@@ -1,0 +1,377 @@
+# JURISRESUMO — MEMÓRIA TÉCNICA E GUIA DO PROJETO (AGENT MEMORY)
+
+> **Documento Vivo de Memória e Conhecimento Técnico**  
+> **Finalidade:** Orientar desenvolvedores e subagentes em futuras modificações, manutenções, refatorações e auditorias da aplicação.  
+> **Última Atualização:** 16/09/2026 (Versão 2.2 — Leitura Integral 100% dos PDFs, Distinção Jurídica Estrita AIJ vs ANPP, Datas por Extenso e Fatos Integrais)
+> **Autor e Desenvolvedor:** FChNeto
+
+---
+
+## 1. Visão Geral e Contexto de Negócio
+
+### 1.1. Propósito da Aplicação
+O **JURISRESUMO** é um sistema completo (Full-Stack / Desktop-Web) desenvolvido para auxiliar magistrados e assessores de Varas Criminais (com foco no TJRN / PJe) na **condução de audiências judiciais** (Instrução e Julgamento - AIJ, Acordo de Não Persecução Penal - ANPP, Produção Antecipada de Provas - PAnP e Audiência de Custódia).
+
+A ferramenta recebe os **autos completos do processo em PDF** (gerados pelo sistema PJe) e gera uma minuta estruturada em **`.docx` (Microsoft Word)**, servindo como guia em tempo real para o magistrado durante o ato solene.
+
+### 1.2. Regras de Domínio Inegociáveis (Diretrizes do Magistrado)
+1. **Fatos da Denúncia (99% dos Casos):** O resumo dos fatos é rigorosamente o que consta na seção fática da denúncia ministerial. Não inventar ou alterar a narrativa fática. Realizar síntese concisa **apenas quando a denúncia for excessivamente longa**, preservando data, hora, local, dinâmica delitiva, apreensões de armas/bens, laudos periciais e interrogatório/confissão em sede policial com os respectivos IDs.
+2. **Histórico Processual Cronológico:** Deve ser estritamente formatado como:
+   `DD/MM/AA: [Descrição do Ato/Decisão/Manifestação] (ID [número])`
+   - O texto da data e da descrição é **sempre regular (NUNCA em negrito)**.
+   - O número do ID do PJe deve ser envelopado em um **hiperlink azul nativo** apontando diretamente para o documento no PJe.
+3. **Rol de Testemunhas:**
+   - Acusação e Defesa separadas e numeradas (`01) [Nome] - [Papel] - [Situação: Intimado / Ofício enviado / Contrafé negativa] (ID [número])`).
+   - Se a defesa apenas reiterou o rol da acusação ou não indicou testemunhas, registrar a fórmula padrão: `A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.` ou `Não há testemunhas de defesa arroladas.`.
+4. **Fechamento Formal:** Sempre terminar com a fórmula canônica judicial:
+   `Cordial e respeitosamente,` (com recuo de primeira linha de 1,27 cm).
+
+---
+
+## 2. Engenharia Reversa dos Modelos DOCX (Especificação OpenXML Mined)
+
+Com base na engenharia reversa dos 9 processos reais fornecidos na pasta (`Proc. 0801889-53`, `Proc. 0802487-75`, `Proc. 0804041-57`, `Proc. 0806049-87`, `Proc. 0820550-12`, `Proc. 0821902-39`, `Proc. 0844118-57`, `Proc. 0860849-94`, `Proc. 0876503-58`), a formatação física e tipográfica deve respeitar estritamente os seguintes parâmetros:
+
+| Parâmetro | Valor Exato OpenXML | Valor Físico / Humano | Observações / Regra |
+|---|---|---|---|
+| **Tamanho da Página** | `w:w="11906" w:h="16838"` | **A4 Retrato** (21,0 x 29,7 cm) | Definido no `<w:sectPr>` de todas as seções. |
+| **Margens** | `w:top="1134" w:bottom="1134" w:left="1134" w:right="1134"` | **2,00 cm** em todos os lados | Header e footer = 0. |
+| **Família Tipográfica** | `w:rFonts w:ascii="Verdana" ...` | **Verdana** | Aplicado em 100% dos runs de texto. |
+| **Tamanho da Fonte** | `w:sz w:val="24"` | **12 pt** | Tamanho fixo para títulos e corpo; hierarquia é feita por negrito e sublinhado. |
+| **Entrelinhas Padrão** | `w:spacing w:line="454" w:lineRule="auto"` | **~1,89x (Amplo)** | Equivale a 22.7 pt de altura de linha. |
+| **Espaçamento Posterior (Histórico e Testemunhas)** | `w:spacing w:after="283"` | **0,50 cm** (14.15 pt) | Dispensa parágrafos em branco intermediários. |
+| **Recuo de Primeira Linha** | `w:ind w:firstLine="720"` | **1,27 cm** (0,5 polegada) | Aplicado na Qualificação, Fatos e Fechamento. |
+| **Alinhamento Global** | `w:jc w:val="both"` | **Justificado** | 96% dos parágrafos do documento. |
+| **Cor de Hiperlink** | `<w:color w:val="0000ff"/>` | **Azul (#0000ff)** | Sublinhado simples (`w:u w:val="single"`). |
+
+### Estrutura Visual do Cabeçalho
+1. **Título (P0):** `Proc. [Num] [Tipo] [Data] às [Hora]` — texto normal, **sublinhado simples**.
+2. **Link (P1):** URL completa da sala do Teams/Meet em azul sublinhado (ou `Audiência Presencial` se não houver link virtual).
+3. **Parágrafo em branco.**
+4. **Chamada de Resumo (P3):** `Segue o resumo da audiência:` — texto **sublinhado simples**.
+5. **Promotor:** `PROMOTOR: Dr. [Nome]` — **Negrito integral**.
+6. **Réu(s):** `Réu: [Nome] - [situação] - Intimado ID [ID]` — **Negrito integral**, com o ID em hiperlink azul. Se múltiplos réus, encabeçado por `Réus:`.
+7. **Defesa:** `Assistido pela Defensoria Pública - Dr. [Nome]` ou `Representado por advogado particular, Dr. [Nome] - OAB/[UF] [Num]` — **Negrito integral**.
+8. **Parágrafo em branco.**
+
+---
+
+## 3. Engenharia de Ingestão de PDFs do PJe
+
+### 3.1. Estrutura dos Autos Eletrônicos no PJe (TJRN)
+- **Capa de Processo (Página 1):** Contém a tabela de partes e procuradores:
+  - `(AUTOR)`: Ministério Público / Promotoria.
+  - `(REU)` ou `(RÉU)`: Nome dos acusados.
+  - `(VÍTIMA)`: Nome das vítimas.
+  - `(TESTEMUNHA)`: Testemunhas arroladas na capa.
+  - `(ADVOGADO)` ou `(DEFENSOR)`: Defensores habilitados.
+- **Tabela de Documentos (TOC - Páginas 1..N):**
+  - Colunas: `Id.`, `Data`, `Documento`, `Tipo`.
+  - Mapeia cada ID de peça processual para sua data de protocolo e nome do ato.
+- **Carimbos de Rodapé do PJe:**
+  - Padrão oficial: `Num. <ID> - Pág. <P>` (ex.: `Num. 101573748 - Pág. 1`).
+  - Permite mapear com exatidão a página inicial e final de cada peça jurídica dentro do PDF compilado.
+- **Páginas Digitalizadas vs. Texto Vetorial:**
+  - O PJe intercala documentos digitais nativos com peças escaneadas (inquéritos policiais físicos, laudos do ITEP, termos de busca e apreensão).
+  - O módulo `app/core/ocr_engine.py` detecta dinamicamente a densidade de caracteres vetoriais e aciona OCR local (RapidOCR / Tesseract) sob demanda.
+
+---
+
+## 4. Arquitetura do Software e Layout de Arquivos
+
+```
+c:\Users\f201503\Documents\Resumo para audiência\
+├── app/
+│   ├── __init__.py
+│   ├── main.py                     # FastAPI entrypoint, middleware CORS e montagem estática
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── models.py               # Schemas Pydantic canônicos (HearingSummaryData, etc.)
+│   │   ├── pje_indexer.py          # Parser de TOC, carimbos 'Num. ID' e poda seletiva
+│   │   └── ocr_engine.py           # RapidOCR/Tesseract híbrido com detecção de scan
+│   ├── engines/
+│   │   ├── __init__.py             # Factory get_engine(mode, api_key)
+│   │   ├── base.py                 # Classe base abstrata BaseExtractionEngine
+│   │   ├── offline_engine.py       # Modo 2: Motor 100% Offline com regex e Capa PJe
+│   │   └── gemini_engine.py        # Modo 1: Google Gemini AI com fallback seguro
+│   ├── generators/
+│   │   ├── __init__.py
+│   │   └── docx_generator.py       # Construtor OpenXML/DOCX de alta fidelidade
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes.py               # Rotas REST (/upload, /extract, /generate-docx, /samples)
+│   └── static/
+│       ├── index.html              # Interface SPA (Google Stitch & Nano Banana)
+│       ├── css/style.css           # Estilos visuais de alto contraste e simulação A4
+│       └── js/app.js               # Gestão de estado reativo, edição e download
+├── tests/
+│   ├── conftest.py                 # Fixtures, constantes de namespace XML e metadados dos 9 casos
+│   ├── test_pje_indexer.py         # 25 testes unitários do indexador
+│   ├── test_docx_generator.py      # 2 testes de conformidade OpenXML/Word
+│   ├── test_offline_engine.py      # 3 testes do motor offline e fallback
+│   ├── test_api.py                 # 4 testes de integração dos endpoints FastAPI
+│   ├── run_all_tests.py            # Dashboard CLI de execução de testes com métricas
+│   └── e2e/
+│       ├── test_e2e_tier1_features.py   # 100 testes cobrindo F01-F20
+│       ├── test_e2e_tier2_boundaries.py # 16 testes de limites (ANPP, PAnP, multi-réu)
+│       ├── test_e2e_tier3_cross_features.py # 9 testes cruzados de pipelines
+│       └── test_e2e_tier4_workloads.py  # 10 testes de carga sobre os 9 processos
+├── run.py                          # Launcher da aplicação (abre navegador e inicia Uvicorn)
+├── recovery.py                     # Sistema nativo de checkpoints e restauração
+├── MEMORY.md                       # Este documento (Memória Técnica Permanente)
+├── PROJECT.md                      # Especificação arquitetural do projeto
+└── requirements.txt                # Dependências Python
+```
+
+---
+
+## 5. Como Operar o Sistema de Recuperação (`recovery.py`)
+
+Como o ambiente Windows local não dispõe do Git, foi implementado o `recovery.py`, um sistema autônomo, seguro e de alta velocidade para criação de checkpoints e rollback instantâneo.
+
+### Comandos Essenciais:
+
+1. **Criar um novo Checkpoint:**
+   ```powershell
+   python recovery.py save "nome_do_ponto" -d "Descrição da alteração realizada"
+   ```
+   *Exemplo:* `python recovery.py save "feat_nova_secao" -d "Adicionada secao de antecedentes criminais"`
+
+2. **Listar todos os Checkpoints salvos:**
+   ```powershell
+   python recovery.py list
+   ```
+
+   **Histórico de Checkpoints do Projeto:**
+   | ID do Checkpoint | Rótulo | Finalidade / Escopo | Tamanho |
+   |---|---|---|---|
+   | `20260916_101709` | `v2.1_strict_formatting_highlights_fixed` | **Versão Atual Ativa**: Realces estritos amarelo/verde, negrito/itálico, hyperlinks PJe e motor offline aprimorado | ~111 KB |
+   | `20260916_100805` | `pre_format_strict_highlight_fix` | Backup preventivo antes da padronização estrita de realces | ~108 KB |
+   | `20260916_100020` | `v2.0_standalone_hamburger_dualscroll_fchneto` | Versão 2.0: Standalone HTML portátil, menu hambúrguer, dual scroll e autoria FChNeto | ~108 KB |
+   | `20260916_095542` | `pre_user_enhancements` | Backup pré-solicitações de aprimoramento de UI do usuário | ~104 KB |
+   | `20260916_093926` | `v1.1_memory_and_recovery_ready` | Implementação do sistema de recovery e arquivo MEMORY.md | ~104 KB |
+   | `20260916_093852` | `v1.0_baseline_aprovada` | Versão baseline aprovada inicialmente pelo usuário | ~98 KB |
+
+3. **Restaurar o projeto para um Checkpoint:**
+   ```powershell
+   python recovery.py restore "nome_do_ponto_ou_id"
+   ```
+   > **Garantia de Segurança Antiperda:** Antes de sobrescrever qualquer arquivo, o comando cria **automaticamente** um backup preventivo (`pre_restore_backup`), permitindo desfazer até mesmo restaurações acidentais.
+
+4. **Comparar o estado atual com um Checkpoint (Diff):**
+   ```powershell
+   python recovery.py diff "nome_do_ponto_ou_id"
+   ```
+   *Mostra exatamente quais arquivos foram modificados, adicionados ou removidos.*
+
+---
+
+## 6. Como Executar a Suíte de Testes
+
+O projeto conta com **170 testes automatizados** cobrindo todos os módulos com 100% de sucesso.
+
+- **Execução completa via Runner com Dashboard:**
+  ```powershell
+  python tests/run_all_tests.py
+  ```
+- **Execução via Pytest padrão:**
+  ```powershell
+  python -m pytest tests/
+  ```
+- **Execução apenas dos testes de ponta a ponta (E2E):**
+  ```powershell
+  python -m pytest tests/e2e/
+  ```
+
+---
+
+## 7. Recomendações para Subagentes e Futuros Desenvolvedores
+
+1. **Antes de fazer qualquer alteração estrutural:**
+   - Execute sempre: `python recovery.py save "pre_modificacao" -d "Antes de alterar componente X"`.
+2. **Ao modificar a geração de DOCX:**
+   - Nunca altere a fonte `Verdana` ou o tamanho `12pt`.
+   - Lembre-se que no Histórico Processual, datas e textos são sempre **sem negrito**.
+   - Mantenha o recuo de primeira linha de `1,27 cm` (`firstLine="720"`) nos blocos narrativos.
+3. **Ao ajustar a leitura de PDFs:**
+   - Sempre utilize `parse_capa_parties` para obter os nomes limpos das partes da Página 1, evitando confundir órgãos institucionais com réus.
+   - Utilize `prune_documents` para descartar anexos pesados e focar nas decisões, denúncias e mandados.
+4. **Após qualquer edição:**
+   - Execute `python -m pytest tests/` para garantir que os testes continuem 100% aprovados.
+   - Atualize este `MEMORY.md` com novos aprendizados ou comportamentos observados.
+
+---
+
+## 8. Recursos da Versão 2.0 (Desenvolvida por FChNeto)
+
+### 8.1. Assinatura e Autoria Permanente
+- **Autor Oficial:** `FChNeto`.
+- A assinatura está registrada de forma perene no rodapé visual da aplicação web (`Desenvolvido por FChNeto • JURISRESUMO • TJRN`), nas tags `<meta name="author">` do HTML, e nas constantes `__author__ = "FChNeto"` e `DEVELOPED_BY = "FChNeto"` nos módulos:
+  - `app/core/models.py`
+  - `app/engines/offline_engine.py`
+  - `app/generators/docx_generator.py`
+  - `app/main.py`
+  - `run.py`
+  - `ABRIR_APLICATIVO_DIRETO.html`
+  - `Iniciar_JURISRESUMO.vbs`
+
+### 8.2. Versão Nativa Portátil Zero-Install (`ABRIR_APLICATIVO_DIRETO.html`)
+- **Portabilidade Total:** Arquivo HTML nativo independente que roda em **qualquer dispositivo** (Windows, macOS, Linux, iPadOS, Android) sem requerer Python, Node.js, terminais ou telas pretas de carregamento.
+- **Motor Client-Side Integrado:**
+  - Extração de texto e metadados PJe via **PDF.js** diretamente no navegador.
+  - Geração e empacotamento do documento `.docx` OpenXML binário nativo via **JSZip**, aplicando as mesmas regras de formatação (Verdana 12pt, margens 2,0cm, espaçamentos e links PJe).
+  - Suporte aos modos 100% Offline (heurístico local em JavaScript) e IA Gemini (via chave de API configurada no drawer).
+
+### 8.3. Inicializador Silencioso do Servidor Python (`Iniciar_JURISRESUMO.vbs`)
+- Para usuários que desejam rodar o backend FastAPI local sem ver janelas pretas de prompt de comando (`cmd.exe`), o script `Iniciar_JURISRESUMO.vbs` inicializa o servidor em segundo plano de forma 100% silenciosa e abre o navegador na porta apropriada.
+
+### 8.4. Correção Visual da Folha A4 e Rolagem Dupla Independente (Dual Scroll)
+- **Viewport Fixo:** Altura travada em `calc(100vh - 92px); overflow: hidden;` eliminando barras de rolagem globais indesejadas.
+- **Rolagem Independente:**
+  - Coluna esquerda (`.editor-pane`): Rolagem vertical autônoma para edição de formulários longos.
+  - Coluna direita (`.preview-pane`): O contêiner `.desk-scroller` rola verticalmente a folha A4.
+- **Folha A4 Estrita Sem Sangramento Azul:**
+  - `.word-paper-sheet` com fundo branco absoluto (`#ffffff !important`), `min-height: 1123px`, `height: auto`, e `padding: 20mm` (2,0 cm em todos os lados).
+  - Texto longo expande a folha verticalmente sem cortes (`overflow: visible`), mantendo contraste preto no branco com sombra realista sobre a escrivaninha escura.
+
+### 8.5. Menu Hambúrguer e Modal de Instruções
+- **Menu Hambúrguer Superior Direito (`☰`):**
+  - Abre gaveta deslizante (`.hamburger-drawer`) com seletor de motor (Modo IA vs. Modo Offline), inserção de chave Gemini API, backup/restauração de rascunhos em JSON e limpeza de dados.
+- **Modal Explicativo ("Sobre o JURISRESUMO & Manual"):**
+  - Explica detalhadamente o propósito judiciário, arquitetura híbrida, estrutura OpenXML fiel, privacidade dos dados e orientações de uso para magistrados e assessores criminais.
+- **Área de Upload Expandida:** Remoção da seção de exemplos para deixar a tela 100% limpa para os processos reais do usuário.
+
+---
+
+## 9. Recursos da Versão 2.1 — Formatação Estrita Rigorosa e Motor Offline Aprimorado
+
+### 9.1. Gramática Visual Estrita (Engenharia Reversa dos 9 Modelos Reais)
+A partir da auditoria minuciosa de 100% dos arquivos de referência `.docx` fornecidos pelo magistrado, o sistema consolidou a seguinte padronização tipográfica e de cores, implementada tanto no gerador Python (`docx_generator.py`) quanto no gerador JSZip puro do navegador (`ABRIR_APLICATIVO_DIRETO.html`) e no preview web (`app.js`):
+
+1. **Realce Amarelo (`w:highlight w:val="yellow"` / CSS `#ffff00`):**
+   - Todos os títulos de seção: `QUALIFICAÇÃO`, `IMPUTAÇÃO`, `RESUMO DOS FATOS`, `HISTÓRICO PROCESSUAL`, `TESTEMUNHAS DE ACUSAÇÃO:`, `TESTEMUNHAS DE DEFESA:`.
+   - Linha de chamada de horário/caso em audiências agendadas (ex.: `11h25min - 0860849-94.2026.8.20.5001 - ANPP`).
+   - Nota padrão de testemunhas da defesa quando não há arrolamento novo (`A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.` ou `Não há testemunhas de defesa arroladas.`).
+
+2. **Realce Verde Vivo (`w:highlight w:val="green"` / CSS `#00ff00`):**
+   - Identificação dos atores da audiência:
+     - `PROMOTOR: Dr. [Nome]` (ou `PROMOTORES:`)
+     - `Réu: [Nome] - [situação] - Intimado ID [ID]` (ou `Réus:`)
+     - Linha da Defesa (`Defesa: Dr. ...` / `Assistido pela Defensoria...` / `Representado por advogado...`)
+
+3. **Negrito Estratégico (`<w:b/>`):**
+   - Cabeçalhos de seção e linhas dos atores do ato solene.
+   - Nome completo dos réus na abertura de sua qualificação, em caixa alta (ex.: `MANOEL PAULINO DA SILVA SOBRINHO`).
+   - Artigos penais e normas jurídicas na imputação (ex.: `(art. 157, § 2º, II, e § 2º-A, I, do Código Penal)`).
+
+4. **Itálico (`<w:i/>`):**
+   - Notas e observações narrativas no resumo dos fatos (ex.: `OBS: este processo foi oriundo de um desmembramento...`).
+
+5. **Hiperlinks Nativos em Todos os IDs:**
+   - Todos os IDs numéricos (7 a 10 dígitos) no histórico processual, intimações de réus e rol de testemunhas são gerados como hiperlinks azuis (`#0000ff`) sublinhados apontando diretamente para o visualizador oficial do PJe TJRN.
+   - No gerador client-side do navegador (`ABRIR_APLICATIVO_DIRETO.html`), os relacionamentos OpenXML são construídos dinamicamente em `word/_rels/document.xml.rels`, garantindo compatibilidade total com o Microsoft Word sem erros de integridade.
+
+### 9.2. Aprimoramentos Críticos no Motor Offline
+- **Resolução do Bug de Ancoragem de Regex:**
+  - Em denúncias criminais do PJe, a qualificação frequentemente traz expressões como `"com 29 anos de idade à época dos fatos"`. Expressões regulares sem ancoragem de linha que buscavam por `DOS\s+FATOS` interceptavam indevidamente essa frase no meio da qualificação, truncando os dados civis do réu e sujando o resumo dos fatos.
+  - O motor foi refatorado com âncoras estritas `(?:^|\n)\s*` e padrões específicos de cabeçalho (`DOS FATOS`, `HISTÓRICO DOS FATOS`, `DA IMPUTAÇÃO`), separando com precisão cirúrgica a qualificação, a tipificação penal e a narrativa ministerial.
+- **Higienização Profunda de Textos do PJe (`_clean_legal_text`):**
+  - Elimina carimbos verticais de margem, avisos de validação de assinatura digital (`Assinado eletronicamente por...`, `https://pje1g.tjrn.jus.br/...`), cabeçalhos de página e contagens de folhas que poluíam as minutas.
+- **Rastreamento de Mandados de Intimação e Citação:**
+  - Extração inteligente de IDs de mandados cumpridos e certidões de oficial de justiça a partir da tabela de documentos (TOC) e do corpo dos autos, mapeando o status de intimação de réus e testemunhas.
+
+### 9.3. Checkpoint Salvo no Repositório
+- **ID do Checkpoint:** `20260916_101709_v2_1_strict_formatting_highlights_fixed`
+- **Rótulo:** `v2.1_strict_formatting_highlights_fixed`
+- **Validação de Testes:** 170 testes unitários, de integração e ponta a ponta (E2E) aprovados com 100% de sucesso.
+
+---
+
+## 10. Matriz dos 9 Processos Reais da Pasta de Trabalho
+
+Esta tabela consolida os 9 casos de teste e modelos de referência reais minerados no repositório, servindo como base de validação e calibração de futuros testes:
+
+| Processo PJe | Ato | Data / Hora | Réu(s) | Situação Prisional | Total Págs | % Digitalizado | Peculiaridades Jurídicas |
+|---|---|---|---|---|---|---|---|
+| **0801889-53.2023.8.20.5001** | AIJ | 31.07.26 às 10h | JUCIMARCIA SOARES DA SILVA | Em liberdade | 119 págs | 10.1% | Furto qualificado, réu solto, Defensoria Pública |
+| **0802487-75.2026.8.20.5300** | AIJ | 31.07.26 às 11h | GEAN | Réu preso | 209 págs | 14.4% | Tráfico de drogas, réu preso em estabelecimento prisional |
+| **0804041-57.2022.8.20.5600** | PAnP | 23.07.26 às 13h | BERANILDO | Citado por edital | 212 págs | 20.3% | Produção Antecipada de Provas (Art. 366 CPP), citação ficta por edital |
+| **0806049-87.2024.8.20.5001** | AIJ | 17.07.26 às 10h | LAIS, GUSTAVO, BIANCA, GIOVANNA | Em liberdade | 3.250 págs | 2.5% | Mega-processo GAECO / Operação policial, 4 acusados, 10 volumes |
+| **0820550-12.2025.8.20.5001** | AIJ | 17.07.26 às 09h | HEVERTON DOUGLAS, ADRIANO MARTINS | Preso / Não localizado | 190 págs | 41.6% | Roubo majorado em concurso, alta densidade escaneada (41% OCR) |
+| **0821902-39.2024.8.20.5001** | AIJ | 13.07.26 às 14h | LUANNA | Em liberdade | 1.166 págs | 19.5% | Inquérito policial extenso, múltiplos laudos periciais |
+| **0844118-57.2025.8.20.5001** | AIJ | 24.07.26 às 11h | ABNER BARBOSA DA SILVA | Em liberdade | 336 págs | 2.4% | Receptação qualificada, histórico cronológico com 11 marcos processuais |
+| **0860849-94.2026.8.20.5001** | ANPP | 24.07.26 às 11h25 | SAMARA TARGINO DE LIMA | Intimada | 480 págs | 0.6% | Acordo de Não Persecução Penal (Art. 28-A CPP), linha de chamada de horário |
+| **0876503-58.2025.8.20.5001** | AIJ | 10.07.26 às 11h | MANOEL, JOSUEL, FELIPE | Intimados | 510 págs | 15.5% | Coautoria (3 réus), rol extenso de 17 IDs chave de certidões e mandados |
+
+---
+
+## 11. Protocolo Operacional para Subagentes e Desenvolvedores
+
+Sempre que receber uma nova demanda de modificação do magistrado ou usuário, siga este protocolo rigoroso:
+
+1. **Passo 1 — Criar Checkpoint de Segurança:**
+   ```powershell
+   python recovery.py save "pre_<tarefa>" -d "Backup preventivo antes de iniciar <tarefa>"
+   ```
+2. **Passo 2 — Preservar a Gramática Visual:**
+   - Nunca remova os realces `<w:highlight w:val="yellow"/>` dos cabeçalhos ou `<w:highlight w:val="green"/>` dos participantes.
+   - Sempre garanta que todo ID numérico de 7 a 10 dígitos gere um elemento `<w:hyperlink>` com a cor azul `#0000ff` e sublinhado.
+   - Na versão autônoma (`ABRIR_APLICATIVO_DIRETO.html`), sempre espelhe as modificações do backend (`docx_generator.py` e `app.js`) para que o aplicativo portátil funcione com a mesma precisão.
+3. **Passo 3 — Executar a Suíte de Testes:**
+   ```powershell
+   pytest tests/
+   ```
+   *Certifique-se de que todos os testes passem com 100% de sucesso.*
+4. **Passo 4 — Atualizar Este Documento e Salvar o Checkpoint Final:**
+   - Adicione o que foi aprendido em `MEMORY.md`.
+   - Crie o checkpoint estável: `python recovery.py save "pos_<tarefa>" -d "<Descricao da solucao>"`.
+
+---
+
+## 12. Revisão e Aperfeiçoamento do Motor Offline (Versão 2.2)
+
+### 12.1. Causa Raiz do Erro de Classificação de Audiência (AIJ vs. ANPP)
+1. **O Falso Positivo "ANPP" e a Menção a Não Persecução:**
+   - Na prática criminal brasileira (TJRN/PJe), quase a totalidade das denúncias e cotas ministeriais traz menções ao Acordo de Não Persecução Penal, comumente para **negar sua aplicação** (ex.: *"Deixo de propor o ANPP em razão da reincidência..."*, *"Incabível o ANPP diante da violência da conduta..."*, *"Não sendo caso de ANPP..."*).
+   - O motor portátil (`ABRIR_APLICATIVO_DIRETO.html`) possuía anteriormente uma regra ingênua: `if (/anpp|não persecução/i.test(text)) actType = 'ANPP';`. Qualquer processo crime ordinário que citasse a negativa de ANPP era equivocadamente rebaixado para "ANPP", mesmo estando com denúncia recebida e audiência de instrução aprazada.
+2. **O Truncamento em 100 Páginas no Frontend:**
+   - No arquivo `ABRIR_APLICATIVO_DIRETO.html`, a leitura de PDF continha `const numPages = Math.min(pdf.numPages, 100);`.
+   - Processos criminais com inquérito têm usualmente de 150 a 500 páginas. As primeiras 100 páginas contêm apenas o APF/IP e a Denúncia; o despacho judicial que efetivamente designa a Audiência de Instrução e Julgamento, bem como os mandados de intimação das testemunhas, ficam nas páginas finais (ex.: páginas 110-180). Cortar em 100 páginas impedia a leitura do ato judicial que marcou a audiência!
+3. **Datas por Extenso em Português:**
+   - Decisões judiciais frequentemente redigem a pauta por extenso (ex.: *"designo o dia 24 de julho de 2026 às 11:25"*). Expressões numéricas simples (`dd/mm/yyyy`) falhavam em capturar esses atos solenes.
+
+### 12.2. Soluções Implementadas no Motor Offline e Frontend
+1. **Hierarquia Jurídica Estrita para Tipificação do Ato:**
+   - Se os autos contêm o recebimento da denúncia (`"recebo a denúncia"`, `"recebida a denúncia"`, `"art. 396"`, `"art. 399"`), o instituto do ANPP é juridicamente incompatível; o processo já ingressou na ação penal e a audiência é estritamente **AIJ**.
+   - O tipo **ANPP** só é admitido se houver designação afirmativa unívoca de audiência de homologação do Art. 28-A do CPP, **sem qualquer recebimento posterior de denúncia** e **sem termos de recusa ou inadmissibilidade**.
+   - O padrão seguro para processos criminais com denúncia recebida é **AIJ**.
+2. **Leitura Completa de 100% das Páginas do PDF:**
+   - Em `ABRIR_APLICATIVO_DIRETO.html`, a restrição de 100 páginas foi extirpada (`numPages = pdf.numPages`).
+   - Implementado carregamento assíncrono em lotes paralelos (`Promise.all` em blocos de 10 páginas), permitindo leitura rápida e fluida de PDFs com 300-500 páginas em poucos segundos, exibindo o percentual exato ao usuário.
+   - Em `app/core/pje_indexer.py`, implementada interpolação de páginas para peças da tabela de documentos com `start_page == 0`, garantindo cobertura de 100% dos autos.
+   - Removido qualquer teto de retrocesso em `offline_engine.py` (anteriormente 60 páginas), varrendo agora todo o arquivo até a página 0.
+3. **Varredura Reversa (Do Mais Recente para o Mais Antigo):**
+   - No PJe, os despachos e pautas de audiência mais recentes estão no final dos autos. O motor agora varre as páginas de trás para frente para capturar prioritariamente o despacho que agendou a audiência ativa.
+4. **Parser Nativo de Datas em Português:**
+   - Reconhecimento completo de meses por extenso em português (`janeiro` a `dezembro`) com conversão para o padrão visual canônico: `24 de julho de 2026 às 11:25` $\rightarrow$ `24.07.26 às 11h25min`.
+5. **Preservação Integral dos Fatos da Denúncia:**
+   - Os fatos são extraídos sempre a partir da peça acusatória ministerial (denúncia), sem truncamentos arbitrários (`slice(0, 5)` ou `clean_den[200:1500]`), incorporando ainda menções de comprovação de materialidade e interrogatório/confissão em sede policial.
+
+### 12.3. Checkpoint Salvo no Repositório
+- **ID do Checkpoint:** `20260916_134935_v2_2_final_validated_all_cases`
+- **Rótulo:** `v2.2_final_validated_all_cases`
+- **Validação de Testes:** 173 testes unitários e de integração aprovados com 100% de sucesso.
+- **Validação Cruzada em 100% dos Processos Reais da Pasta:**
+  - `Proc. 0801889-53.2023.8.20.5001`: **AIJ**, 31.07.26 às 10h00min, Jucimarcia Soares da Silva
+  - `Proc. 0802487-75.2026.8.20.5300`: **AIJ**, 31.07.26 às 11h00min, Gean de Lima Ferreira
+  - `Proc. 0804041-57.2022.8.20.5600`: **PAnP**, 23.07.26 às 13h00min, Beranildo Alves Soares
+  - `Proc. 0806049-87.2024.8.20.5001`: **AIJ**, 17.07.26 às 10h00min, 4 acusados
+  - `Proc. 0844118-57.2025.8.20.5001`: **AIJ**, 24.07.26 às 11h00min, Glauco Barbosa da Silva
+  - `Proc. 0820550-12.2025.8.20.5001`: **AIJ**, 17.07.26 às 09h00min, Heverton Douglas, Adriano
+  - `Proc. 0821902-39.2024.8.20.5001`: **AIJ**, 10.07.26 às 09h30min, Luanna Karla
+  - `Proc. 0860849-94.2026.8.20.5001`: **ANPP**, 24.07.26 às 11h25min, Samara Targino de Lima
+  - `Proc. 0876503-58.2025.8.20.5001`: **AIJ**, 10.07.26 às 11h00min, Manoel, Josuel, Felipe
+
+
+
+

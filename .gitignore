@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.class
+
+# Caches and Environments
+.pytest_cache/
+.coverage
+htmlcov/
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# IDE / Editor Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# JURISRESUMO Checkpoints & Recovery
+.recovery/
+*.zip
+
+# Sensitive Legal Process Files (LGPD / Privacy Protection)
+# Real court PDF and DOCX files with sensitive personal data are kept out of git
+Proc. */
+Proc.*
+*.pdf
+test_output_*.docx
+scratch/

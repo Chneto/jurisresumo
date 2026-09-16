@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JURISRESUMO | Resumo de Processos para Audiência (PJe)</title>
+  <meta name="author" content="FChNeto">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Verdana&display=swap" rel="stylesheet">
+</head>
+<body class="stitch-theme">
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-logo">
+        <span class="banana-accent">⚡</span>
+        <span class="brand-text">JURIS<strong>RESUMO</strong></span>
+      </div>
+      <span class="badge badge-nano">Nano Banana Edition</span>
+      <span class="badge badge-stitch">Google Stitch UI</span>
+      <div class="engine-status-pill" id="engine-status-pill" title="Motor de Processamento Ativo">
+        <span class="engine-dot" id="header-engine-dot"></span>
+        <span id="header-engine-label">Modo 100% Offline (Local Seguro)</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button type="button" class="btn btn-primary" id="btn-export-docx" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Baixar Resumo (.docx)</span>
+      </button>
+
+      <!-- Hamburger Menu Button -->
+      <button type="button" class="btn-hamburger" id="btn-hamburger" aria-label="Abrir Menu de Configurações" title="Menu de Configurações">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hamburger Drawer / Dropdown Menu -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+  <aside class="hamburger-drawer" id="hamburger-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <span class="banana-accent">⚡</span>
+        <h3>Configurações & Painel</h3>
+      </div>
+      <button type="button" class="btn-close-drawer" id="btn-close-drawer">&times;</button>
+    </div>
+
+    <div class="drawer-content">
+      <!-- Section: Engine Selection -->
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">Motor de Extração e Inteligência</h4>
+        <div class="engine-card-selector">
+          <label class="engine-radio-card" id="card-mode-offline">
+            <input type="radio" name="drawer_engine_mode" value="offline" checked>
+            <div class="radio-card-body">
+              <div class="radio-card-header">
+                <span class="engine-dot offline-dot"></span>
+                <strong>Modo 100% Offline (Local Seguro)</strong>
+              </div>
+              <p>Processamento local ultra-rápido, sem conexão externa. Utiliza carimbos do PJe, OCR local e expressões regulares jurídicas.</p>
+            </div>
+          </label>
+
+          <label class="engine-radio-card" id="card-mode-gemini">
+            <input type="radio" name="drawer_engine_mode" value="gemini">
+            <div class="radio-card-body">
+              <div class="radio-card-header">
+                <span class="engine-dot ai-dot"></span>
+                <strong>Modo IA Google Gemini</strong>
+              </div>
+              <p>Análise aprofundada com raciocínio jurídico, síntese refinada de denúncias longas e correlação de peças complexas.</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Section: Gemini API Key Config -->
+      <div class="drawer-section" id="section-gemini-key">
+        <h4 class="drawer-section-title">Chave da API Google Gemini</h4>
+        <div class="form-group">
+          <input type="password" id="input-drawer-gemini-key" class="form-control" placeholder="Insira sua chave (AIzaSy...)">
+          <button type="button" class="btn btn-sm btn-secondary mt-2" id="btn-save-drawer-key">Salvar Chave no Navegador</button>
+          <span class="form-hint">Salvo estritamente no armazenamento local do seu navegador.</span>
+        </div>
+      </div>
+
+      <!-- Section: Backup & Tools -->
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">Ferramentas e Rascunhos</h4>
+        <div class="drawer-actions-grid">
+          <button type="button" class="btn btn-outline btn-sm" id="btn-save-draft">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Salvar Rascunho (JSON)
+          </button>
+          <label class="btn btn-outline btn-sm btn-file-label">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Carregar Rascunho
+            <input type="file" id="input-load-draft" accept=".json" style="display:none;">
+          </label>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-clear-form">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Limpar Formulário
+          </button>
+        </div>
+      </div>
+
+      <!-- Section: About & Documentation -->
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">Documentação & Autoria</h4>
+        <button type="button" class="btn btn-secondary btn-block" id="btn-open-about">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Sobre a Ferramenta & Manual de Uso
+        </button>
+      </div>
+
+      <!-- Drawer Footer Credit -->
+      <div class="drawer-footer-credit">
+        <span>Desenvolvido por <strong>FChNeto</strong></span>
+        <small>TJRN • Varas Criminais • PJe</small>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Viewport (Fixed Height, Dual Independent Scroll) -->
+  <main class="main-viewport">
+    <!-- Ingestion Section (Full Width Drag & Drop) -->
+    <section class="ingestion-section">
+      <div class="upload-dropzone" id="dropzone">
+        <input type="file" id="file-input" accept=".pdf" class="file-input-hidden">
+        <div class="dropzone-content">
+          <div class="dropzone-icon">
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+          </div>
+          <div class="dropzone-text">
+            <h3>Arraste e solte os autos completos do PJe em PDF aqui</h3>
+            <p>ou <span class="upload-browse">clique para selecionar do seu computador</span> — suporta arquivos de qualquer tamanho com texto ou páginas escaneadas</p>
+          </div>
+        </div>
+        <div class="upload-loading-overlay" id="upload-loading">
+          <div class="spinner"></div>
+          <p class="loading-message">Processando autos e indexando peças judiciais...</p>
+          <span class="loading-sub">Extraindo denúncia, decisões, mandados e certidões</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dual-Column Workspace: Left = Editor, Right = Fixed Live Preview -->
+    <div class="dual-workspace">
+      <!-- Left Column: Form Editor (Independent Scroll) -->
+      <div class="editor-pane" id="editor-pane">
+        <div class="editor-pane-header">
+          <div class="step-indicator">
+            <span class="step-number">✍️</span>
+            <div>
+              <h2>Painel de Revisão e Adaptação</h2>
+              <p class="subtitle">Todos os campos são livremente editáveis antes do download final.</p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-xs btn-outline" id="btn-revert">Restaurar Valores Extraídos</button>
+        </div>
+
+        <form id="hearing-form" class="editor-form">
+          <!-- Card 1: Cabeçalho -->
+          <div class="card form-card">
+            <div class="card-title">
+              <span class="card-icon">📌</span>
+              <h3>1. Cabeçalho da Audiência</h3>
+            </div>
+            <div class="form-row-grid grid-3">
+              <div class="form-group">
+                <label for="case_number">Número do Processo (CNJ)</label>
+                <input type="text" id="case_number" name="case_number" class="form-control mono" placeholder="0000000-00.0000.8.20.0000">
+              </div>
+              <div class="form-group">
+                <label for="act_type">Tipo de Audiência / Ato</label>
+                <select id="act_type" name="act_type" class="form-control">
+                  <option value="AIJ">AIJ (Instrução e Julgamento)</option>
+                  <option value="ANPP">ANPP (Acordo de Não Persecução Penal)</option>
+                  <option value="PAnP">PAnP (Produção Antecipada de Provas - art. 366)</option>
+                  <option value="Custódia">Audiência de Custódia</option>
+                  <option value="Sursis">Audiência de Suspensão Condicional</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="hearing_datetime">Data e Hora da Audiência</label>
+                <input type="text" id="hearing_datetime" name="hearing_datetime" class="form-control" placeholder="DD.MM.AA às HHhMMmin">
+              </div>
+            </div>
+
+            <div class="form-row-grid grid-2">
+              <div class="form-group">
+                <label for="hearing_link">Link da Videoconferência (Teams / Meet)</label>
+                <input type="url" id="hearing_link" name="hearing_link" class="form-control" placeholder="https://teams.microsoft.com/meet/...">
+              </div>
+              <div class="form-group checkbox-group">
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="is_in_person" name="is_in_person">
+                  <span class="checkmark"></span>
+                  Audiência Presencial (Sem link virtual)
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row-grid grid-2">
+              <div class="form-group">
+                <label for="prosecutor">Promotor(a) de Justiça</label>
+                <input type="text" id="prosecutor" name="prosecutor" class="form-control" placeholder="Dr. Nome do Promotor (Promotoria)">
+              </div>
+              <div class="form-group">
+                <label for="defense_counsel">Defesa Técnica (Defensoria Pública ou Advogado)</label>
+                <input type="text" id="defense_counsel" name="defense_counsel" class="form-control" placeholder="Assistido pela Defensoria Pública - Dr. ...">
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Réus -->
+          <div class="card form-card">
+            <div class="card-header-flex">
+              <div class="card-title">
+                <span class="card-icon">👤</span>
+                <h3>2. Réus do Processo</h3>
+              </div>
+              <button type="button" class="btn btn-xs btn-outline" id="btn-add-defendant">+ Adicionar Réu</button>
+            </div>
+            <div id="defendants-container" class="items-container"></div>
+          </div>
+
+          <!-- Card 3: Qualificação -->
+          <div class="card form-card">
+            <div class="card-title">
+              <span class="card-icon">📝</span>
+              <h3>3. Qualificação Completa</h3>
+            </div>
+            <p class="form-tip">Nome em caixa alta e dados pessoais extraídos da denúncia/inquérito policial.</p>
+            <div class="form-group">
+              <textarea id="qualification_text" name="qualification_text" rows="4" class="form-control" placeholder="NOME DO RÉU, nacionalidade, estado civil, profissão, RG, CPF, endereço..."></textarea>
+            </div>
+          </div>
+
+          <!-- Card 4: Imputação -->
+          <div class="card form-card">
+            <div class="card-title">
+              <span class="card-icon">⚖️</span>
+              <h3>4. Imputação Penal</h3>
+            </div>
+            <p class="form-tip">Tipificação penal e artigos atribuídos pelo Ministério Público.</p>
+            <div class="form-group">
+              <textarea id="imputation_text" name="imputation_text" rows="3" class="form-control" placeholder="Lesão corporal (art. 129, §9º, do Código Penal)..."></textarea>
+            </div>
+          </div>
+
+          <!-- Card 5: Resumo dos Fatos -->
+          <div class="card form-card">
+            <div class="card-header-flex">
+              <div class="card-title">
+                <span class="card-icon">📖</span>
+                <h3>5. Resumo dos Fatos da Denúncia</h3>
+              </div>
+              <span class="char-count" id="facts-char-count">0 caracteres</span>
+            </div>
+            <p class="form-tip">99% das vezes correspondendo aos fatos da denúncia; resumido se muito longo.</p>
+            <div class="form-group">
+              <textarea id="facts_summary" name="facts_summary" rows="8" class="form-control" placeholder="Consta nos referidos autos do inquérito policial que, no dia..."></textarea>
+            </div>
+          </div>
+
+          <!-- Card 6: Histórico Processual -->
+          <div class="card form-card">
+            <div class="card-header-flex">
+              <div class="card-title">
+                <span class="card-icon">📅</span>
+                <h3>6. Histórico Processual Cronológico</h3>
+              </div>
+              <button type="button" class="btn btn-xs btn-outline" id="btn-add-history">+ Adicionar Ato</button>
+            </div>
+            <p class="form-tip">Padrão rigoroso: <code>DD/MM/AA: [Descrição do Ato] (ID [número])</code>.</p>
+            <div id="history-container" class="items-container"></div>
+          </div>
+
+          <!-- Card 7: Testemunhas -->
+          <div class="card form-card">
+            <div class="card-header-flex">
+              <div class="card-title">
+                <span class="card-icon">👥</span>
+                <h3>7. Rol de Testemunhas</h3>
+              </div>
+              <button type="button" class="btn btn-xs btn-outline" id="btn-add-witness">+ Adicionar Testemunha</button>
+            </div>
+            <div class="witnesses-section">
+              <h4 class="sub-section-title">Testemunhas de Acusação:</h4>
+              <div id="pros-witnesses-container" class="items-container"></div>
+
+              <div class="form-group mt-3">
+                <label for="defense_witness_note">Observação sobre Testemunhas de Defesa</label>
+                <input type="text" id="defense_witness_note" name="defense_witness_note" class="form-control" placeholder="A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Right Column: Fixed Live Preview (Independent Scroll) -->
+      <div class="preview-pane" id="preview-pane">
+        <div class="preview-pane-header">
+          <div class="preview-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Minuta em Tempo Real (Padrão Oficial DOCX)</span>
+          </div>
+          <span class="badge badge-stitch">A4 • Verdana 12pt • Margens 2,0 cm</span>
+        </div>
+
+        <!-- Scrollable Desk Container -->
+        <div class="desk-scroller" id="desk-scroller">
+          <div class="word-paper-sheet" id="word-paper-sheet">
+            <div class="paper-placeholder" id="paper-placeholder">
+              <div class="placeholder-icon">📄</div>
+              <h4>Nenhum processo carregado</h4>
+              <p>Arraste um PDF dos autos do PJe acima para gerar instantaneamente a minuta da audiência.</p>
+            </div>
+            <div class="paper-body" id="paper-body">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- App Footer with Immutable Author Signature -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <span>Desenvolvido por <strong>FChNeto</strong></span>
+      <span class="footer-dot">•</span>
+      <span>JURISRESUMO — Sistema de Apoio a Audiências Criminais</span>
+      <span class="footer-dot">•</span>
+      <span>Tribunal de Justiça do Rio Grande do Norte (TJRN)</span>
+    </div>
+  </footer>
+
+  <!-- Modal: About & Comprehensive Manual -->
+  <div class="modal-backdrop" id="modal-about-backdrop">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span class="banana-accent">📖</span>
+          <h3>Sobre o JURISRESUMO & Manual de Funcionamento</h3>
+        </div>
+        <button type="button" class="btn-close" id="btn-close-about">&times;</button>
+      </div>
+      <div class="modal-body about-body">
+        <h4>1. Para que serve a ferramenta?</h4>
+        <p>O <strong>JURISRESUMO</strong> foi projetado para atuar como o braço direito do Magistrado e de seus assessores na preparação e condução de audiências judiciais criminais (AIJ, ANPP, PAnP e Custódia). A ferramenta lê os autos integrais em PDF extraídos do sistema PJe e gera uma minuta sintética, padronizada e completa em formato Word (<code>.docx</code>), que guia o juiz durante o ato informando todos os réus, defensores, imputação penal, narrativa fática, histórico processual com IDs e rol de testemunhas.</p>
+
+        <h4>2. Como ela foi construída?</h4>
+        <p>A aplicação foi desenvolvida através de engenharia reversa minuciosa de modelos reais de resumos confeccionados pelo magistrado no TJRN. Foram mapeados:</p>
+        <ul>
+          <li><strong>Especificações OpenXML / Word Mined:</strong> Papel A4 com dimensões exatas de 21,0 cm x 29,7 cm, margens estritas de 2,00 cm em todas as bordas, família tipográfica Verdana 12pt, entrelinha ampla de ~1,89 linhas (<code>line="454"</code>), recuo de primeira linha de 1,27 cm (<code>firstLine="720"</code>) e espaçamento de 0,5 cm após itens do histórico e rol de testemunhas.</li>
+          <li><strong>Mapeamento de Carimbos do PJe:</strong> Leitura automática da Capa de Processo (Página 1) para identificação inequívoca de réus, defensores, promotor e vítimas, associada aos carimbos marginais de rodapé <code>Num. &lt;ID&gt; - Pág. &lt;P&gt;</code> para isolar cada peça jurídica.</li>
+          <li><strong>Hiperlinks Nativos:</strong> Todos os números de ID citados no documento gerado são transformados automaticamente em links azuis clicáveis que abrem a peça original no PJe.</li>
+        </ul>
+
+        <h4>3. Funcionalidades & Motores</h4>
+        <ul>
+          <li><strong>Modo 100% Offline (Local Seguro):</strong> Opera sem qualquer dependência de internet. Executa OCR local (Tesseract / RapidOCR) para peças escaneadas e extrai dados com segurança e privacidade absolutas.</li>
+          <li><strong>Modo IA Google Gemini:</strong> Permite síntese refinada de denúncias complexas e volumosas com raciocínio jurídico avançado, preservando fielmente autoria e materialidade.</li>
+          <li><strong>Edição Bidirecional em Tempo Real:</strong> Qualquer edição feita no formulário reflete instantaneamente na folha A4 exibida no painel direito.</li>
+        </ul>
+
+        <h4>4. Autoria & Direitos</h4>
+        <p class="mt-2">Aplicativo concebido e desenvolvido por <strong>FChNeto</strong> para aprimorar a eficiência, celeridade e precisão dos atos judiciais criminais.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="btn-close-about-btn">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
