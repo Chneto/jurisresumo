@@ -36,15 +36,17 @@ O **JURISRESUMO** realiza a ingestão dos autos processuais integrais em formato
 
 Você pode utilizar o **JURISRESUMO** de duas formas simples:
 
-### Opção 1: Uso Imediato Portátil (Sem Instalação)
-1. Dê um duplo clique no arquivo:
+### Opção 1: Uso Imediato Portátil (Nativo em JavaScript / Zero Instalação)
+1. Dê um duplo clique no arquivo principal na raiz do repositório:
    ```text
-   ABRIR_APLICATIVO_DIRETO.html
+   index.html
    ```
+   *(ou no atalho `ABRIR_APLICATIVO_DIRETO.html`)*
 2. O aplicativo abre instantaneamente no seu navegador web padrão (Chrome, Edge, Safari, Firefox).
-3. Arraste o arquivo PDF dos autos completos do PJe para a tela.
-4. O resumo estruturado será extraído e exibido no simulador de folha A4.
-5. Clique em **Exportar Documento Word (.docx)** para baixar a minuta formatada com marcatextos e links.
+3. **100% Offline e Autônomo:** Funciona imediatamente após o download do GitHub, mesmo sem conexão com a internet, pois as bibliotecas necessárias de extração de PDF e geração OpenXML `.docx` estão incorporadas localmente na pasta `vendor/`.
+4. Arraste o arquivo PDF dos autos completos do PJe para a tela.
+5. O resumo estruturado será extraído em segundos e exibido no simulador de folha A4.
+6. Clique em **Exportar Documento Word (.docx)** para baixar a minuta formatada com marcatextos e links.
 
 ---
 
@@ -113,12 +115,17 @@ A minuta gerada obedece com rigor à seguinte ordem:
 │   ├── engines/gemini_engine.py   # Motor com Google Gemini AI
 │   ├── generators/docx_generator.py # Construtor OpenXML/DOCX fiel
 │   └── static/                    # Interface Google Stitch & Nano Banana (CSS e JS)
+├── vendor/                        # Bibliotecas JavaScript locais (100% offline)
+│   ├── pdf.min.js                 # Parser PDF Mozilla
+│   ├── pdf.worker.min.js          # Web Worker local
+│   └── jszip.min.js               # Construtor de arquivos DOCX OpenXML
 ├── tests/                         # Suíte completa com 173 testes automatizados
-├── ABRIR_APLICATIVO_DIRETO.html   # Aplicativo portátil zero-install
-├── Iniciar_JURISRESUMO.vbs        # Launcher invisível para Windows
+├── index.html                     # Aplicativo nativo JavaScript/HTML5/CSS3 (Execução Imediata)
+├── ABRIR_APLICATIVO_DIRETO.html   # Atalho portátil zero-install
+├── Iniciar_JURISRESUMO.vbs        # Launcher invisível para Windows (modo servidor local)
 ├── run.py                         # Ponto de entrada do backend Python
 ├── recovery.py                    # Sistema de checkpoints e restauração
-├── requirements.txt               # Dependências Python
+├── requirements.txt               # Dependências Python (opcional para modo servidor)
 ├── README.md                      # Esta documentação
 └── LICENSE                        # Licença MIT (Autor: FChNeto)
 ```
