@@ -2,7 +2,7 @@
 
 > **Documento Vivo de Memória e Conhecimento Técnico**  
 > **Finalidade:** Orientar desenvolvedores e subagentes em futuras modificações, manutenções, refatorações e auditorias da aplicação.  
-> **Última Atualização:** 16/09/2026 (Versão 2.2 — Leitura Integral 100% dos PDFs, Distinção Jurídica Estrita AIJ vs ANPP, Datas por Extenso e Fatos Integrais)
+> **Última Atualização:** 17/09/2026 (Versão 2.5 — Folha A4 de Pré-Visualização Contínua sem Fundo Azul, Frontend Python com CSS Embutido e Integração Nativa Desktop Eel)
 > **Autor e Desenvolvedor:** FChNeto
 
 ---
@@ -474,3 +474,28 @@ O motor JavaScript portátil foi profundamente reformulado para replicar a intel
    - Todos os 6 parágrafos do ANPP são gerados dinamicamente a partir dos documentos reais do PJe (`termoDoc`, `cisaoDoc`, `despachoDoc`, `ipDoc`), sem valores mock ou IDs simulados.
 5. **Validação Rigorosa em 100% dos Casos:**
    - Todos os 9 processos reais (`Proc. 0801889`, `Proc. 0802487`, `Proc. 0804041`, `Proc. 0806049`, `Proc. 0820550`, `Proc. 0821902`, `Proc. 0844118`, `Proc. 0860849`, `Proc. 0876503`) testados e aprovados com 100% de sucesso.
+
+---
+
+## 15. Atualizações da Versão 2.5 (Folha A4 Contínua e Desktop Eel no Python)
+
+### 15.1. Resolução do Corte da Folha A4 no Preview (JavaScript e Python)
+- **Causa Raiz Identificada:** Em contêineres flexbox com `display: flex; justify-content: center;`, a propriedade `align-items` assume por padrão o valor `stretch`. Sob a especificação CSS de rolagem vertical (`overflow-y: auto`), o elemento filho `.word-paper-sheet` tinha sua altura fixada ao viewport visível (~900px). Ao ultrapassar a primeira página com longas narrativas fáticas ou históricos extensos, o conteúdo interno do `#paper-body` transbordava para fora da folha, revelando o fundo azul/canvas da escrivaninha (`#0d121d`) atrás do texto.
+- **Solução Arquitetural Aplicada:**
+  - No container escrivaninha `.desk-scroller`: aplicação explícita de `align-items: flex-start;` e padding vertical ampliado (`padding: 2rem 1.5rem 4rem 1.5rem;`), libertando o item da restrição de altura do viewport.
+  - No simulador da folha `.word-paper-sheet`: definição de `height: auto !important; min-height: 29.7cm; flex-shrink: 0; background: #ffffff !important; overflow: visible; margin: 0 auto 3rem auto;`.
+  - No corpo `.paper-body`: definição de `width: 100%; height: auto; background: transparent;`.
+- **Efeito Prático:** A folha branca expande-se dinamicamente por 2.000px, 5.000px ou quantas páginas forem necessárias, mantendo o fundo branco puro (`#ffffff`) e as margens estritas de 2,0 cm atrás de todos os parágrafos, sem qualquer exposição do fundo azul durante a rolagem.
+
+### 15.2. Blindagem e Embutimento do CSS no Frontend Python
+- **Causa Raiz:** O arquivo `versao_python/app/static/index.html` utilizava tag `<link rel="stylesheet" href="css/style.css">`. Quando aberto diretamente pelo usuário ou caso ocorresse qualquer falha na montagem de rotas estáticas do servidor web, o navegador renderizava o HTML cru com fontes Serif/Times New Roman e controles desformatados (conforme capturado na imagem enviada pelo magistrado).
+- **Solução:** Embutimento integral de 1.142 linhas do sistema de design **Google Stitch & Nano Banana** diretamente dentro de `<style> ... </style>` no cabeçalho do `index.html`. Agora, seja via servidor FastAPI, janela Eel, ou abertura direta, a aplicação sempre carrega 100% formatada com os cards escuros, tipografia elegante e a folha A4 impecável.
+
+### 15.3. Integração do Eel para Experiência Nativa de Desktop (Edge App Mode)
+- **Novo Módulo `run_eel.py`:** Integração da biblioteca Python `eel` configurada para detectar automaticamente o executável do Microsoft Edge no Windows (`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` ou `C:\Program Files\Microsoft\Edge\Application\msedge.exe`) e inicializar a interface em modo de aplicativo (`--app`), sem barras de navegação ou abas de navegador.
+- **Ponte Bidirecional Rápida (`@eel.expose`):**
+  - `process_pdf_eel`: Recebe o arquivo PDF via base64, executa a extração direta no motor offline/Gemini e retorna o JSON estruturado instantaneamente.
+  - `generate_docx_eel`: Recebe o JSON editado pelo usuário e gera o arquivo `.docx` via `docx_generator.py`, retornando os bytes codificados em base64 para download com um clique.
+- **Frontend Híbrido e Resiliente (`app.js`):** O script detecta dinamicamente `if (typeof eel !== 'undefined')`. Em modo desktop Eel, utiliza a ponte Python direta; se iniciado via servidor FastAPI/Uvicorn, utiliza as rotas REST (`/api/upload` e `/api/generate-docx`).
+- **Lançador Universal `run.py`:** Por padrão, `python run.py` ou os arquivos `.vbs` inicializam a janela nativa do Eel. Se for passado o parâmetro `--server` ou caso o Eel seja encerrado, o backend comuta com segurança para o servidor FastAPI/Uvicorn.
+
