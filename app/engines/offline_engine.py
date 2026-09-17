@@ -124,6 +124,18 @@ def _clean_legal_text(text: str) -> str:
             continue
         if re.search(r"N[úu]mero\s+do\s+documento:\s*\d+", l_s, re.I):
             continue
+        if re.search(r"^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO", l_s, re.I):
+            continue
+        if re.search(r"PROMOTORIA\s+DE\s+JUSTI[CÇ]A", l_s, re.I):
+            continue
+        if re.search(r"Defesa\s+dos\s+Direitos", l_s, re.I):
+            continue
+        if re.search(r"^\s*Rua\s+(?:Promotor|Milit[aã]o|Doutor|Serid[oó]|Alameda)", l_s, re.I):
+            continue
+        if re.search(r"^Telefone\(s\):", l_s, re.I) or re.search(r"^E-mail:", l_s, re.I) or re.search(r"^www\.", l_s, re.I):
+            continue
+        if re.search(r"^\s*_{5,}\s*$", l_s):
+            continue
         clean_lines.append(line)
     cleaned = "\n".join(clean_lines)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
@@ -1212,25 +1224,58 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         seen_names = set()
 
         # 1. Parse Denúncia ROL DE TESTEMUNHAS (primary source in criminal process)
-        rol_match = re.search(
-            r"(?:ROL\s+DE\s+(?:DECLARANTES\s+E\s+)?TESTEMUNHAS|TESTEMUNHAS)[:\s\n]+(.*?)(?:Pede\s+(?:e\s+Espera\s+)?deferimento|Nestes\s+termos|Natal\s*\(?RN\)?|$)",
-            denuncia_text,
-            re.IGNORECASE | re.DOTALL,
+        cleaned_denuncia = _clean_legal_text(denuncia_text)
+        start_pat = re.compile(
+            r"(?:(?:^|\n)\s*(?:[IVXLCDM]+\)?\.?\s*)?(?:ROL\s+(?:DE\s+)?(?:DECLARANTES?\s*(?:\([^)]*\))?\s*(?:E\s*)?)?TESTEMUNHAS?\s*(?:\([^)]*\))?(?:\s*E\s*DECLARANTES?)?|ROL\s+TESTEMUNHAL|TESTEMUNHAS\s*:))",
+            re.IGNORECASE,
         )
-        if rol_match:
-            lines = [l.strip() for l in rol_match.group(1).split("\n") if l.strip()]
+        m_start = start_pat.search(cleaned_denuncia)
+        if m_start:
+            sub = cleaned_denuncia[m_start.end():]
+            stop_pat = re.compile(
+                r"(?:^|\n)\s*(?:COTA\b|Termos\s+em\s+que|Nestes\s+termos|Pede\s+(?:e\s+espera\s+)?deferimento|Pede\s+deferimento)",
+                re.IGNORECASE,
+            )
+            m_stop = stop_pat.search(sub)
+            rol_body = sub[:m_stop.start()] if m_stop else sub
+
+            blacklist = [
+                "rua", "avenida", "travessa", "alameda", "telefone", "e-mail", "whatsapp", "cpf", "rg", "cep",
+                "residente", "domiciliado", "bairro", "natal", "termos", "requer", "pede", "ministério",
+                "promotoria", "defesa", "secretaria", "vara", "tribunal", "estado", "assinado", "documento",
+                "pág", "registre", "dessa maneira", "cota", "rol de", "declarantes", "promotor",
+            ]
+
+            lines = [l.strip() for l in rol_body.split("\n") if l.strip()]
+            has_numbers = any(re.match(r"^\d+[\s.)-]", l) for l in lines)
+
             for line in lines:
-                m = re.match(r"^(?:\d+[\s.)-]+)?([A-ZÁÉÍÓÚÂÊÔÃÕ][A-Za-záéíóúâêôãõ\s]+?)(?:[-–,]\s*|\s*\((.*?)\)|\s+[-–]\s*(.*))?$", line)
+                if has_numbers and not re.match(r"^\d+[\s.)-]", line):
+                    continue
+
+                m = re.match(
+                    r"^(?:\d+[\s.)-]+)?([A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ\s.]{3,60}?)(?:[-–,]\s*|\s*\((.*?)\)|\s+[-–]\s*(.*)|$)",
+                    line,
+                )
                 if m:
                     w_name = m.group(1).strip()
-                    if len(w_name) > 3 and not any(ex in w_name.upper() for ex in ["PEDE", "DEFERIMENTO", "NATAL", "MINISTÉRIO"]):
-                        extra = (m.group(2) or m.group(3) or "").strip().lower()
-                        is_pm = any(pm_term in extra or pm_term in w_name.lower() for pm_term in ["pm", "policial", "militar", "civil", "cabo", "sargento", "soldado"])
-                        is_vitima = "vítima" in extra or "vitima" in extra or "declarante" in extra
-                        role = "vítima" if is_vitima else ("PM" if is_pm else "Testemunha")
-                        status_id = find_subpoena_status(w_name, is_pm)
+                    name_lower = w_name.lower()
+                    if len(w_name) <= 3 or any(b in name_lower for b in blacklist):
+                        continue
 
-                        seen_names.add(w_name.lower())
+                    ext1 = m.group(2) or ""
+                    ext2 = m.group(3) or ""
+                    extra = (line[len(m.group(0)):].lower() + " " + ext1.lower() + " " + ext2.lower()).strip()
+                    is_pm = bool(
+                        re.search(r"\b(?:pm|policial|militar|civil|cabo|sgt|sargento|soldado)\b", extra)
+                        or re.search(r"\b(?:pm|policial)\b", name_lower)
+                    )
+                    is_vitima = any(v in extra for v in ["vítima", "vitima", "declarante"])
+                    role = "vítima" if is_vitima else ("PM" if is_pm else "Testemunha")
+                    status_id = find_subpoena_status(w_name, is_pm)
+
+                    if name_lower not in seen_names:
+                        seen_names.add(name_lower)
                         pros_witnesses.append(
                             Witness(number=num, name=w_name.title(), role=role, status_id=status_id)
                         )

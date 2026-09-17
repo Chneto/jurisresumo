@@ -761,6 +761,12 @@
           if (/Documento\s+n[ºo]\s*\d+\s+do\s+procedimento/i.test(l)) return false;
           if (/Valida[cç][aã]o\s+em\s+/i.test(l)) return false;
           if (/N[úu]mero\s+do\s+documento:\s*\d+/i.test(l)) return false;
+          if (/^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO/i.test(l)) return false;
+          if (/PROMOTORIA\s+DE\s+JUSTI[CÇ]A/i.test(l)) return false;
+          if (/Defesa\s+dos\s+Direitos/i.test(l)) return false;
+          if (/^\s*Rua\s+(?:Promotor|Milit[aã]o|Doutor|Serid[oó]|Alameda)/i.test(l)) return false;
+          if (/^Telefone\(s\):/i.test(l) || /^E-mail:/i.test(l) || /^www\./i.test(l)) return false;
+          if (/^\s*_{5,}\s*$/.test(l)) return false;
           return true;
         })
         .join('\n')
@@ -1123,7 +1129,8 @@
         const d = pjeCatalog[i];
         const nl = d.doc_name.toLowerCase();
         const tl = d.doc_type.toLowerCase();
-        if (/cota|requerimento|recebimento|aditamento|certidão|bnmp|seeu|antecedentes/.test(nl)) continue;
+        if (/cota|recebimento|aditamento|certidão|bnmp|seeu|antecedentes/.test(nl)) continue;
+        if (nl.includes('requerimento') && !nl.includes('denún') && !nl.includes('denun')) continue;
         if (nl.startsWith('denún') || nl.startsWith('denun') || tl.startsWith('denún') || tl.startsWith('denun') || nl.includes('queixa')) {
           denunciaDoc = d;
           break;
@@ -1351,63 +1358,134 @@
       // 11. Facts Extraction & ANPP Structure
       let factsSummary = '';
       if (actType === 'ANPP') {
-        const termoDoc = pjeCatalog.find(d => (d.doc_name.toLowerCase().includes('termo') && d.doc_name.toLowerCase().includes('anpp')) || d.doc_name.toLowerCase().includes('acordo'));
-        const cisaoDoc = pjeCatalog.find(d => /desmembramento|cisão|cisao/.test(d.doc_name.toLowerCase()));
-        let despachoDoc = pjeCatalog.find(d => d.doc_name.toLowerCase() === 'despacho' && d.start_page > 400);
-        if (!despachoDoc) {
-          for (let i = pjeCatalog.length - 1; i >= 0; i--) {
-            if (/despacho|decisão/i.test(pjeCatalog[i].doc_name) && hearingDesigRegex.test(pjeCatalog[i].text)) {
-              despachoDoc = pjeCatalog[i]; break;
-            }
+        const termoDoc = pjeCatalog.find(d => {
+          const c = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+          return (c.includes('termo') && (c.includes('anpp') || c.includes('acordo'))) || (c.includes('acordo') && c.includes('persecu'));
+        }) || pjeCatalog.find(d => `${d.doc_name} ${d.doc_type}`.toLowerCase().includes('acordo'));
+
+        const cisaoDoc = pjeCatalog.find(d => /desmembramento|cisão|cisao/.test(`${d.doc_name} ${d.doc_type}`.toLowerCase()));
+        
+        let despachoDoc = null;
+        for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+          const d = pjeCatalog[i];
+          const c = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+          if (/despacho|decisão|decisao/i.test(c) && hearingDesigRegex.test(d.text)) {
+            despachoDoc = d;
+            break;
           }
         }
-        const ipDoc = pjeCatalog.find(d => /inquérito|inquerito|ip_/.test(d.doc_name.toLowerCase()));
-
-        let originProc = '0804126-72.2024.8.20.5600';
-        if (cisaoDoc) {
-          const cM = cisaoDoc.text.match(/principal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i);
-          if (cM) originProc = cM[1];
+        if (!despachoDoc) {
+          despachoDoc = pjeCatalog.find(d => d.doc_name.toLowerCase() === 'despacho' && d.start_page > 400);
         }
 
+        const ipDoc = pjeCatalog.find(d => /inquérito|inquerito|ip_/.test(`${d.doc_name} ${d.doc_type}`.toLowerCase()));
+
+        // Paragraph 1: Desmembramento / Origem
+        let originProc = '';
+        if (cisaoDoc) {
+          const cM = cisaoDoc.text.match(/principal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i) ||
+                     cisaoDoc.text.match(/a[cç][aã]o\s+penal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i);
+          if (cM) originProc = cM[1];
+        }
+        if (!originProc && despachoDoc) {
+          const dM = despachoDoc.text.match(/principal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i);
+          if (dM) originProc = dM[1];
+        }
+        if (!originProc) {
+          const gM = fullText.match(/principal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i);
+          if (gM) originProc = gM[1];
+        }
+
+        const paras = [];
+        if (originProc) {
+          paras.push(`OBS: este processo foi oriundo de um desmembramento da ação penal nº ${originProc} que possuía outros indiciados que foram denunciados pelo MP, com exceção da acusada que foi beneficiada com ANPP.`);
+        } else {
+          paras.push(`OBS: Processo com proposta de Acordo de Não Persecução Penal (ANPP) formulada pelo Ministério Público nos termos do art. 28-A do CPP.`);
+        }
+
+        // Paragraph 2: Indiciamento
         const artM = fullText.match(/(art(?:igo)?\.?\s*\d+[^.\n;]+(?:Código Penal|CP|Lei[^.\n;]+)?)/i);
-        const artStr = artM ? artM[1].trim() : 'art. 155, §4, I, do CP';
+        const artStr = artM ? artM[1].trim() : 'art. 28-A do Código de Processo Penal';
         const ipIdStr = ipDoc ? ` (inquérito policial no ID ${ipDoc.doc_id})` : '';
+        paras.push(`A acusada foi indiciada por crime previsto no ${artStr}${ipIdStr}`);
 
-        const tDate = termoDoc ? formatShortDate(termoDoc.date_str) : '17/06/26';
-        const tId = termoDoc ? termoDoc.doc_id : '191909572';
+        // Paragraph 3: Tratativa com MP
+        const tDate = termoDoc ? formatShortDate(termoDoc.date_str) : formatShortDate(cisaoDoc ? cisaoDoc.date_str : '');
+        const tId = termoDoc ? termoDoc.doc_id : '';
+        const idJuntadoStr = tId ? ` juntado no ID ${tId}` : '';
+        paras.push(`${tDate}: O Ministério Público realizou a tratativa de ANPP, tendo a indiciada aceitado as condições - termo de ANPP firmado entre o MP e a indiciada${idJuntadoStr}, pendente de homologação`);
 
-        const cDate = cisaoDoc ? formatShortDate(cisaoDoc.date_str) : '10/06/26';
-        const cId = cisaoDoc ? cisaoDoc.doc_id : '191912979';
+        // Paragraph 4: Condições do Acordo
+        const termoText = termoDoc ? termoDoc.text : '';
+        const condList = [];
+        if (termoText) {
+          const pecM = termoText.match(/(?:presta[çc][aã]o\s+pecuni[aá]ria|valor|quantia)[^\n;.]+(?:R\$\s*[\d.,]+|\d+\s+sal[aá]rio)[^\n;.]*/i);
+          if (pecM) {
+            condList.push(`a) pagamento de ${pecM[0].trim()};`);
+          } else {
+            condList.push('a) pagamento de prestação pecuniária fixada no termo de acordo;');
+          }
+          const depM = termoText.match(/(?:juntar|comprovante)[^\n;.]*dep[oó]sito[^\n;.]*/i);
+          if (depM) {
+            condList.push(`b) ${depM[0].trim()};`);
+          } else {
+            condList.push('b) juntar nos autos os comprovantes de depósito mensal, no prazo de 10 dias;');
+          }
+          const crimM = termoText.match(/n[aã]o\s+voltar\s+a\s+cometer\s+(?:crimes|infra[cç][õo]es)[^\n;.]*/i);
+          if (crimM) {
+            condList.push(`c) ${crimM[0].trim()}.`);
+          } else {
+            condList.push('c) não voltar a cometer crimes, durante o período de cumprimento do acordo.');
+          }
+        } else {
+          condList.push('a) pagamento de prestação pecuniária fixada no acordo;');
+          condList.push('b) juntar nos autos os comprovantes de depósito mensal, no prazo de 10 dias;');
+          condList.push('c) não voltar a cometer crimes, durante o período de cumprimento do acordo.');
+        }
+        paras.push(`CONDIÇÕES DO ACORDO: ${condList.join(' ')}`);
 
-        const dDate = despachoDoc ? formatShortDate(despachoDoc.date_str) : '07/07/26';
-        const dId = despachoDoc ? despachoDoc.doc_id : '192155666';
+        // Paragraph 5: Decisão de Cisão
+        if (cisaoDoc) {
+          const cDate = formatShortDate(cisaoDoc.date_str);
+          paras.push(`${cDate}: Decisão de ID ${cisaoDoc.doc_id} determinou a cisão dos autos em relação à investigada que gerou estes autos.`);
+        }
 
-        const paras = [
-          `OBS: este processo foi oriundo de um desmembramento da ação penal nº ${originProc} que possuía outros indiciados que foram denunciados pelo MP, com exceção da acusada que foi beneficiada com ANPP.`,
-          `A acusada foi indiciada por crime previsto no ${artStr}${ipIdStr}`,
-          `${tDate}: O Ministério Público realizou a tratativa de ANPP, tendo a indiciada aceitado as condições - termo de ANPP firmado entre o MP e a indiciada juntado no ID ${tId}, pendente de homologação`,
-          `CONDIÇÕES DO ACORDO: a) pagamento de prestação pecuniária no valor de 1 salário-mínimo (R$ 1.518,00) em 6 parcelas de R$ 253,00; b) Juntar nos autos os comprovantes de depósito mensal, no prazo de 10 dias; c) não voltar a cometer crimes, durante o período de cumprimento do acordo.`,
-          `${cDate}: Decisão de ID ${cId} determinou a cisão dos autos em relação à investigada que gerou estes autos.`,
-          `${dDate}: Despacho designando a audiência de homologação de ANPP (ID ${dId})`
-        ];
+        // Paragraph 6: Despacho Designação Audiência
+        if (despachoDoc) {
+          const dDate = formatShortDate(despachoDoc.date_str);
+          const dtStr = hearingDateTime && hearingDateTime !== 'Data a definir' ? ` para ${hearingDateTime}` : '';
+          paras.push(`${dDate}: Despacho designando a audiência de homologação de ANPP${dtStr} (ID ${despachoDoc.doc_id})`);
+        }
+
         factsSummary = paras.join('\n\n');
       } else {
         // Standard AIJ / PAnP factual narrative
         const narrativeParas = extractCleanNarrative(denunciaText);
 
-        const confMatch = denunciaText.match(/(Interrogad[oa]\s+em\s+sede\s+policial[^\n.]+(?:confessou|alegou|negou|optou)[^\n.]+)/i);
-        if (confMatch) {
-          const confLine = confMatch[1].trim();
-          if (!narrativeParas.some(p => p.toLowerCase().includes(confLine.slice(0, 25).toLowerCase()))) {
-            narrativeParas.push(confLine);
+        // Modus operandi & apreensões
+        const apreensaoMatch = denunciaText.match(/(?:auto\s+de\s+exibi[cç][aã]o\s+e\s+apreens[aã]o|apreens[aã]o\s+d[eo]|apreendid[oa]s?[^\n.]+(?:arma|rev[oó]lver|pistola|muni[cç]|entorpecente|coca[ií]na|maconha|crack|droga|ve[ií]culo)[^\n.]+)/i);
+        if (apreensaoMatch) {
+          const aprLine = apreensaoMatch[0].trim();
+          if (!narrativeParas.some(p => p.toLowerCase().includes(aprLine.slice(0, 25).toLowerCase()))) {
+            narrativeParas.push(aprLine);
           }
         }
 
-        const matMatch = denunciaText.match(/(?:(?:A\s+materialidade\s+e\s+a\s+autoria|A\s+autoria\s+e\s+a\s+materialidade|Boletim\s+de\s+Ocorr[eê]ncia)[^\n.]+(?:demonstradas|comprovadas|corpo\s+de\s+delito)[^\n.]+)/i);
+        // Forensic reports & materiality
+        const matMatch = denunciaText.match(/(?:(?:laudo\s+pericial|laudo\s+de\s+exame|laudo\s+toxicol[oó]gico|exame\s+cadav[eé]rico|exame\s+de\s+corpo\s+de\s+delito|boletim\s+de\s+ocorr[eê]ncia)[^\n.]+(?:comprov|demonstr|atest|conclusivo)[^\n.]+|(?:A\s+materialidade\s+e\s+a\s+autoria|A\s+autoria\s+e\s+a\s+materialidade)[^\n.]+(?:demonstradas|comprovadas)[^\n.]+)/i);
         if (matMatch) {
           const matLine = matMatch[0].trim();
           if (!narrativeParas.some(p => p.toLowerCase().includes(matLine.slice(0, 25).toLowerCase()))) {
             narrativeParas.push(matLine);
+          }
+        }
+
+        // Police interrogation & confession/denial
+        const confMatch = denunciaText.match(/(?:Interrogad[oa]\s+em\s+sede\s+policial[^\n.]+(?:confessou|alegou|negou|optou|declarou|afirmou)[^\n.]+|Em\s+sede\s+policial[^\n.]+(?:confessou|negou|alegou|admitiu)[^\n.]+)/i);
+        if (confMatch) {
+          const confLine = confMatch[0].trim();
+          if (!narrativeParas.some(p => p.toLowerCase().includes(confLine.slice(0, 25).toLowerCase()))) {
+            narrativeParas.push(confLine);
           }
         }
 
@@ -1456,23 +1534,45 @@
         return 'Mandado expedido';
       };
 
-      const rolMatch = denunciaText.match(/(?:ROL[\s\S]{0,40}?TESTEMUNHA[S\w\(\)]*)[:\s\n]+([\s\S]*?)(?:Pede\s+(?:e\s+Espera\s+)?deferimento|Nestes\s+termos|Natal\s*\(?RN\)?|$)/i);
-      if (rolMatch) {
-        const lines = rolMatch[1].split('\n');
-        lines.forEach(l => {
-          const lTrim = l.trim();
-          const m = lTrim.match(/^(?:\d+[\s.)-]+)?([A-ZÁÉÍÓÚÂÊÔÃÕ][A-Za-záéíóúâêôãõ\s]{3,45}?)(?:[-–,]\s*|\s*\((.*?)\)|$)/);
+      const cleanedDenuncia = cleanPjeText(denunciaText);
+      const startPat = /(?:(?:^|\n)\s*(?:[IVXLCDM]+\)?\.?\s*)?(?:ROL\s+(?:DE\s+)?(?:DECLARANTES?\s*(?:\([^)]*\))?\s*(?:E\s*)?)?TESTEMUNHAS?\s*(?:\([^)]*\))?(?:\s*E\s*DECLARANTES?)?|ROL\s+TESTEMUNHAL|TESTEMUNHAS\s*:))/i;
+      const mStart = cleanedDenuncia.match(startPat);
+      if (mStart) {
+        const sub = cleanedDenuncia.substring(mStart.index + mStart[0].length);
+        const stopPat = /(?:^|\n)\s*(?:COTA\b|Termos\s+em\s+que|Nestes\s+termos|Pede\s+(?:e\s+espera\s+)?deferimento|Pede\s+deferimento)/i;
+        const mStop = sub.match(stopPat);
+        const rolBody = mStop ? sub.substring(0, mStop.index) : sub;
+
+        const blacklist = [
+          'rua', 'avenida', 'travessa', 'alameda', 'telefone', 'e-mail', 'whatsapp', 'cpf', 'rg', 'cep',
+          'residente', 'domiciliado', 'bairro', 'natal', 'termos', 'requer', 'pede', 'ministério',
+          'promotoria', 'defesa', 'secretaria', 'vara', 'tribunal', 'estado', 'assinado', 'documento',
+          'pág', 'registre', 'dessa maneira', 'cota', 'rol de', 'declarantes', 'promotor'
+        ];
+
+        const lines = rolBody.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        const hasNumbers = lines.some(l => /^\d+[\s.)-]/.test(l));
+
+        lines.forEach(line => {
+          if (hasNumbers && !/^\d+[\s.)-]/.test(line)) return;
+
+          const m = line.match(/^(?:\d+[\s.)-]+)?([A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ\s.]{3,60}?)(?:[-–,]\s*|\s*\((.*?)\)|\s+[-–]\s*(.*)|$)/);
           if (m) {
             const wn = m[1].trim();
-            if (wn.length > 3 && !/pede|deferimento|natal|ministério/i.test(wn)) {
-              const restLine = lTrim.slice(m[0].length).toLowerCase();
-              const ext = `${restLine} ${(m[2] || '')}`.toLowerCase();
-              const isPm = /pm|policial|militar|cabo|sargento|soldado/i.test(ext) || /pm|policial/i.test(wn.toLowerCase());
-              const isVit = /vítima|vitima|declarante/i.test(ext);
-              const role = isVit ? 'vítima' : (isPm ? 'PM' : 'Testemunha');
-              const st = findSubpoenaStatus(wn, isPm);
+            const wnLower = wn.toLowerCase();
+            if (wn.length <= 3 || blacklist.some(b => wnLower.includes(b))) return;
 
-              seenWitnessNames.add(wn.toLowerCase());
+            const ext1 = m[2] || '';
+            const ext2 = m[3] || '';
+            const extra = `${line.slice(m[0].length).toLowerCase()} ${ext1.toLowerCase()} ${ext2.toLowerCase()}`.trim();
+
+            const isPm = /\b(?:pm|policial|militar|civil|cabo|sgt|sargento|soldado)\b/i.test(extra) || /\b(?:pm|policial)\b/i.test(wnLower);
+            const isVit = /vítima|vitima|declarante/i.test(extra);
+            const role = isVit ? 'vítima' : (isPm ? 'PM' : 'Testemunha');
+            const st = findSubpoenaStatus(wn, isPm);
+
+            if (!seenWitnessNames.has(wnLower)) {
+              seenWitnessNames.add(wnLower);
               prosWitnesses.push({
                 number: witNum++,
                 name: wn.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
@@ -1499,7 +1599,7 @@
       testemunhasCapa.forEach(t => {
         if (!seenWitnessNames.has(t.toLowerCase())) {
           seenWitnessNames.add(t.toLowerCase());
-          const isPm = /pm|policial|cabo|sargento|militar/i.test(t.toLowerCase());
+          const isPm = /\b(?:pm|policial|cabo|sargento|militar)\b/i.test(t.toLowerCase());
           prosWitnesses.push({
             number: witNum++,
             name: t.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
@@ -1514,7 +1614,7 @@
       const seenHistIds = new Set();
       pjeCatalog.forEach(d => {
         const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
-        if (/extrato|dados telef|comprovante|foto|laudo|relatório técnico/.test(comb)) return;
+        if (/extrato|dados telef|comprovante|foto|laudo|relatório técnico|manual|tela whatsapp|print/.test(comb)) return;
         if (/denúncia|denuncia|decis|despacho|ato ordinat|resposta|defesa prévia|defesa previa|mandado|edital|ata|termo de audiência/.test(comb)) {
           if (!seenHistIds.has(d.doc_id) && d.start_page > 0) {
             seenHistIds.add(d.doc_id);

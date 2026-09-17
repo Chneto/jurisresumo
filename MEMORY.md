@@ -463,7 +463,14 @@ O motor JavaScript portátil foi profundamente reformulado para replicar a intel
     - Nota defensiva em negrito com realce amarelo.
     - ANPP omite estritamente Qualificação, Imputação, Histórico e Testemunhas.
 
-
-
-
-
+### 14.3. Correções Críticas de Extração e Validação nos 9 Processos Reais
+1. **Caracteres Acentuados Maiúsculos em Nomes Próprios:**
+   - A classe de caracteres foi atualizada para `[A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]`, corrigindo o truncamento ou descarte de nomes com acentos maiúsculos (ex.: `FRANÇA`, `FÁTIMA`, `LÚCIA`, `JOSÉ`, `ÂNGELO MÁRCIO`).
+2. **Cabeçalhos Quebrados em Múltiplas Linhas do ROL:**
+   - Suporte a cabeçalhos como `Rol de\ndeclarante(s)\ne\ntestemunha(s)` comuns na comarca de Natal via `\s+` flexível e busca delimitada por tokens de parada (`COTA`, `Termos em que`, `Pede deferimento`).
+3. **Tratamento Seguro de 'Requerimento de Denúncia':**
+   - Ajuste no filtro de exclusão para não ignorar peças como `REQUERIMENTO DE DENÚNCIA` (`Proc. 0821902`), garantindo que petições com `requerimento` só sejam descartadas se não contiverem `denún`/`denun`.
+4. **Eliminação de Fallbacks Hardcoded em ANPP:**
+   - Todos os 6 parágrafos do ANPP são gerados dinamicamente a partir dos documentos reais do PJe (`termoDoc`, `cisaoDoc`, `despachoDoc`, `ipDoc`), sem valores mock ou IDs simulados.
+5. **Validação Rigorosa em 100% dos Casos:**
+   - Todos os 9 processos reais (`Proc. 0801889`, `Proc. 0802487`, `Proc. 0804041`, `Proc. 0806049`, `Proc. 0820550`, `Proc. 0821902`, `Proc. 0844118`, `Proc. 0860849`, `Proc. 0876503`) testados e aprovados com 100% de sucesso.
