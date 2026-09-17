@@ -618,8 +618,8 @@ textarea.form-control {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  background-color: #1e293b;
-  padding: 1.75rem 1rem;
+  background-color: #0d121d;
+  padding: 2rem 1.5rem 4rem 1.5rem;
   border-radius: var(--radius-lg);
   display: flex;
   justify-content: center;
@@ -633,8 +633,9 @@ textarea.form-control {
   color: #000000 !important;
   width: 100%;
   max-width: 794px; /* Standard A4 at 96 DPI */
-  min-height: 1123px; /* Standard A4 at 96 DPI */
-  height: auto;
+  min-height: 29.7cm; /* Padrão A4 mínimo */
+  height: auto !important;
+  flex-shrink: 0;
   padding: 20mm; /* Strict 2.0 cm margins on all edges */
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
   font-family: var(--font-doc);
@@ -642,8 +643,9 @@ textarea.form-control {
   line-height: 1.89; /* 454/240 lines */
   text-align: justify;
   box-sizing: border-box;
-  margin-bottom: 2rem;
+  margin: 0 auto 3rem auto;
   position: relative;
+  overflow: visible;
 }
 
 .paper-placeholder {

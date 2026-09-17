@@ -310,27 +310,38 @@
     .desk-scroller {
       flex: 1;
       overflow-y: auto;
-      padding: 1.5rem;
+      padding: 2rem 1.5rem 4rem 1.5rem;
       display: flex;
       justify-content: center;
+      align-items: flex-start;
+      background: #0d121d;
     }
 
-    /* Word Paper Sheet Simulator */
+    /* Word Paper Sheet Simulator - Expande dinamicamente para conter 100% do texto em folha branca pura */
     .word-paper-sheet {
       width: 100%;
       max-width: 680px;
-      min-height: 900px;
-      background: #ffffff;
+      min-height: 29.7cm; /* Padrão A4 mínimo */
+      height: auto !important;
+      flex-shrink: 0;
+      background: #ffffff !important;
       color: #000000;
       font-family: var(--font-doc);
       font-size: 12pt;
       line-height: 1.5;
-      padding: 2.0cm; /* Strict 2.0cm judicial margins */
+      padding: 2.0cm; /* Margens estritas de 2,0 cm */
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       border-radius: 3px;
-      margin-bottom: 2rem;
+      margin: 0 auto 3rem auto;
       box-sizing: border-box;
       text-align: justify;
+      overflow: visible;
+    }
+
+    .paper-body {
+      width: 100%;
+      height: auto;
+      background: transparent;
     }
 
     .paper-placeholder {

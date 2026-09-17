@@ -218,33 +218,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        const base64 = result.substring(result.indexOf(',') + 1);
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function handleFileUpload(file) {
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       showToast('Por favor, selecione um arquivo em formato PDF do PJe.', 'error');
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('engine_mode', currentEngineMode);
-    if (geminiApiKey) formData.append('api_key', geminiApiKey);
-
     uploadLoading.classList.add('active');
 
     try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      if (typeof eel !== 'undefined' && eel.process_pdf_eel) {
+        // Modo Desktop Nativo via Eel
+        const base64 = await fileToBase64(file);
+        const res = await eel.process_pdf_eel(base64, file.name, currentEngineMode, geminiApiKey || null)();
+        if (res.error) {
+          throw new Error(res.error);
+        }
+        loadDataIntoUI(res.data);
+        showToast(`Processo ${res.data.case_number || 'sintetizado'} com sucesso via Motor Desktop!`, 'success');
+      } else {
+        // Modo Web padrão via FastAPI
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('engine_mode', currentEngineMode);
+        if (geminiApiKey) formData.append('api_key', geminiApiKey);
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || 'Falha ao processar os autos do PJe.');
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'Falha ao processar os autos do PJe.');
+        }
+
+        const data = await response.json();
+        loadDataIntoUI(data);
+        showToast(`Processo ${data.case_number} sintetizado com sucesso!`, 'success');
       }
-
-      const data = await response.json();
-      loadDataIntoUI(data);
-      showToast(`Processo ${data.case_number} sintetizado com sucesso!`, 'success');
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -584,28 +609,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       syncDataFromForm();
-      const response = await fetch('/api/generate-docx', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(activeData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha na geração do arquivo DOCX.');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
       const safeCase = (activeData.case_number || 'Processo').replace(/[\/\\]/g, '-');
-      a.download = `Resumo - ${safeCase} ${activeData.act_type || 'AIJ'}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
+      const filename = `Resumo - ${safeCase} ${activeData.act_type || 'AIJ'}.docx`;
 
-      showToast('Documento DOCX baixado com sucesso!', 'success');
+      if (typeof eel !== 'undefined' && eel.generate_docx_eel) {
+        // Modo Desktop Nativo via Eel
+        const base64Docx = await eel.generate_docx_eel(JSON.stringify(activeData))();
+        if (!base64Docx || base64Docx.startsWith('ERROR:')) {
+          throw new Error(base64Docx || 'Falha na geração do arquivo DOCX.');
+        }
+
+        const byteCharacters = atob(base64Docx);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        showToast('Documento DOCX gerado e baixado com sucesso!', 'success');
+      } else {
+        // Modo Web padrão via FastAPI
+        const response = await fetch('/api/generate-docx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(activeData),
+        });
+
+        if (!response.ok) {
+          throw new Error('Falha na geração do arquivo DOCX.');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        showToast('Documento DOCX baixado com sucesso!', 'success');
+      }
     } catch (err) {
       showToast(err.message, 'error');
     } finally {

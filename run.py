@@ -1,4 +1,4 @@
-"""Local launcher for Judicial Case Summary Web Application.
+﻿"""Launcher - JURISRESUMO (Eel Native Desktop App & FastAPI Server).
 
 Desenvolvido por FChNeto.
 """
@@ -14,7 +14,9 @@ import time
 import webbrowser
 from pathlib import Path
 
-import uvicorn
+BASE_DIR = Path(__file__).resolve().parent
+if not str(BASE_DIR) in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 
 def is_port_in_use(port: int, host: str = "127.0.0.1") -> bool:
@@ -38,14 +40,9 @@ def open_browser(url: str, delay: float = 1.2):
     webbrowser.open(url)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Launcher - Resumo para Audiência (PJe / TJRN)")
-    parser.add_argument("--host", default="127.0.0.1", help="Host address (default: 127.0.0.1)")
-    parser.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
-    parser.add_argument("--no-browser", action="store_true", help="Do not open browser automatically")
-    parser.add_argument("--reload", action="store_true", help="Enable auto-reload for development")
-
-    args = parser.parse_args()
+def run_server(args):
+    """Runs FastAPI backend with Uvicorn."""
+    import uvicorn
 
     port = args.port
     if is_port_in_use(port, args.host):
@@ -57,7 +54,7 @@ def main():
 
     print("=" * 75)
     print("  JURISRESUMO - Confecção Automatizada de Resumos de Audiência (PJe)")
-    print("  Google Stitch & Nano Banana Interface")
+    print("  Servidor FastAPI / Google Stitch & Nano Banana")
     print("=" * 75)
     print(f"  Servidor local: {url}")
     print("  Pressione Ctrl+C para encerrar.")
@@ -73,6 +70,27 @@ def main():
         reload=args.reload,
         log_level="info",
     )
+
+
+def main():
+    parser = argparse.ArgumentParser(description="JURISRESUMO - Launcher")
+    parser.add_argument("--server", action="store_true", help="Start FastAPI/Uvicorn server instead of Eel desktop app")
+    parser.add_argument("--host", default="127.0.0.1", help="Host address (default: 127.0.0.1)")
+    parser.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
+    parser.add_argument("--no-browser", action="store_true", help="Do not open browser automatically")
+    parser.add_argument("--reload", action="store_true", help="Enable auto-reload for development")
+
+    args = parser.parse_args()
+
+    if args.server:
+        run_server(args)
+    else:
+        try:
+            from run_eel import launch
+            launch()
+        except Exception as exc:
+            print(f"[AVISO] Falha ao iniciar modo Eel desktop ({exc}). Alternando para servidor local...")
+            run_server(args)
 
 
 if __name__ == "__main__":
