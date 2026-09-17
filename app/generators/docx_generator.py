@@ -249,7 +249,7 @@ def generate_docx_summary(
                 d_line += f" - Intimado ID {d.subpoena_id}"
             elif d.citation_id:
                 d_line += f" - Citado ID {d.citation_id}"
-            _append_text_with_id_links(p_d, d_line, bold=True, highlight="green")
+            _append_text_with_id_links(p_d, d_line, bold=False, highlight=None)
 
     # DEFESA line: BOLD + BRIGHT GREEN HIGHLIGHT
     if data.defense_counsel:
@@ -259,8 +259,10 @@ def generate_docx_summary(
     # Blank line separator
     _add_p(doc)
 
-    # 3. QUALIFICAÇÃO Section: Header BOLD + YELLOW HIGHLIGHT
-    if data.qualification_text:
+    is_anpp = "ANPP" in (data.act_type or "")
+
+    # 3. QUALIFICAÇÃO Section: Header BOLD + YELLOW HIGHLIGHT (omitted in ANPP)
+    if data.qualification_text and not is_anpp:
         p_q_hdr = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
         _add_run(p_q_hdr, "QUALIFICAÇÃO", bold=True, highlight="yellow")
 
@@ -282,8 +284,8 @@ def generate_docx_summary(
 
         _add_p(doc)
 
-    # 4. IMPUTAÇÃO Section: Header BOLD + YELLOW HIGHLIGHT
-    if data.imputation_text:
+    # 4. IMPUTAÇÃO Section: Header BOLD + YELLOW HIGHLIGHT (omitted in ANPP)
+    if data.imputation_text and not is_anpp:
         p_imp_hdr = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
         _add_run(p_imp_hdr, "IMPUTAÇÃO", bold=True, highlight="yellow")
 
@@ -331,8 +333,8 @@ def generate_docx_summary(
 
         _add_p(doc)
 
-    # 6. HISTÓRICO PROCESSUAL Section: Header BOLD + YELLOW HIGHLIGHT
-    if data.chronological_history:
+    # 6. HISTÓRICO PROCESSUAL Section: Header BOLD + YELLOW HIGHLIGHT (omitted in ANPP)
+    if data.chronological_history and not is_anpp:
         p_hist_hdr = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
         _add_run(p_hist_hdr, "HISTÓRICO PROCESSUAL", bold=True, highlight="yellow")
 
@@ -348,8 +350,8 @@ def generate_docx_summary(
 
         _add_p(doc)
 
-    # 7. TESTEMUNHAS Section: Header BOLD + YELLOW HIGHLIGHT
-    if data.prosecution_witnesses or data.defense_witnesses or data.defense_witness_note:
+    # 7. TESTEMUNHAS Section: Header BOLD + YELLOW HIGHLIGHT (omitted in ANPP)
+    if (data.prosecution_witnesses or data.defense_witnesses or data.defense_witness_note) and not is_anpp:
         p_test_hdr = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
         _add_run(p_test_hdr, "TESTEMUNHAS DE ACUSAÇÃO:", bold=True, highlight="yellow")
 

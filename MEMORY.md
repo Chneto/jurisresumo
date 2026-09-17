@@ -372,6 +372,47 @@ Sempre que receber uma nova demanda de modificação do magistrado ou usuário, 
   - `Proc. 0860849-94.2026.8.20.5001`: **ANPP**, 24.07.26 às 11h25min, Samara Targino de Lima
   - `Proc. 0876503-58.2025.8.20.5001`: **AIJ**, 10.07.26 às 11h00min, Manoel, Josuel, Felipe
 
+---
+
+## 13. Padronização Estrita de Marcatexto e Eliminação de Fatos Desnecessários (Versão 2.3)
+
+### 13.1. Regras de Marcação com Marcatexto (Highlighting Standards)
+A partir da análise rigorosa dos modelos de resumo adotados pela magistratura criminal, foram estabelecidas as seguintes diretrizes estritas:
+1. **Réus Múltiplos:**
+   - Apenas o rótulo **`Réus:`** recebe realce verde-claro brilhante (`w:val="green"`, negrito).
+   - As linhas individuais de cada acusado abaixo têm recuo (`left="720" hanging="360"` ou `padding-left: 1.27cm;`), texto regular (sem negrito) e **SEM NENHUM REALCE** (`highlight=None`). Apenas o número de ID de intimação/citação mantém o hiperlink azul sublinhado.
+2. **Réu Único:**
+   - A linha inteira `Réu: [Nome] - [situação] - Intimado ID [ID]` (ou `Ré:`) recebe realce verde (`w:val="green"`, negrito), com o ID preservado em azul.
+3. **Corpo das Seções do Resumo:**
+   - Os títulos das seções recebem realce amarelo (`QUALIFICAÇÃO`, `IMPUTAÇÃO`, `RESUMO DOS FATOS`, `HISTÓRICO PROCESSUAL`, `TESTEMUNHAS DE ACUSAÇÃO:`, `TESTEMUNHAS DE DEFESA:`).
+   - O corpo das seções (parágrafos da qualificação, tipificação penal, narrativa dos fatos, itens cronológicos do histórico e lista de testemunhas) **NÃO POSSUI NENHUM REALCE**.
+4. **Nota Defensiva de Testemunhas:**
+   - Quando não há testemunhas de defesa ou houve reiteração do rol da acusação, a nota (ex.: `A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.`) recebe realce amarelo (`w:val="yellow"`, negrito).
+5. **Estrutura Canônica de ANPP:**
+   - Nos processos de Acordo de Não Persecução Penal (ANPP), as seções de **Qualificação, Imputação, Histórico Processual e Testemunhas são estritamente omitidas**, gerando um documento limpo e conciso voltado exclusivamente à homologação do acordo.
+
+### 13.2. Eliminação de Fatos Desnecessários e Síntese Canônica
+1. **Seleção Reversa da Denúncia Oficial do MP:**
+   - Identifica a peça inaugural de acusação protocolada pelo Ministério Público, descartando manifestações avulsas de advogados privados e cotas preliminares.
+2. **Delimitadores Rígidos de Início e Término:**
+   - **Início:** Captura pontos de partida como `Consta nos/dos inclusos/referidos autos...`, `DOS FATOS`, `NARRATIVA FÁTICA` e `CONTEXTUALIZAÇÃO DA INVESTIGAÇÃO`.
+   - **Parada:** Interrompe imediatamente ao encontrar fórmulas de encerramento (`Termos em que, pede...`, `pede e aguarda deferimento`, `Nestes termos`, `ROL DE TESTEMUNHAS`, `COTA`, `DOS PEDIDOS`, `REQUERIMENTOS`, `Diante do exposto requer`, `Assinaturas do Documento`).
+3. **Limpeza de Cabeçalhos e Metadados Institucionais:**
+   - Remove dados institucionais que poluíam o resumo (`MINISTÉRIO PÚBLICO`, `PROMOTORIA`, endereços de fórum/promotoria, telefones, links de validação e carimbos). Expressões como `Inquérito Policial nº`, `Autos nº` e `TCO nº` são ancoradas no início de linha para não corromper menções substantivas na narrativa.
+4. **Refluxo e Condensação Inteligente:**
+   - Reúne sentenças fragmentadas que encerram com pontuação canônica (`[.:;]`), garantindo que o resumo dos fatos mantenha entre 3 e 6 parágrafos substantivos de alta densidade informativa, acompanhados de notas periciais e interrogatório/confissão policial.
+5. **Construtor Especializado para ANPP:**
+   - Para audiências de ANPP, constrói exatamente os 6 parágrafos de referência: observação de desmembramento com número do processo originário, artigo do indiciamento com ID do IP, data e ID do termo firmado, condições pactuadas (prestação pecuniária, prestação de contas e não reiteração), data e ID da decisão de cisão, e data/horário e ID do despacho de designação da audiência.
+
+### 13.3. Paridade Plena entre Ambientes (Python, Web e HTML Autônomo)
+Todas as melhorias foram sincronizadas e validadas integralmente em:
+- `app/generators/docx_generator.py` (Backend Python OpenXML)
+- `app/engines/offline_engine.py` (Motor Heurístico Local)
+- `app/static/js/app.js` (Interface Web FastAPI)
+- `index.html` e `ABRIR_APLICATIVO_DIRETO.html` (Versão Portátil Zero-Instalação)
+- Repositório de publicação `gitpost/` (GitHub Release)
+
+
 
 
 

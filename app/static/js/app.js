@@ -474,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
       html += '<div class="doc-reus"><span class="hl-green">Réus:</span></div>';
       activeData.defendants.forEach((d) => {
         const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
-        html += `<div class="doc-reus" style="padding-left: 1.27cm;"><span class="hl-green">${d.name} - ${d.status}${idText}</span></div>`;
+        html += `<div class="doc-reus" style="padding-left: 1.27cm;">${d.name} - ${d.status}${idText}</div>`;
       });
     }
 
@@ -485,8 +485,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     html += '<div style="margin-bottom: 1.2rem;"></div>';
 
-    // QUALIFICAÇÃO (Yellow highlight)
-    if (activeData.qualification_text) {
+    const isAnpp = (activeData.act_type || '').includes('ANPP');
+
+    // QUALIFICAÇÃO (Yellow highlight - omitted in ANPP)
+    if (activeData.qualification_text && !isAnpp) {
       html += '<div class="doc-section-header"><span class="hl-yellow">QUALIFICAÇÃO</span></div>';
       const paras = activeData.qualification_text.split('\n\n').filter((p) => p.trim());
       paras.forEach((p) => {
@@ -502,8 +504,8 @@ document.addEventListener('DOMContentLoaded', () => {
       html += '<div style="margin-bottom: 1.2rem;"></div>';
     }
 
-    // IMPUTAÇÃO (Yellow highlight)
-    if (activeData.imputation_text) {
+    // IMPUTAÇÃO (Yellow highlight - omitted in ANPP)
+    if (activeData.imputation_text && !isAnpp) {
       html += '<div class="doc-section-header"><span class="hl-yellow">IMPUTAÇÃO</span></div>';
       const paras = activeData.imputation_text.split('\n\n').filter((p) => p.trim());
       paras.forEach((p) => {
@@ -528,8 +530,8 @@ document.addEventListener('DOMContentLoaded', () => {
       html += '<div style="margin-bottom: 1.2rem;"></div>';
     }
 
-    // HISTÓRICO PROCESSUAL (Yellow highlight)
-    if (activeData.chronological_history && activeData.chronological_history.length > 0) {
+    // HISTÓRICO PROCESSUAL (Yellow highlight - omitted in ANPP)
+    if (activeData.chronological_history && activeData.chronological_history.length > 0 && !isAnpp) {
       html += '<div class="doc-section-header"><span class="hl-yellow">HISTÓRICO PROCESSUAL</span></div>';
       activeData.chronological_history.forEach((h) => {
         html += `<div class="doc-history-p">${h.date_str}: ${h.description} (ID <a href="${pjeLink(h.doc_id)}" target="_blank" rel="noopener noreferrer">${h.doc_id}</a>)</div>`;
@@ -537,28 +539,29 @@ document.addEventListener('DOMContentLoaded', () => {
       html += '<div style="margin-bottom: 1.2rem;"></div>';
     }
 
-    // TESTEMUNHAS DE ACUSAÇÃO (Yellow highlight)
-    if (activeData.prosecution_witnesses && activeData.prosecution_witnesses.length > 0) {
-      html += '<div class="doc-section-header"><span class="hl-yellow">TESTEMUNHAS DE ACUSAÇÃO:</span></div>';
-      activeData.prosecution_witnesses.forEach((w) => {
-        const num = String(w.number).padStart(2, '0');
-        let status = w.status_id ? ` - ${w.status_id}` : '';
-        status = status.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
-        html += `<div class="doc-witness-p">${num}) ${w.name} - ${w.role}${status}</div>`;
-      });
-    }
+    // TESTEMUNHAS (Yellow highlight - omitted in ANPP)
+    if (!isAnpp) {
+      if (activeData.prosecution_witnesses && activeData.prosecution_witnesses.length > 0) {
+        html += '<div class="doc-section-header"><span class="hl-yellow">TESTEMUNHAS DE ACUSAÇÃO:</span></div>';
+        activeData.prosecution_witnesses.forEach((w) => {
+          const num = String(w.number).padStart(2, '0');
+          let status = w.status_id ? ` - ${w.status_id}` : '';
+          status = status.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
+          html += `<div class="doc-witness-p">${num}) ${w.name} - ${w.role}${status}</div>`;
+        });
+      }
 
-    // TESTEMUNHAS DE DEFESA (Yellow highlight)
-    if (activeData.defense_witnesses && activeData.defense_witnesses.length > 0) {
-      html += '<div class="doc-section-header"><span class="hl-yellow">TESTEMUNHAS DE DEFESA:</span></div>';
-      activeData.defense_witnesses.forEach((w) => {
-        const num = String(w.number).padStart(2, '0');
-        let status = w.status_id ? ` - ${w.status_id}` : '';
-        status = status.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
-        html += `<div class="doc-witness-p">${num}) ${w.name}${status}</div>`;
-      });
-    } else if (activeData.defense_witness_note) {
-      html += `<div class="doc-witness-p" style="margin-top: 0.6rem;"><span class="hl-yellow">${activeData.defense_witness_note}</span></div>`;
+      if (activeData.defense_witnesses && activeData.defense_witnesses.length > 0) {
+        html += '<div class="doc-section-header"><span class="hl-yellow">TESTEMUNHAS DE DEFESA:</span></div>';
+        activeData.defense_witnesses.forEach((w) => {
+          const num = String(w.number).padStart(2, '0');
+          let status = w.status_id ? ` - ${w.status_id}` : '';
+          status = status.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
+          html += `<div class="doc-witness-p">${num}) ${w.name}${status}</div>`;
+        });
+      } else if (activeData.defense_witness_note) {
+        html += `<div class="doc-witness-p" style="margin-top: 0.6rem;"><span class="hl-yellow">${activeData.defense_witness_note}</span></div>`;
+      }
     }
 
     html += '<div style="margin-bottom: 1.2rem;"></div>';
