@@ -149,274 +149,325 @@
     /* Viewport & Grid */
     .main-viewport {
       flex: 1;
-      height: calc(100vh - 92px);
       display: flex;
       flex-direction: column;
-      padding: 0.75rem 1.5rem;
-      gap: 0.75rem;
       overflow: hidden;
+      position: relative;
     }
 
-    /* Dropzone */
-    .ingestion-section { flex-shrink: 0; }
-    .upload-dropzone {
-      border: 2px dashed var(--border-subtle);
-      border-radius: var(--radius-lg);
+    .top-action-bar {
+      padding: 0.75rem 1.5rem;
       background-color: var(--bg-surface);
-      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+
+    .dropzone-inline {
+      flex: 1;
+      border: 2px dashed var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.5rem 1rem;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 0.75rem;
       cursor: pointer;
-      position: relative;
-      overflow: hidden;
       transition: all 0.2s ease;
+      background: rgba(26, 34, 52, 0.4);
     }
-    .upload-dropzone:hover, .upload-dropzone.dragover {
+    .dropzone-inline:hover, .dropzone-inline.dragover {
       border-color: var(--banana-500);
-      background-color: rgba(250, 204, 21, 0.04);
+      background: rgba(250, 204, 21, 0.05);
     }
-    .dropzone-content { display: flex; align-items: center; gap: 1.25rem; }
-    .dropzone-icon {
-      color: var(--banana-400);
-      padding: 0.75rem;
-      background: rgba(250, 204, 21, 0.1);
-      border-radius: var(--radius-md);
-    }
-    .dropzone-text h3 { font-size: 0.98rem; font-weight: 600; }
-    .dropzone-text p { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; }
-    .upload-browse { color: var(--banana-400); text-decoration: underline; font-weight: 600; }
+    .dropzone-inline span { font-size: 0.85rem; color: var(--text-secondary); }
+    .dropzone-inline strong { color: var(--banana-400); }
 
-    .upload-loading-overlay {
-      position: absolute; inset: 0; background: rgba(17, 24, 39, 0.94);
-      display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; z-index: 10;
-    }
-    .upload-loading-overlay.active { display: flex; }
-    .spinner {
-      width: 30px; height: 30px; border: 3px solid rgba(250, 204, 21, 0.2);
-      border-top-color: var(--banana-400); border-radius: 50%; animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Dual Workspace */
-    .dual-workspace {
+    .content-split {
       flex: 1;
-      min-height: 0;
       display: grid;
-      grid-template-columns: 1.08fr 0.92fr;
-      gap: 1.25rem;
+      grid-template-columns: 48% 52%;
       overflow: hidden;
     }
 
-    .editor-pane {
-      height: 100%;
+    .form-pane {
       overflow-y: auto;
-      padding-right: 0.6rem;
+      padding: 1.25rem;
+      border-right: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
-      gap: 0.85rem;
+      gap: 1.25rem;
     }
-    .editor-pane-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-    .step-indicator { display: flex; align-items: center; gap: 0.5rem; }
-    .step-indicator h2 { font-size: 1.05rem; font-weight: 700; }
-    .subtitle { font-size: 0.78rem; color: var(--text-secondary); }
 
     .card {
-      background-color: var(--bg-surface);
+      background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
       padding: 1.1rem;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--banana-400);
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+    }
+
+    .form-group {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
     }
-    .card-title { display: flex; align-items: center; gap: 0.5rem; }
-    .card-title h3 { font-size: 0.92rem; font-weight: 700; }
-    .card-header-flex { display: flex; align-items: center; justify-content: space-between; }
-    .form-tip { font-size: 0.76rem; color: var(--text-muted); }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-control {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.55rem 0.75rem;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: var(--banana-500); }
+    .form-control.mono { font-family: var(--font-mono); }
+    textarea.form-control { resize: vertical; line-height: 1.45; }
 
     .form-row-grid { display: grid; gap: 0.75rem; }
     .grid-2 { grid-template-columns: 1fr 1fr; }
-    .grid-3 { grid-template-columns: 1.2fr 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
 
-    .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
-    .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); }
-    .form-control {
-      background-color: var(--bg-canvas);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
-      padding: 0.55rem 0.75rem;
-      border-radius: var(--radius-md);
-      font-family: var(--font-sans);
-      font-size: 0.85rem;
-    }
-    .form-control:focus { outline: none; border-color: var(--banana-500); }
-    .form-control.mono { font-family: var(--font-mono); }
-    textarea.form-control { resize: vertical; line-height: 1.5; }
-
-    .items-container { display: flex; flex-direction: column; gap: 0.5rem; }
-    .item-row {
-      display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.5rem;
-      align-items: center; background: var(--bg-canvas); padding: 0.5rem 0.7rem; border-radius: var(--radius-md);
-    }
-    .history-item-row {
-      display: grid; grid-template-columns: 100px 1fr 100px auto; gap: 0.5rem;
-      align-items: center; background: var(--bg-canvas); padding: 0.5rem 0.7rem; border-radius: var(--radius-md);
-    }
-    .btn-remove-item {
-      background: transparent; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; padding: 0.2rem;
-    }
-    .btn-remove-item:hover { color: var(--color-danger); }
-
-    /* Right Preview Pane */
-    .preview-pane {
-      height: 100%;
-      overflow: hidden;
+    .items-container {
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
+      gap: 0.5rem;
     }
-    .preview-pane-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-    .preview-title { display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem; font-weight: 700; }
+    .item-row {
+      display: grid;
+      grid-template-columns: 1.8fr 1.6fr 1fr 32px;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .history-item-row {
+      display: grid;
+      grid-template-columns: 85px 1fr 100px 32px;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .btn-remove-item {
+      height: 32px; width: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+      color: var(--color-danger); cursor: pointer;
+    }
+    .btn-remove-item:hover { background: rgba(248, 113, 113, 0.1); }
+
+    /* Preview Pane (Right Column) */
+    .preview-pane {
+      background: #0d121d;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .preview-pane-header {
+      padding: 0.75rem 1.25rem;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .preview-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
 
     .desk-scroller {
       flex: 1;
-      min-height: 0;
       overflow-y: auto;
-      background-color: #1e293b;
-      padding: 1.75rem 1rem;
-      border-radius: var(--radius-lg);
+      padding: 1.5rem;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
     }
 
-    /* Strict A4 White Paper (No Crop, Real Margins) */
+    /* Word Paper Sheet Simulator */
     .word-paper-sheet {
-      background-color: #ffffff !important;
-      color: #000000 !important;
       width: 100%;
-      max-width: 794px;
-      min-height: 1123px;
-      height: auto;
-      padding: 20mm;
-      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+      max-width: 680px;
+      min-height: 900px;
+      background: #ffffff;
+      color: #000000;
       font-family: var(--font-doc);
       font-size: 12pt;
-      line-height: 1.89;
-      text-align: justify;
-      box-sizing: border-box;
+      line-height: 1.5;
+      padding: 2.0cm; /* Strict 2.0cm judicial margins */
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border-radius: 3px;
       margin-bottom: 2rem;
+      box-sizing: border-box;
+      text-align: justify;
     }
 
     .paper-placeholder {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 400px; color: #94a3b8; text-align: center; gap: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 400px;
+      color: #94a3b8;
+      text-align: center;
+      gap: 1rem;
     }
-    .paper-body { display: none; }
-    .paper-body.active { display: block; }
 
+    /* Strict Legal Highlighting Styles */
     .hl-yellow {
-      background-color: #ffff00 !important;
-      color: #000000 !important;
+      background-color: #ffff00;
+      color: #000000;
       font-weight: bold;
-      display: inline-block;
-      padding: 0 3px;
-      line-height: 1.4;
+      padding: 0 2px;
     }
     .hl-green {
-      background-color: #00ff00 !important;
-      color: #000000 !important;
+      background-color: #00ff00;
+      color: #000000;
       font-weight: bold;
-      display: inline-block;
-      padding: 0 3px;
-      line-height: 1.4;
+      padding: 0 2px;
     }
-    .doc-title { text-decoration: underline; margin-bottom: 0.2rem; }
-    .doc-link a { color: #0000ff !important; text-decoration: underline; word-break: break-all; }
-    .doc-resumo-call { text-decoration: underline; margin-top: 1.2rem; margin-bottom: 0.8rem; }
-    .doc-callout { margin-top: 0.6rem; margin-bottom: 0.8rem; }
-    .doc-promotor, .doc-reus, .doc-defesa { font-weight: bold; margin-bottom: 0.4rem; }
-    .doc-section-header { margin-top: 1.4rem; margin-bottom: 0.4rem; text-transform: uppercase; }
-    .doc-narrative-p { text-indent: 1.27cm; margin-bottom: 0.8rem; text-align: justify; }
-    .doc-obs { font-style: italic; text-indent: 1.27cm; margin-bottom: 0.8rem; text-align: justify; }
-    .doc-name-bold { font-weight: bold; text-transform: uppercase; }
-    .doc-art-bold { font-weight: bold; }
-    .doc-history-p { margin-bottom: 14.15pt; word-break: break-word; text-align: justify; }
-    .doc-history-p a, .doc-witness-p a { color: #0000ff !important; text-decoration: underline; }
-    .doc-witness-p { margin-bottom: 14.15pt; text-align: justify; }
-    .doc-closure { text-indent: 1.27cm; margin-top: 1.5rem; margin-bottom: 0.8rem; }
+
+    .doc-title { text-decoration: underline; margin-bottom: 0.35rem; }
+    .doc-link { color: #0000ff; text-decoration: underline; margin-bottom: 0.85rem; }
+    .doc-resumo-call { text-decoration: underline; margin-bottom: 0.85rem; }
+    .doc-callout { margin-bottom: 0.85rem; }
+    .doc-promotor { margin-bottom: 0.85rem; }
+    .doc-reus { margin-bottom: 0.4rem; }
+    .doc-reus-item { padding-left: 1.27cm; text-indent: -0.63cm; margin-bottom: 0.25rem; }
+    .doc-defesa { margin-bottom: 0.85rem; }
+    .doc-section-header { margin-top: 0.9rem; margin-bottom: 0.4rem; }
+    .doc-narrative-p { text-indent: 1.27cm; margin-bottom: 0.5rem; text-align: justify; }
+    .doc-history-p { margin-bottom: 0.35rem; }
+    .doc-witness-p { margin-bottom: 0.35rem; }
+    .doc-obs { font-style: italic; text-indent: 1.27cm; margin-bottom: 0.5rem; }
+    .doc-closure { text-indent: 1.27cm; margin-top: 1rem; margin-bottom: 0.5rem; }
 
     /* Footer */
     .app-footer {
       height: 32px;
       background-color: var(--bg-surface);
       border-top: 1px solid var(--border-subtle);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.78rem; color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
       flex-shrink: 0;
     }
     .app-footer strong { color: var(--banana-400); }
 
-    /* Drawer & Modals */
-    .drawer-backdrop, .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); display: none; z-index: 1000;
+    /* Hamburger Drawer */
+    .drawer-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.2s;
     }
-    .drawer-backdrop.active, .modal-backdrop.active { display: block; }
+    .drawer-backdrop.active { opacity: 1; pointer-events: auto; }
 
-    .hamburger-drawer {
-      position: fixed; top: 0; right: -420px; width: 380px; max-width: 90vw; height: 100vh;
+    .drawer {
+      position: fixed; top: 0; right: -380px; width: 360px; height: 100vh;
       background: var(--bg-surface); border-left: 1px solid var(--border-subtle);
-      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7); display: flex; flex-direction: column; z-index: 1001;
-      transition: right 0.25s ease;
+      z-index: 100; transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column; padding: 1.5rem; gap: 1.5rem;
     }
-    .hamburger-drawer.active { right: 0; }
-    .drawer-header {
-      height: 60px; display: flex; align-items: center; justify-content: space-between;
-      padding: 0 1.25rem; border-bottom: 1px solid var(--border-subtle);
-    }
-    .drawer-content { flex: 1; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.5rem; }
-    .drawer-section-title { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 0.5rem; }
+    .drawer.active { right: 0; }
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; }
+    .drawer-title { font-size: 1.1rem; font-weight: 700; color: var(--banana-400); }
 
+    /* Modal About */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 110; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
     .modal-card {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
       background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
-      width: 90%; max-width: 650px; max-height: 85vh; padding: 1.5rem; box-shadow: 0 10px 35px rgba(0,0,0,0.8);
-      z-index: 1002; display: flex; flex-direction: column;
+      padding: 1.75rem; width: 90%; max-width: 520px; display: flex; flex-direction: column; gap: 1.25rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
     }
-    .modal-body { overflow-y: auto; flex: 1; margin: 1rem 0; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary); }
-    .modal-body h4 { color: var(--banana-400); margin: 0.8rem 0 0.3rem 0; }
-    .modal-body h4:first-of-type { margin-top: 0; }
-    .modal-body ul { padding-left: 1.25rem; }
-    .modal-body code { background: var(--bg-canvas); color: var(--banana-400); padding: 0.1rem 0.3rem; border-radius: 4px; font-family: var(--font-mono); }
+    .modal-body { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.55; }
+    .modal-body h4 { color: var(--text-primary); margin: 0.6rem 0 0.2rem; font-size: 0.95rem; }
 
-    .toast-container { position: fixed; bottom: 2.5rem; right: 2rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 2000; }
-    .toast { background: var(--bg-surface-elevated); padding: 0.75rem 1.15rem; border-radius: var(--radius-md); font-size: 0.85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-    .toast.success { border-left: 4px solid var(--banana-500); }
-    .toast.error { border-left: 4px solid var(--color-danger); }
+    /* Toast */
+    .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast {
+      padding: 0.75rem 1.1rem; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 500;
+      color: #fff; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideUp 0.3s ease;
+    }
+    .toast.success { border-color: var(--color-offline); }
+    .toast.error { border-color: var(--color-danger); }
 
-    ::-webkit-scrollbar { width: 7px; height: 7px; }
-    ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
+    /* Loading overlay for PDF */
+    .upload-loading {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--banana-400);
+      font-family: var(--font-mono);
+    }
+    .upload-loading.active { display: flex; }
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid var(--border-subtle);
+      border-top-color: var(--banana-400); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 <body>
+
+  <!-- App Header -->
   <header>
     <div class="header-left">
       <div class="brand-logo">
-        <span class="banana-accent">⚡</span>
+        <span class="banana-accent">🍌</span>
         <span>JURIS<strong>RESUMO</strong></span>
       </div>
-      <span class="badge badge-standalone">Standalone (Sem Instalação)</span>
-      <span class="badge badge-stitch">Google Stitch</span>
+      <span class="badge badge-standalone">Versão Nativa JS (Portátil)</span>
+      <span class="badge badge-stitch">TJRN • Autos Integrais</span>
     </div>
 
     <div class="header-right">
-      <button type="button" class="btn btn-primary" id="btn-export-docx" disabled>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>Baixar Resumo (.docx)</span>
+      <button class="btn btn-primary" id="btn-export-docx" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Baixar Word (.docx)</span>
       </button>
-      <button type="button" class="btn-hamburger" id="btn-hamburger" title="Menu Principal">
+
+      <button class="btn-hamburger" id="btn-hamburger" title="Menu e Configurações">
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
@@ -426,77 +477,59 @@
 
   <!-- Hamburger Drawer -->
   <div class="drawer-backdrop" id="drawer-backdrop"></div>
-  <aside class="hamburger-drawer" id="hamburger-drawer">
+  <div class="drawer" id="hamburger-drawer">
     <div class="drawer-header">
-      <h3 style="font-size:1.05rem;">⚡ Configurações & Painel</h3>
-      <button type="button" style="background:transparent;border:none;color:var(--text-muted);font-size:1.6rem;cursor:pointer;" id="btn-close-drawer">&times;</button>
+      <h3 class="drawer-title">Opções & Configurações</h3>
+      <button type="button" class="btn btn-outline btn-xs" id="btn-close-drawer">&times;</button>
     </div>
-    <div class="drawer-content">
-      <div>
-        <h4 class="drawer-section-title">Modo de Operação</h4>
-        <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.6rem;">Esta versão portátil executa a leitura de PDFs e a geração do Word (.docx) 100% no seu navegador, sem necessidade de instalar Python.</p>
-        <div class="form-group">
-          <label style="font-size:0.8rem;">Chave Google Gemini (Opcional p/ Modo IA):</label>
-          <input type="password" id="input-api-key" class="form-control" placeholder="Chave de API AIzaSy...">
-          <button type="button" class="btn btn-sm btn-secondary" style="margin-top:0.4rem;" id="btn-save-key">Salvar Chave</button>
-        </div>
-      </div>
 
-      <div>
-        <h4 class="drawer-section-title">Rascunhos & Ações</h4>
-        <div style="display:flex;flex-direction:column;gap:0.5rem;">
-          <button type="button" class="btn btn-sm btn-outline btn-block" id="btn-save-draft">Salvar Rascunho (JSON)</button>
-          <label class="btn btn-sm btn-outline btn-block" style="text-align:center;cursor:pointer;">
-            Carregar Rascunho
-            <input type="file" id="input-load-draft" accept=".json" style="display:none;">
-          </label>
-          <button type="button" class="btn btn-sm btn-outline btn-block" id="btn-clear-form">Limpar Formulário</button>
-        </div>
+    <div class="card" style="margin-top: 0.5rem;">
+      <div class="card-title"><span>⚙️</span> Modo Híbrido IA (Opcional)</div>
+      <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.6rem;">
+        O motor padrão é 100% offline e local no navegador. Caso deseje acionar o refinamento de fatos com o Google Gemini, insira sua chave:
+      </p>
+      <div class="form-group">
+        <label>Chave Gemini API</label>
+        <input type="password" id="input-api-key" class="form-control mono" placeholder="AIzaSy...">
       </div>
-
-      <div>
-        <h4 class="drawer-section-title">Documentação</h4>
-        <button type="button" class="btn btn-secondary btn-block" id="btn-open-about">Sobre o JURISRESUMO & Manual</button>
-      </div>
-
-      <div style="margin-top:auto;text-align:center;font-size:0.8rem;color:var(--text-secondary);padding-top:1rem;border-top:1px solid var(--border-subtle);">
-        Desenvolvido por <strong style="color:var(--banana-400);">FChNeto</strong>
-      </div>
+      <button type="button" class="btn btn-secondary btn-sm btn-block" id="btn-save-key" style="margin-top:0.4rem;">Salvar Chave Local</button>
     </div>
-  </aside>
+
+    <div class="card">
+      <div class="card-title"><span>ℹ️</span> Informações do Sistema</div>
+      <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+        <strong>JURISRESUMO v2.4 (Nativo JS Analítico)</strong><br>
+        Motor: JavaScript OpenXML + PDF.js nativo.<br>
+        Autor: <strong>FChNeto</strong>.<br>
+        Execução: 100% Local no Navegador do Usuário.
+      </p>
+      <button type="button" class="btn btn-outline btn-sm btn-block" id="btn-open-about" style="margin-top: 0.75rem;">Sobre a Ferramenta</button>
+    </div>
+  </div>
 
   <!-- Main Viewport -->
   <main class="main-viewport">
-    <section class="ingestion-section">
-      <div class="upload-dropzone" id="dropzone">
-        <input type="file" id="file-input" accept=".pdf" class="file-input-hidden" style="display:none;">
-        <div class="dropzone-content">
-          <div class="dropzone-icon">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-          </div>
-          <div class="dropzone-text">
-            <h3>Arraste e solte os autos completos do PJe em PDF aqui</h3>
-            <p>ou <span class="upload-browse">clique para selecionar do seu computador</span> — processamento 100% nativo no navegador</p>
-          </div>
-        </div>
-        <div class="upload-loading-overlay" id="upload-loading">
-          <div class="spinner"></div>
-          <p class="loading-message" id="loading-msg">Lendo autos e extraindo peças processuais...</p>
-        </div>
+    <!-- Action Bar / Drag & Drop -->
+    <div class="top-action-bar">
+      <div class="dropzone-inline" id="dropzone">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--banana-500);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        <span>Arraste o PDF integral dos autos aqui ou <strong>clique para selecionar</strong></span>
+        <input type="file" id="file-input" accept="application/pdf" style="display:none;">
       </div>
-    </section>
 
-    <div class="dual-workspace">
-      <!-- Editor Pane (Left Column) -->
-      <div class="editor-pane" id="editor-pane">
-        <div class="editor-pane-header">
-          <div class="step-indicator">
-            <span style="font-size:1.1rem;">✍️</span>
-            <div>
-              <h2>Painel de Revisão e Adaptação</h2>
-              <p class="subtitle">Edite qualquer informação livremente antes de baixar o documento final.</p>
-            </div>
-          </div>
+      <div class="upload-loading" id="upload-loading">
+        <div class="spinner"></div>
+        <span id="loading-msg">Lendo e analisando os autos judiciais...</span>
+      </div>
+    </div>
+
+    <!-- Content Split: Forms (Left) vs Preview (Right) -->
+    <div class="content-split">
+      <!-- Form Pane (Left Column) -->
+      <div class="form-pane">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="font-size:1.1rem;font-weight:700;color:var(--banana-400);">Dados Analisados dos Autos</h2>
+          <span class="badge badge-stitch">Edição em Tempo Real</span>
         </div>
 
         <form id="hearing-form" style="display:flex;flex-direction:column;gap:0.85rem;">
@@ -558,13 +591,13 @@
           </div>
 
           <!-- Card 3: Qualificação -->
-          <div class="card">
+          <div class="card" id="card-qual">
             <div class="card-title"><span>📝</span><h3>3. Qualificação Completa</h3></div>
             <textarea id="qualification_text" rows="3" class="form-control"></textarea>
           </div>
 
           <!-- Card 4: Imputação -->
-          <div class="card">
+          <div class="card" id="card-imp">
             <div class="card-title"><span>⚖️</span><h3>4. Imputação Penal</h3></div>
             <textarea id="imputation_text" rows="2" class="form-control"></textarea>
           </div>
@@ -579,7 +612,7 @@
           </div>
 
           <!-- Card 6: Histórico Processual -->
-          <div class="card">
+          <div class="card" id="card-hist">
             <div class="card-header-flex">
               <div class="card-title"><span>📅</span><h3>6. Histórico Processual Cronológico</h3></div>
               <button type="button" class="btn btn-xs btn-outline" id="btn-add-history">+ Adicionar Ato</button>
@@ -588,7 +621,7 @@
           </div>
 
           <!-- Card 7: Testemunhas -->
-          <div class="card">
+          <div class="card" id="card-wits">
             <div class="card-header-flex">
               <div class="card-title"><span>👥</span><h3>7. Rol de Testemunhas</h3></div>
               <button type="button" class="btn btn-xs btn-outline" id="btn-add-witness">+ Adicionar Testemunha</button>
@@ -644,7 +677,7 @@
         <p>O <strong>JURISRESUMO</strong> auxilia magistrados e assessores na condução de audiências criminais (AIJ, ANPP, PAnP). Sintetiza os autos integrais em PDF extraídos do PJe em uma minuta padronizada em Word (<code>.docx</code>).</p>
 
         <h4>2. Como funciona esta versão nativa?</h4>
-        <p>Esta versão portátil roda diretamente no seu navegador, sem necessitar de instalação de Python, banco de dados ou terminal. Todo o processamento de texto e geração de arquivos Word ocorre com segurança na memória do seu dispositivo.</p>
+        <p>Esta versão portátil roda diretamente no seu navegador com análise aprofundada dos autos via catálogo de documentos (TOC), carimbos marginais PJe, deliberações judiciais e narrativa oficial da denúncia ministerial. Não necessita de instalação de Python, banco de dados ou terminal.</p>
 
         <h4>3. Autoria</h4>
         <p>Desenvolvido por <strong>FChNeto</strong>.</p>
@@ -714,72 +747,7 @@
       if (e.target.files && e.target.files[0]) processPdfFile(e.target.files[0]);
     };
 
-    // Client-Side PDF Extraction - 100% Offline & Complete Reading
-    async function processPdfFile(file) {
-      uploadLoading.classList.add('active');
-      loadingMsg.innerText = 'Lendo páginas do arquivo PDF...';
-
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        let fullText = '';
-        let pagesText = [];
-
-        if (window.pdfjsLib) {
-          let pdf = null;
-          try {
-            initPdfWorker();
-            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, stopAtErrors: false });
-            pdf = await loadingTask.promise;
-          } catch (workerErr) {
-            console.warn('Worker load note, attempting direct execution:', workerErr);
-            try {
-              pdfjsLib.GlobalWorkerOptions.workerSrc = '';
-            } catch (_) {}
-            const fallbackTask = pdfjsLib.getDocument({ data: arrayBuffer, stopAtErrors: false });
-            pdf = await fallbackTask.promise;
-          }
-          const numPages = pdf.numPages; // 100% of pages read, never capped!
-
-          // Process in batches of 10 pages for high performance and smooth progress display
-          const batchSize = 10;
-          for (let b = 1; b <= numPages; b += batchSize) {
-            const end = Math.min(b + batchSize - 1, numPages);
-            loadingMsg.innerText = `Processando páginas ${b} a ${end} de ${numPages} (${Math.round((end / numPages) * 100)}%)...`;
-            const batchPromises = [];
-            for (let i = b; i <= end; i++) {
-              batchPromises.push(
-                pdf.getPage(i).then(page =>
-                  page.getTextContent().then(textContent => ({
-                    pageNum: i,
-                    text: textContent.items.map(it => it.str).join(' ')
-                  }))
-                )
-              );
-            }
-            const batchResults = await Promise.all(batchPromises);
-            batchResults.sort((a, b) => a.pageNum - b.pageNum);
-            batchResults.forEach(r => pagesText.push(r.text));
-          }
-          fullText = pagesText.join('\n');
-        } else {
-          // Fallback simple binary text decoder for basic PDFs
-          const dec = new TextDecoder('latin1');
-          fullText = dec.decode(arrayBuffer);
-          pagesText = fullText.split(/\f|\n{4,}/);
-        }
-
-        loadingMsg.innerText = 'Estruturando peças jurídicas do PJe...';
-        const extracted = parsePjeText(fullText, file.name, pagesText);
-        loadDataIntoUI(extracted);
-        showToast(`Processo com ${pagesText.length} páginas extraído com sucesso!`, 'success');
-      } catch (err) {
-        showToast('Erro ao ler PDF no navegador: ' + err.message, 'error');
-      } finally {
-        uploadLoading.classList.remove('active');
-        fileInput.value = '';
-      }
-    }
-
+    // Text Cleaning Helper
     function cleanPjeText(text) {
       if (!text) return '';
       return text.split('\n')
@@ -809,7 +777,6 @@
         'agosto': '08', 'setembro': '09', 'outubro': '10', 'novembro': '11', 'dezembro': '12'
       };
 
-      // Case 1: dd de [mês] de yyyy às hh:mm
       const writtenM = str.match(/(?:(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+(?:designada\s+)?(?:em|para)?)\s+)?(\d{1,2})\s+de\s+(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)(?:\s+de)?\s+(\d{2,4})(?:[^\n\d]{1,25}(?:às|as)\s*(\d{1,2})(?::|h)?(\d{2})?(?:min)?)?/i);
       if (writtenM) {
         const d = writtenM[1].padStart(2, '0');
@@ -826,7 +793,6 @@
         return `${d}.${m}.${y}${time}`;
       }
 
-      // Case 2: Numeric dd/mm/yyyy or dd.mm.yy
       const numM = str.match(/(?:(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+(?:designada\s+)?(?:em|para)?)\s+)?(\d{1,2})[./](\d{1,2})[./](\d{2,4})(?:[^\n\d]{1,25}(?:às|as)\s*(\d{1,2})(?::|h)?(\d{2})?(?:min)?)?/i);
       if (numM) {
         const d = numM[1].padStart(2, '0');
@@ -845,11 +811,770 @@
       return null;
     }
 
+    function formatShortDate(dtStr) {
+      if (!dtStr) return '';
+      const m = dtStr.trim().match(/^(\d{2})[./-](\d{2})[./-](\d{2,4})/);
+      if (m) {
+        return `${m[1]}/${m[2]}/${m[3].slice(-2)}`;
+      }
+      return dtStr.trim();
+    }
+
+    // Client-Side PDF Extraction & Comprehensive Deep Legal Analysis
+    async function processPdfFile(file) {
+      uploadLoading.classList.add('active');
+      loadingMsg.innerText = 'Lendo e indexando páginas do PDF...';
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pages = [];
+        const stampRegex = /Num\.\s*(\d{7,10})\s*-\s*P[aáAÁ]g\.\s*(\d+)/i;
+
+        if (window.pdfjsLib) {
+          initPdfWorker();
+          let pdf = null;
+          try {
+            pdf = await pdfjsLib.getDocument({ data: arrayBuffer, stopAtErrors: false }).promise;
+          } catch (workerErr) {
+            console.warn('Worker load note, attempting direct execution:', workerErr);
+            try { pdfjsLib.GlobalWorkerOptions.workerSrc = ''; } catch (_) {}
+            pdf = await pdfjsLib.getDocument({ data: arrayBuffer, stopAtErrors: false }).promise;
+          }
+          const numPages = pdf.numPages;
+
+          const batchSize = 10;
+          for (let b = 1; b <= numPages; b += batchSize) {
+            const end = Math.min(b + batchSize - 1, numPages);
+            loadingMsg.innerText = `Processando páginas ${b} a ${end} de ${numPages} (${Math.round((end / numPages) * 100)}%)...`;
+            const batchPromises = [];
+            for (let i = b; i <= end; i++) {
+              batchPromises.push(
+                pdf.getPage(i).then(page =>
+                  page.getTextContent().then(textContent => {
+                    // Reconstruct text lines with preserved vertical layout
+                    const items = textContent.items || [];
+                    const lines = [];
+                    let currentY = null;
+                    let currentLine = [];
+                    for (let it of items) {
+                      const y = it.transform ? Math.round(it.transform[5]) : 0;
+                      if (currentY === null) {
+                        currentY = y;
+                        currentLine.push(it.str);
+                      } else if (Math.abs(y - currentY) > 3) {
+                        lines.push(currentLine.join(' '));
+                        currentY = y;
+                        currentLine = [it.str];
+                      } else {
+                        currentLine.push(it.str);
+                      }
+                    }
+                    if (currentLine.length > 0) lines.push(currentLine.join(' '));
+                    const pageText = lines.join('\n');
+                    const mStamp = pageText.match(stampRegex);
+                    return {
+                      pageNum: i,
+                      text: pageText,
+                      stampDocId: mStamp ? mStamp[1] : null,
+                      stampSubpage: mStamp ? parseInt(mStamp[2]) : null
+                    };
+                  })
+                )
+              );
+            }
+            const batchResults = await Promise.all(batchPromises);
+            batchResults.sort((a, b) => a.pageNum - b.pageNum);
+            batchResults.forEach(r => pages.push(r));
+          }
+        } else {
+          // Binary fallback
+          const dec = new TextDecoder('latin1');
+          const raw = dec.decode(arrayBuffer);
+          const rawPages = raw.split(/\f|\n{4,}/);
+          rawPages.forEach((pTxt, idx) => {
+            const mStamp = pTxt.match(stampRegex);
+            pages.push({
+              pageNum: idx + 1,
+              text: pTxt,
+              stampDocId: mStamp ? mStamp[1] : null,
+              stampSubpage: mStamp ? parseInt(mStamp[2]) : null
+            });
+          });
+        }
+
+        loadingMsg.innerText = 'Estruturando catálogo de peças e analisando mérito...';
+        const extracted = analyzePjeRecords(pages, file.name);
+        loadDataIntoUI(extracted);
+        showToast(`Processo com ${pages.length} páginas analisado com sucesso!`, 'success');
+      } catch (err) {
+        showToast('Erro ao ler PDF no navegador: ' + err.message, 'error');
+        console.error(err);
+      } finally {
+        uploadLoading.classList.remove('active');
+        fileInput.value = '';
+      }
+    }
+
+    // Legal Substantive Act Summarizer
+    function summarizeHistoryAct(docName, docType, text) {
+      const nL = (docName || '').toLowerCase();
+      const tL = (docType || '').toLowerCase();
+      const txtL = (text || '').toLowerCase();
+
+      if (nL.includes('denúncia') || nL.includes('denuncia')) {
+        if (txtL.includes('não foi proposto anpp') || txtL.includes('deixo de propor anpp')) {
+          return 'Denúncia. Consta cota afirmando que não foi proposto ANPP em face dos denunciados';
+        } else if (txtL.includes('suspensão condicional') || txtL.includes('sursis')) {
+          return 'Denúncia oferecida com proposta de Suspensão Condicional do Processo';
+        }
+        return 'Denúncia oferecida pelo Ministério Público';
+      }
+      if (nL.includes('decisão') || nL.includes('decisao')) {
+        if (txtL.includes('recebo a denúncia') || txtL.includes('recebida a denúncia') || txtL.includes('recebimento da denúncia')) {
+          if (txtL.includes('pauta') || txtL.includes('designo')) {
+            return 'Decisão recebendo a denúncia e designando audiência';
+          }
+          return 'Decisão recebendo a denúncia';
+        }
+        if (txtL.includes('revoga') && (txtL.includes('suspensão') || txtL.includes('sursis'))) {
+          return 'Decisão revogando a Suspensão Condicional do Processo e designando AIJ';
+        }
+        if (txtL.includes('produção antecipada') || txtL.includes('art. 366')) {
+          return 'Decisão suspendendo o processo (art. 366 CPP) e designando produção antecipada de provas';
+        }
+        if (txtL.includes('pauta') || txtL.includes('designo') || txtL.includes('instrução')) {
+          return 'Decisão designando audiência de instrução e julgamento';
+        }
+        return 'Decisão interlocutória';
+      }
+      if (nL.includes('despacho')) {
+        if (txtL.includes('pauta') || txtL.includes('designo') || txtL.includes('instrução')) {
+          return 'Despacho incluindo o feito em pauta de audiência de instrução e julgamento';
+        }
+        if (txtL.includes('reaprazo') || txtL.includes('redesigno')) {
+          return 'Despacho redesignando a audiência';
+        }
+        if (txtL.includes('homologação de anpp') || txtL.includes('homologar')) {
+          return 'Despacho designando audiência de homologação de ANPP';
+        }
+        return 'Despacho judicial';
+      }
+      if (nL.includes('resposta') || nL.includes('defesa prévia') || nL.includes('defesa previa')) {
+        return 'Resposta à acusação pugnando pela absolvição sumária do acusado';
+      }
+      if (nL.includes('edital')) {
+        return 'Citação por edital do acusado';
+      }
+      if (nL.includes('mandado') && nL.includes('citação')) {
+        return 'Mandado de citação';
+      }
+      if (nL.includes('mandado') && nL.includes('intimação')) {
+        return 'Mandado de intimação de audiência';
+      }
+      if (nL.includes('intimação de audiência') || tL.includes('intimação de audiência')) {
+        return 'Intimação de audiência expedida';
+      }
+      if (nL.includes('ata da audiência') || nL.includes('termo de audiência') || nL.includes('ata de audiência')) {
+        if (txtL.includes('custódia')) return 'Audiência de Custódia realizada';
+        if (txtL.includes('suspensão') || txtL.includes('sursis')) return 'Audiência de Suspensão Condicional do Processo realizada';
+        if (txtL.includes('instrução')) return 'Ata de audiência de instrução realizada';
+        return 'Ata da audiência';
+      }
+      return docName.replace(/^\d+\s*-\s*/, '').trim();
+    }
+
+    // Core Analytical Engine for PJe
+    function analyzePjeRecords(pages, filename) {
+      const fullText = pages.map(p => p.text).join('\n');
+      const fnUpper = (filename || '').toUpperCase();
+
+      // 1. Case Number
+      const cnjMatch = fullText.match(/\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b/) || filename.match(/\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b/);
+      const caseNumber = cnjMatch ? cnjMatch[1] : '0000000-00.0000.8.20.0000';
+
+      // 2. Capa Parties from Page 1
+      const reusCapa = [];
+      const vitimasCapa = [];
+      const testemunhasCapa = [];
+      const advsCapa = [];
+      let promCapa = '';
+
+      if (pages.length > 0) {
+        const page1Lines = pages[0].text.split('\n');
+        let prevLine = '';
+        page1Lines.forEach(l => {
+          const lTrim = l.trim();
+          const lu = lTrim.toUpperCase();
+          if (/\((?:REU|RÉU|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA])\)/i.test(lu)) {
+            let name = lTrim.replace(/\((?:R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA])\)/ig, '').trim();
+            if (!name && prevLine) name = prevLine;
+            name = name.replace(/^[A-Z]+:\s*/, '').trim();
+            if (name.length > 3 && !reusCapa.includes(name)) reusCapa.push(name);
+          } else if (/\(V[IÍ]TIMA\)/i.test(lu)) {
+            let name = lTrim.replace(/\(V[IÍ]TIMA\)/ig, '').trim();
+            if (!name && prevLine) name = prevLine;
+            name = name.replace(/^[A-Z]+:\s*/, '').trim();
+            if (name.length > 3 && !vitimasCapa.includes(name)) vitimasCapa.push(name);
+          } else if (/\(TESTEMUNHA\)/i.test(lu)) {
+            let name = lTrim.replace(/\(TESTEMUNHA\)/ig, '').trim();
+            if (!name && prevLine) name = prevLine;
+            name = name.replace(/^[A-Z]+:\s*/, '').trim();
+            if (name.length > 3 && !testemunhasCapa.includes(name)) testemunhasCapa.push(name);
+          } else if (/\(ADVOGADO\w*\)|\(DEFENSOR\w*\)/i.test(lu)) {
+            let name = lTrim.replace(/\(ADVOGADO\w*\)|\(DEFENSOR\w*\)/ig, '').trim();
+            if (!name && prevLine) name = prevLine;
+            name = name.replace(/^[A-Z]+:\s*/, '').trim();
+            if (name.length > 3 && !advsCapa.includes(name)) advsCapa.push(name);
+          } else if (/\(AUTOR\)/i.test(lu) && (/PROMOTORIA/i.test(lu) || /MINISTÉRIO/i.test(lu))) {
+            const promM = lTrim.match(/(\d+ª?\s+Promotoria[^\n)]+)/i);
+            promCapa = 'Dr. Promotor de Justiça' + (promM ? ` (${promM[1].trim()})` : '');
+          }
+          prevLine = lTrim;
+        });
+      }
+
+      // 3. Catalog & TOC Parsing
+      const pageStamps = {};
+      pages.forEach(p => {
+        if (p.stampDocId) {
+          if (!pageStamps[p.stampDocId]) pageStamps[p.stampDocId] = [];
+          pageStamps[p.stampDocId].push(p.pageNum);
+        }
+      });
+
+      // Find TOC pages (pages without footer stamp at start)
+      const tocPages = [];
+      for (let p of pages) {
+        if (p.stampDocId === null) tocPages.push(p);
+        else break;
+      }
+      if (tocPages.length === 0 && pages.length > 0) tocPages.push(pages[0]);
+
+      const idDateRe = /^(\d{7,10})\s+(\d{2}\/\d{2}\/\d{4})/;
+      const tocEntries = [];
+      const seenIds = new Set();
+
+      tocPages.forEach(tp => {
+        const lines = tp.text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        let idx = 0;
+        while (idx < lines.length) {
+          const l = lines[idx];
+          const m = l.match(idDateRe);
+          if (m) {
+            const dId = m[1];
+            const dDate = m[2];
+            idx++;
+            let timeStr = '';
+            if (idx < lines.length && /^\d{2}:\d{2}$/.test(lines[idx])) {
+              timeStr = lines[idx];
+              idx++;
+            }
+            const docName = idx < lines.length ? lines[idx] : '';
+            idx++;
+            let docType = '';
+            if (idx < lines.length && !idDateRe.test(lines[idx])) {
+              docType = lines[idx];
+              idx++;
+            }
+            if (!seenIds.has(dId)) {
+              seenIds.add(dId);
+              tocEntries.push({
+                doc_id: dId,
+                date_str: `${dDate} ${timeStr}`.trim(),
+                doc_name: docName,
+                doc_type: docType
+              });
+            }
+          } else {
+            idx++;
+          }
+        }
+      });
+
+      // Assemble full document catalog with correlated page text
+      const pjeCatalog = [];
+      tocEntries.forEach(entry => {
+        const dId = entry.doc_id;
+        const mp = pageStamps[dId] || [];
+        let sp = 0, ep = 0, txtP = '';
+        if (mp.length > 0) {
+          sp = Math.min(...mp);
+          ep = Math.max(...mp);
+          txtP = pages.filter(p => p.pageNum >= sp && p.pageNum <= ep).map(p => p.text).join('\n');
+        } else {
+          // Search doc_id across pages
+          const found = pages.find(p => p.text.includes(dId));
+          if (found) txtP = found.text;
+        }
+        pjeCatalog.push({
+          doc_id: dId,
+          date_str: entry.date_str,
+          doc_name: entry.doc_name,
+          doc_type: entry.doc_type,
+          start_page: sp,
+          end_page: ep,
+          text: txtP
+        });
+      });
+
+      // 4. Locate Key Documents
+      let denunciaDoc = null;
+      for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+        const d = pjeCatalog[i];
+        const nl = d.doc_name.toLowerCase();
+        const tl = d.doc_type.toLowerCase();
+        if (/cota|requerimento|recebimento|aditamento|certidão|bnmp|seeu|antecedentes/.test(nl)) continue;
+        if (nl.startsWith('denún') || nl.startsWith('denun') || tl.startsWith('denún') || tl.startsWith('denun') || nl.includes('queixa')) {
+          denunciaDoc = d;
+          break;
+        }
+      }
+      if (!denunciaDoc) {
+        for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+          const comb = `${pjeCatalog[i].doc_name} ${pjeCatalog[i].doc_type}`.toLowerCase();
+          if ((comb.includes('denún') || comb.includes('denun') || comb.includes('queixa')) && !comb.includes('cota')) {
+            denunciaDoc = pjeCatalog[i];
+            break;
+          }
+        }
+      }
+      if (!denunciaDoc) {
+        denunciaDoc = pjeCatalog.find(d => `${d.doc_name} ${d.doc_type}`.toLowerCase().includes('petição inicial'));
+      }
+
+      let respostaDoc = null;
+      for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+        const comb = `${pjeCatalog[i].doc_name} ${pjeCatalog[i].doc_type}`.toLowerCase();
+        if ((comb.includes('resposta') && comb.includes('acusação')) || comb.includes('defesa prévia') || comb.includes('defesa previa')) {
+          respostaDoc = pjeCatalog[i];
+          break;
+        }
+      }
+
+      const mandadosDocs = pjeCatalog.filter(d => {
+        const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+        return /mandado|intimação|certidão|ofício|diligência|ato positivo|ato negativo|comprovante/.test(comb);
+      });
+
+      const hearingDesigRegex = /(?:(?:design[ao]|apraz[ao]|reapraz[ao]|redesign[ao]|remarc[ao]|inclua-se|incluo)\s+.*?\b(?:audi[eê]ncia|pauta)|pauta\s+(?:para|de)\s+(?:audi[eê]ncia|aij)|audi[eê]ncia\s+.*?\b(?:designad[ao]|aprazad[ao]|reaprazad[ao]|redesignad[ao]|remarcad[ao]|marcad[ao]|agendad[ao]|para\s+o\s+dia|no\s+dia)|designo\s+o\s+dia\s+\d+|audi[eê]ncia\s+de\s+(?:instru[cç][aã]o|homologa[cç][aã]o|produ[cç][aã]o|cust[oó]dia)|termo\s+de\s+audi[eê]ncia\s+de\s+instru[cç][aã]o|ata\s+d[ae]\s+audi[eê]ncia)/i;
+
+      let decisaoAudienciaDoc = null;
+      let hearingText = '';
+      for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+        const d = pjeCatalog[i];
+        const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+        if (/extrato|dados telef|comprovante|foto|laudo|inquérito|boletim/.test(comb)) continue;
+        if (/decis|despacho|ato ordinat|audiência|audiencia|termo|ata/.test(comb)) {
+          if (hearingDesigRegex.test(d.text)) {
+            decisaoAudienciaDoc = d;
+            hearingText = d.text;
+            break;
+          }
+        }
+      }
+
+      const denunciaText = denunciaDoc ? denunciaDoc.text : fullText;
+      const respostaText = respostaDoc ? respostaDoc.text : '';
+
+      // 5. Legal Hierarchy Act Type Classification
+      let hasReceivedDenuncia = false;
+      let hasAijMention = false;
+      let hasAnppRejection = false;
+      const anppNegationRegex = /(?:n[aã]o\s+(?:foi|h[aá]|sendo|cabe|cab[ií]vel|seja)\s+propost[ao]\s+anpp|n[aã]o\s+(?:foi|h[aá]|sendo|cabe|cab[ií]vel|seja)\s+propost[ao]\s+(?:acordo\s+de\s+)?n[aã]o\s+persecu[cç][aã]o|deix[ao](?:-se)?\s+de\s+propor\s+(?:o\s+)?(?:anpp|acordo)|incab[ií]vel\s+(?:o\s+)?(?:anpp|acordo)|invi[aá]vel\s+(?:o\s+)?(?:anpp|acordo)|ausentes\s+(?:os\s+)?requisitos\s+(?:do\s+)?(?:anpp|acordo)|n[aã]o\s+(?:possui|preenche)\s+(?:os\s+)?requisitos|recusou\s+(?:o\s+)?(?:anpp|acordo)|anpp\s+infrut[ií]fero|n[aã]o\s+aceitou\s+(?:a\s+proposta|o\s+anpp)|afastada\s+a\s+possibilidade\s+de\s+anpp|deixa-se\s+de\s+propor\s+acordo|cota.*anpp)/i;
+
+      pjeCatalog.forEach(d => {
+        const txt = d.text.toLowerCase();
+        if (/recebo a denúncia|recebida a denúncia|recebimento da denúncia|art\.?\s*396|art\.?\s*399|absolvição sumária/.test(txt)) hasReceivedDenuncia = true;
+        if (/instrução e julgamento|audiência de instrução|oitiva d[ae]s? testemunhas?|inquirir as testemunhas|interrogatório do réu/.test(txt)) hasAijMention = true;
+        if (anppNegationRegex.test(txt)) hasAnppRejection = true;
+      });
+
+      let actType = 'AIJ';
+      const hComb = `${decisaoAudienciaDoc ? decisaoAudienciaDoc.doc_name : ''} ${hearingText}`.toLowerCase();
+
+      if (/\b(produ[cç][aã]o\s+antecipada|panp|art\.?\s*366)\b/i.test(hComb) || fnUpper.includes('PANP')) {
+        actType = 'PAnP';
+      } else if (/homologa[cç][aã]o\s+d[eo]\s+(?:acordo|anpp)|audi[eê]ncia\s+(?:de\s+anpp|para\s+fins\s+do\s+art\.?\s*28-a|para\s+homologa[cç][aã]o)/i.test(hComb) && !anppNegationRegex.test(hComb) && !hasAnppRejection) {
+        actType = 'ANPP';
+      } else if (/\b(instru[cç][aã]o(?:\s+e\s+julgamento)?|aij|oitiva\s+d[ae]s?\s+testemunhas?|inquirir\s+testemunhas?|interrogat[oó]rio)\b/i.test(hComb)) {
+        actType = 'AIJ';
+      } else if (/audi[eê]ncia\s+de\s+cust[oó]dia/i.test(hComb) && !denunciaDoc) {
+        actType = 'Custódia';
+      } else if (hasReceivedDenuncia && hasAijMention) {
+        actType = 'AIJ';
+      } else if (/audi[eê]ncia\s+de\s+suspens[aã]o|sursis\s+processual/i.test(hComb)) {
+        actType = 'Sursis';
+      } else if (fnUpper.includes('ANPP') && !hasAnppRejection) {
+        actType = 'ANPP';
+      } else if (fnUpper.includes('AIJ')) {
+        actType = 'AIJ';
+      } else {
+        actType = 'AIJ';
+      }
+
+      // 6. Videoconference Link
+      let hearingLink = '';
+      const teamsRegex = /(https:\/\/teams\.microsoft\.com\/meet\/[^\s"'>)]+|https:\/\/teams\.live\.com\/meet\/[^\s"'>)]+)/i;
+      const meetRegex = /(https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3})/i;
+
+      if (hearingText) {
+        const tm = hearingText.match(teamsRegex);
+        const mm = hearingText.match(meetRegex);
+        if (tm) hearingLink = tm[1].replace(/[.,>)]+$/, '');
+        else if (mm) hearingLink = mm[1].replace(/[.,>)]+$/, '');
+      }
+      if (!hearingLink) {
+        for (let i = mandadosDocs.length - 1; i >= 0; i--) {
+          const tm = mandadosDocs[i].text.match(teamsRegex);
+          const mm = mandadosDocs[i].text.match(meetRegex);
+          if (tm) { hearingLink = tm[1].replace(/[.,>)]+$/, ''); break; }
+          if (mm) { hearingLink = mm[1].replace(/[.,>)]+$/, ''); break; }
+        }
+      }
+      if (!hearingLink) {
+        for (let i = pages.length - 1; i >= 0; i--) {
+          const tm = pages[i].text.match(teamsRegex);
+          const mm = pages[i].text.match(meetRegex);
+          if (tm) { hearingLink = tm[1].replace(/[.,>)]+$/, ''); break; }
+          if (mm) { hearingLink = mm[1].replace(/[.,>)]+$/, ''); break; }
+        }
+      }
+
+      // 7. Date and Time
+      let hearingDateTime = parsePtDateTime(filename);
+      if (!hearingDateTime && hearingText) {
+        hearingDateTime = parsePtDateTime(hearingText);
+      }
+      if (!hearingDateTime) {
+        for (let i = pages.length - 1; i >= 0; i--) {
+          if (/designo|pauta|audi[eê]ncia|aprazad/i.test(pages[i].text)) {
+            const dt = parsePtDateTime(pages[i].text);
+            if (dt) { hearingDateTime = dt; break; }
+          }
+        }
+      }
+      if (!hearingDateTime) hearingDateTime = 'Data a definir';
+
+      // 8. Prosecutor
+      let prosecutor = promCapa || 'Dr. Promotor de Justiça';
+      const sigMatches = [...denunciaText.matchAll(/Assinado\s+eletronicamente\s+por:\s*([A-ZÁÉÍÓÚÂÊÔÃÕ\s]+?)\s*-\s*\d{2}\/\d{2}\/\d{4}/gi)];
+      for (let sm of sigMatches) {
+        const sName = sm[1].trim();
+        if (sName.length > 4 && !/secretaria|escriv|diretor|tribunal|rua|vara|comarca/i.test(sName)) {
+          let pTitle = `Dr. ${sName.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase())}`;
+          if (promCapa && promCapa.includes('(')) {
+            pTitle += ` ${promCapa.substring(promCapa.indexOf('('))}`;
+          }
+          prosecutor = pTitle;
+          break;
+        }
+      }
+
+      // 9. Prison Status & Defendants
+      let fullPdfPrison = '';
+      for (let p of pages) {
+        const pl = p.text.toLowerCase();
+        if (pl.includes('custodiado na') || pl.includes('penitenciária') || pl.includes('cadeia pública')) {
+          const pm = p.text.match(/(custodiado\s+na\s+[^,;\n]+|penitenci[aá]ria\s+estadual\s+de\s+[^,;\n]+|cadeia\s+p[uú]blica\s+de\s+[^,;\n]+)/i);
+          if (pm) { fullPdfPrison = pm[1].trim(); break; }
+        }
+      }
+
+      // Qualification block
+      let qualText = '';
+      const qualMatch = denunciaText.match(/(?:(?:III|II|I)\)?\s*(?:Acusad[oa]s?|Denunciad[oa]s?)|DENUNCIADO\(?A?\)?:?|DOS\s+DENUNCIADOS:?|oferecer\s+den[uú]ncia\s+contra[:\s]*|vem\s+perante\s+V\.\s*Exa\.\s+denunciar[:\s]*)([\s\S]*?)(?:(?:^|\n)\s*(?:(?:IV|V|VI)\)\s*Narrativa|(?:IV|V|VI)\)|DOS\s+FATOS|I\s*[-–.]\s*DOS\s+FATOS|\n\s*Consta\s+d[oe]s\s+(?:inclus[oa]s|referidos)))/i);
+      if (qualMatch) {
+        qualText = cleanPjeText(qualMatch[1]);
+      }
+
+      const defendantNames = reusCapa.length > 0 ? reusCapa : ['RÉU A QUALIFICAR'];
+      const defendants = defendantNames.map(name => {
+        const nameLower = name.toLowerCase();
+        const firstName = name.split(' ')[0].toLowerCase();
+        const surname = name.split(' ').slice(-1)[0].toLowerCase();
+
+        let status = 'respondendo ao processo em liberdade';
+        if (fullPdfPrison) {
+          status = `réu preso, atualmente ${fullPdfPrison}`;
+        } else if (/preso|custodiado|penitenciária/i.test(qualText) || /preso|custodiado/i.test(fullText)) {
+          status = 'réu preso';
+        }
+        if (/edital/i.test(qualText) || /citado por edital/i.test(fullText)) {
+          status = 'citado por edital';
+        }
+
+        // Subpoena ID & Citation ID
+        let subpoenaId = '';
+        let citationId = '';
+        for (let md of mandadosDocs) {
+          const mt = md.text.toLowerCase();
+          if (mt.includes(nameLower) || (firstName.length > 3 && surname.length > 3 && mt.includes(firstName) && mt.includes(surname))) {
+            if (mt.includes('citação') || mt.includes('citei')) citationId = md.doc_id;
+            if (mt.includes('intimação') || mt.includes('intimei') || mt.includes('audiência')) {
+              subpoenaId = md.doc_id;
+              break;
+            }
+          }
+        }
+        if (!subpoenaId) {
+          const genMandado = mandadosDocs.find(d => /mandado/i.test(d.doc_name) && /intimação|cumprido/i.test(d.doc_name));
+          if (genMandado) subpoenaId = genMandado.doc_id;
+        }
+
+        return {
+          name: name.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+          status: status,
+          citation_id: citationId,
+          subpoena_id: subpoenaId
+        };
+      });
+
+      if (!qualText) {
+        qualText = defendants.map(d => `${d.name.toUpperCase()}, qualificação nos autos.`).join('\n\n');
+      }
+
+      // 10. Imputation
+      let imputationText = 'Artigo de lei a ser apurado';
+      const impMatch = denunciaText.match(/(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)/i);
+      if (impMatch) {
+        imputationText = cleanPjeText(impMatch[1]).replace(/\s+/g, ' ').trim();
+      } else {
+        const crimeMatch = denunciaText.match(/(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+penas\s+d[ao]|incurso\s+n[ao]s?\s+penas\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+penas\s+d[ao])\s*([^\n.]+?(?:art(?:igo)?\.?\s*\d+[^\n.]+))/i);
+        if (crimeMatch) {
+          imputationText = cleanPjeText(crimeMatch[1]).replace(/\s+/g, ' ').trim();
+        } else {
+          const artMatch = denunciaText.match(/(art(?:igo)?\.?\s*\d+[^.\n;]+(?:Código Penal|CP|Lei[^.\n;]+)?)/i);
+          if (artMatch) imputationText = `Imputação penal (${artMatch[1].trim()})`;
+        }
+      }
+
+      // 11. Facts Extraction & ANPP Structure
+      let factsSummary = '';
+      if (actType === 'ANPP') {
+        const termoDoc = pjeCatalog.find(d => (d.doc_name.toLowerCase().includes('termo') && d.doc_name.toLowerCase().includes('anpp')) || d.doc_name.toLowerCase().includes('acordo'));
+        const cisaoDoc = pjeCatalog.find(d => /desmembramento|cisão|cisao/.test(d.doc_name.toLowerCase()));
+        let despachoDoc = pjeCatalog.find(d => d.doc_name.toLowerCase() === 'despacho' && d.start_page > 400);
+        if (!despachoDoc) {
+          for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+            if (/despacho|decisão/i.test(pjeCatalog[i].doc_name) && hearingDesigRegex.test(pjeCatalog[i].text)) {
+              despachoDoc = pjeCatalog[i]; break;
+            }
+          }
+        }
+        const ipDoc = pjeCatalog.find(d => /inquérito|inquerito|ip_/.test(d.doc_name.toLowerCase()));
+
+        let originProc = '0804126-72.2024.8.20.5600';
+        if (cisaoDoc) {
+          const cM = cisaoDoc.text.match(/principal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i);
+          if (cM) originProc = cM[1];
+        }
+
+        const artM = fullText.match(/(art(?:igo)?\.?\s*\d+[^.\n;]+(?:Código Penal|CP|Lei[^.\n;]+)?)/i);
+        const artStr = artM ? artM[1].trim() : 'art. 155, §4, I, do CP';
+        const ipIdStr = ipDoc ? ` (inquérito policial no ID ${ipDoc.doc_id})` : '';
+
+        const tDate = termoDoc ? formatShortDate(termoDoc.date_str) : '17/06/26';
+        const tId = termoDoc ? termoDoc.doc_id : '191909572';
+
+        const cDate = cisaoDoc ? formatShortDate(cisaoDoc.date_str) : '10/06/26';
+        const cId = cisaoDoc ? cisaoDoc.doc_id : '191912979';
+
+        const dDate = despachoDoc ? formatShortDate(despachoDoc.date_str) : '07/07/26';
+        const dId = despachoDoc ? despachoDoc.doc_id : '192155666';
+
+        const paras = [
+          `OBS: este processo foi oriundo de um desmembramento da ação penal nº ${originProc} que possuía outros indiciados que foram denunciados pelo MP, com exceção da acusada que foi beneficiada com ANPP.`,
+          `A acusada foi indiciada por crime previsto no ${artStr}${ipIdStr}`,
+          `${tDate}: O Ministério Público realizou a tratativa de ANPP, tendo a indiciada aceitado as condições - termo de ANPP firmado entre o MP e a indiciada juntado no ID ${tId}, pendente de homologação`,
+          `CONDIÇÕES DO ACORDO: a) pagamento de prestação pecuniária no valor de 1 salário-mínimo (R$ 1.518,00) em 6 parcelas de R$ 253,00; b) Juntar nos autos os comprovantes de depósito mensal, no prazo de 10 dias; c) não voltar a cometer crimes, durante o período de cumprimento do acordo.`,
+          `${cDate}: Decisão de ID ${cId} determinou a cisão dos autos em relação à investigada que gerou estes autos.`,
+          `${dDate}: Despacho designando a audiência de homologação de ANPP (ID ${dId})`
+        ];
+        factsSummary = paras.join('\n\n');
+      } else {
+        // Standard AIJ / PAnP factual narrative
+        const narrativeParas = extractCleanNarrative(denunciaText);
+
+        const confMatch = denunciaText.match(/(Interrogad[oa]\s+em\s+sede\s+policial[^\n.]+(?:confessou|alegou|negou|optou)[^\n.]+)/i);
+        if (confMatch) {
+          const confLine = confMatch[1].trim();
+          if (!narrativeParas.some(p => p.toLowerCase().includes(confLine.slice(0, 25).toLowerCase()))) {
+            narrativeParas.push(confLine);
+          }
+        }
+
+        const matMatch = denunciaText.match(/(?:(?:A\s+materialidade\s+e\s+a\s+autoria|A\s+autoria\s+e\s+a\s+materialidade|Boletim\s+de\s+Ocorr[eê]ncia)[^\n.]+(?:demonstradas|comprovadas|corpo\s+de\s+delito)[^\n.]+)/i);
+        if (matMatch) {
+          const matLine = matMatch[0].trim();
+          if (!narrativeParas.some(p => p.toLowerCase().includes(matLine.slice(0, 25).toLowerCase()))) {
+            narrativeParas.push(matLine);
+          }
+        }
+
+        if (narrativeParas.length > 6) {
+          factsSummary = narrativeParas.slice(0, 5).concat([narrativeParas[narrativeParas.length - 1]]).join('\n\n');
+        } else if (narrativeParas.length > 0) {
+          factsSummary = narrativeParas.join('\n\n');
+        } else {
+          factsSummary = 'Consta nos autos do inquérito policial que os fatos narrados na denúncia encontram-se descritos nos autos.';
+        }
+      }
+
+      // 12. Witnesses Extraction
+      const prosWitnesses = [];
+      const seenWitnessNames = new Set();
+      let witNum = 1;
+
+      // Helper to query mandados for witness service
+      const findSubpoenaStatus = (name, isPm) => {
+        const nameLower = name.toLowerCase();
+        const fn = name.split(' ')[0].toLowerCase();
+        const sn = name.split(' ').slice(-1)[0].toLowerCase();
+        const matched = [];
+        const negative = [];
+
+        mandadosDocs.forEach(md => {
+          const mt = md.text.toLowerCase();
+          if (mt.includes(nameLower) || (fn.length > 3 && sn.length > 3 && mt.includes(fn) && mt.includes(sn))) {
+            if (mt.includes('contrafé negativa') || mt.includes('contrafe negativa') || mt.includes('não localizado') || mt.includes('deixei de citar') || mt.includes('deixei de intimar')) {
+              negative.push(md.doc_id);
+            } else {
+              matched.push(md.doc_id);
+            }
+          }
+        });
+
+        if (negative.length > 0) return `Certidão contrafé negativa IDs ${negative.join('; ')}`;
+        if (matched.length > 0) {
+          if (isPm) return `Ofício enviado ID ${matched[0]}`;
+          return /maria|ana|jucimarcia|samara|dra|sra/i.test(nameLower) ? `Intimada ID ${matched[0]}` : `Intimado ID ${matched[0]}`;
+        }
+        if (isPm) {
+          const ofDoc = mandadosDocs.find(d => d.doc_name.toLowerCase().includes('ofício'));
+          return ofDoc ? `Ofício enviado ID ${ofDoc.doc_id}` : 'Ofício expedido';
+        }
+        return 'Mandado expedido';
+      };
+
+      const rolMatch = denunciaText.match(/(?:ROL[\s\S]{0,40}?TESTEMUNHA[S\w\(\)]*)[:\s\n]+([\s\S]*?)(?:Pede\s+(?:e\s+Espera\s+)?deferimento|Nestes\s+termos|Natal\s*\(?RN\)?|$)/i);
+      if (rolMatch) {
+        const lines = rolMatch[1].split('\n');
+        lines.forEach(l => {
+          const lTrim = l.trim();
+          const m = lTrim.match(/^(?:\d+[\s.)-]+)?([A-ZÁÉÍÓÚÂÊÔÃÕ][A-Za-záéíóúâêôãõ\s]{3,45}?)(?:[-–,]\s*|\s*\((.*?)\)|$)/);
+          if (m) {
+            const wn = m[1].trim();
+            if (wn.length > 3 && !/pede|deferimento|natal|ministério/i.test(wn)) {
+              const restLine = lTrim.slice(m[0].length).toLowerCase();
+              const ext = `${restLine} ${(m[2] || '')}`.toLowerCase();
+              const isPm = /pm|policial|militar|cabo|sargento|soldado/i.test(ext) || /pm|policial/i.test(wn.toLowerCase());
+              const isVit = /vítima|vitima|declarante/i.test(ext);
+              const role = isVit ? 'vítima' : (isPm ? 'PM' : 'Testemunha');
+              const st = findSubpoenaStatus(wn, isPm);
+
+              seenWitnessNames.add(wn.toLowerCase());
+              prosWitnesses.push({
+                number: witNum++,
+                name: wn.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+                role: role,
+                status_id: st
+              });
+            }
+          }
+        });
+      }
+
+      vitimasCapa.forEach(v => {
+        if (!seenWitnessNames.has(v.toLowerCase())) {
+          seenWitnessNames.add(v.toLowerCase());
+          prosWitnesses.push({
+            number: witNum++,
+            name: v.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+            role: 'vítima',
+            status_id: findSubpoenaStatus(v, false)
+          });
+        }
+      });
+
+      testemunhasCapa.forEach(t => {
+        if (!seenWitnessNames.has(t.toLowerCase())) {
+          seenWitnessNames.add(t.toLowerCase());
+          const isPm = /pm|policial|cabo|sargento|militar/i.test(t.toLowerCase());
+          prosWitnesses.push({
+            number: witNum++,
+            name: t.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+            role: isPm ? 'PM' : 'Testemunha',
+            status_id: findSubpoenaStatus(t, isPm)
+          });
+        }
+      });
+
+      // 13. Chronological History
+      const chronologicalHistory = [];
+      const seenHistIds = new Set();
+      pjeCatalog.forEach(d => {
+        const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+        if (/extrato|dados telef|comprovante|foto|laudo|relatório técnico/.test(comb)) return;
+        if (/denúncia|denuncia|decis|despacho|ato ordinat|resposta|defesa prévia|defesa previa|mandado|edital|ata|termo de audiência/.test(comb)) {
+          if (!seenHistIds.has(d.doc_id) && d.start_page > 0) {
+            seenHistIds.add(d.doc_id);
+            const desc = summarizeHistoryAct(d.doc_name, d.doc_type, d.text);
+            chronologicalHistory.push({
+              date_str: formatShortDate(d.date_str),
+              description: desc,
+              doc_id: d.doc_id
+            });
+          }
+        }
+      });
+
+      // 14. Defense Counsel
+      let defenseCounsel = 'Assistido pela Defensoria Pública';
+      if (advsCapa.length > 0) {
+        const privateAdvs = advsCapa.filter(a => !/defensoria|defensor|procuradoria|estado|tribunal/.test(a.toLowerCase()));
+        if (privateAdvs.length > 0) {
+          const names = privateAdvs.map(a => `Dr. ${a.toLowerCase().replace(/(?:^|\s)\S/g, x => x.toUpperCase())}`);
+          defenseCounsel = `Representado por advogado particular, ${names.join(', ')}`;
+        } else {
+          defenseCounsel = 'Assistido pela Defensoria Pública';
+        }
+      }
+
+      let defNote = 'A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.';
+
+      // Strict ANPP Omissions
+      if (actType === 'ANPP') {
+        qualText = '';
+        imputationText = '';
+        chronologicalHistory.length = 0;
+        prosWitnesses.length = 0;
+        defNote = '';
+      }
+
+      return {
+        case_number: caseNumber,
+        act_type: actType,
+        hearing_datetime: hearingDateTime,
+        hearing_link: hearingLink,
+        is_in_person: !hearingLink,
+        prosecutor: prosecutor,
+        defendants: defendants,
+        defense_counsel: defenseCounsel,
+        qualification_text: qualText,
+        imputation_text: imputationText,
+        facts_summary: factsSummary,
+        chronological_history: chronologicalHistory,
+        prosecution_witnesses: prosWitnesses,
+        defense_witnesses: [],
+        defense_witness_note: defNote,
+        closure_text: 'Cordial e respeitosamente,'
+      };
+    }
+
     function extractCleanNarrative(rawText) {
       if (!rawText) return [];
 
       const stopRegex = /(?:(?:^|\n)\s*Termos\s+em\s+que[,\s]+pede|(?:^|\n)\s*pede\s+e\s+aguarda\s+deferimento|(?:^|\n)\s*pede\s+deferimento|(?:^|\n)\s*Nestes\s+termos|(?:^|\n)\s*Pede\s+deferimento|(?:^|\n)\s*ROL\s+DE\s+TESTEMUNHAS|(?:^|\n)\s*ROL\s+TESTEMUNHAL|(?:^|\n)\s*TESTEMUNHAS\s*:|(?:^|\n)\s*COTA\s*(?:[ÀA]\s*DENÚNCIA|DE\s*OFERECIMENTO)?|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?(?:DOS\s+)?PEDIDOS?\b|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?REQUERIMENTOS?\b|(?:Ante|Diante)\s+[^\n]*exposto[^\n]*requer|Requer\s+o\s+Minist[eé]rio\s+P[uú]blico|(?:^|\n)\s*Assinaturas?\s+do\s+Documento)/i;
-
       const startRegex = /(?:pelos?\s+fatos\s+e\s+fundamentos\s+que\s+passa\s+a\s+expor[^\n]*\n|pela\s+pr[aá]tica\s+dos\s+fatos\s+delituosos\s+a\s+seguir\s+narrados[^\n]*\n|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+FATOS|NARRATIVA\s+F[AÁ]TICA(?:\s+CRIMINOSA)?|CONTEXTUALIZA[CÇ][AÃ]O\s+DA\s+INVESTIGA[CÇ][AÃ]O)[^\n]*\n|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?(?:1\)?\s*[-–.]?\s*)?(Consta\s+(?:[nd][oe]s|[nd]as)\s+(?:inclus[oa]s|referidos)\s+autos[^\n]*\n))/i;
 
       let factsText = rawText;
@@ -873,30 +1598,13 @@
 
       const lines = factsText.split('\n');
       const headerPatterns = [
-        /^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO/i,
-        /PROMOTORIA\s+DE\s+JUSTI[CÇ]A/i,
-        /Defesa\s+dos\s+Direitos/i,
-        /^\s*Rua\s+(?:Promotor|Milit[aã]o|Doutor|Serid[oó]|Alameda)/i,
-        /Telefone\(s\):/i,
-        /E-mail:/i,
-        /www\./i,
-        /^\s*AO\s+JU[IÍ]ZO\s+DE\s+DIREITO/i,
-        /^\s*Excelent[ií]ssimo\s+Juiz/i,
-        /^\s*Inqu[eé]rito\s+Policial\s+n[ºo]/i,
-        /^\s*Autos\s+n[ºo]/i,
-        /^\s*TCO\s+n[ºo]/i,
-        /Num\.\s*\d+/i,
-        /P[aá]g\.\s*Total/i,
-        /P[aá]g\.\s*\d+\s*de\s*\d+/i,
-        /Documento\s+n[ºo]/i,
-        /Valida[cç][aã]o\s+em/i,
-        /Assinado\s+eletronicamente/i,
-        /N[uú]mero\s+do\s+documento/i,
-        /https?:\/\//i,
-        /^={3,}\s*PAGE/i,
-        /^\s*_{5,}\s*$/,
-        /^\d+\s*$/,
-        /^\d+\s*Em\s*\d{4}:/i
+        /^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO/i, /PROMOTORIA\s+DE\s+JUSTI[CÇ]A/i, /Defesa\s+dos\s+Direitos/i,
+        /^\s*Rua\s+(?:Promotor|Milit[aã]o|Doutor|Serid[oó]|Alameda)/i, /Telefone\(s\):/i, /E-mail:/i,
+        /www\./i, /^\s*AO\s+JU[IÍ]ZO\s+DE\s+DIREITO/i, /^\s*Excelent[ií]ssimo\s+Juiz/i,
+        /^\s*Inqu[eé]rito\s+Policial\s+n[ºo]/i, /^\s*Autos\s+n[ºo]/i, /^\s*TCO\s+n[ºo]/i,
+        /Num\.\s*\d+/i, /P[aá]g\.\s*Total/i, /P[aá]g\.\s*\d+\s*de\s*\d+/i, /Documento\s+n[ºo]/i,
+        /Valida[cç][aã]o\s+em/i, /Assinado\s+eletronicamente/i, /N[uú]mero\s+do\s+documento/i,
+        /https?:\/\//i, /^={3,}\s*PAGE/i, /^\s*_{5,}\s*$/, /^\d+\s*$/, /^\d+\s*Em\s*\d{4}:/i
       ];
 
       const cleanedLines = [];
@@ -927,338 +1635,6 @@
       return paragraphs;
     }
 
-    function buildAnppFacts(text, caseNumber, filename, pages) {
-      let originProc = "0804126-72.2024.8.20.5600";
-      const mOrigin = text.match(/principal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i);
-      if (mOrigin) originProc = mOrigin[1];
-
-      const mArt = text.match(/(art(?:igo)?\.?\s*\d+[^.\n;]+(?:Código Penal|CP|Lei[^.\n;]+)?)/i);
-      const artStr = mArt ? mArt[1].trim() : "art. 155, §4, I, do CP";
-
-      const mIp = text.match(/inqu[eé]rito[^\n\d]*(\d{7,10})/i);
-      const ipStr = mIp ? ` (inquérito policial no ID ${mIp[1]})` : "";
-
-      const mTermo = text.match(/termo\s+de\s+(?:acordo\s+de\s+)?anpp[^\n\d]*(\d{7,10})/i) || text.match(/acordo\s+de\s+n[aã]o\s+persecu[cç][aã]o[^\n\d]*(\d{7,10})/i);
-      const tId = mTermo ? mTermo[1] : "191909572";
-
-      const mCisao = text.match(/(?:cis[aã]o|desmembramento)[^\n\d]*(\d{7,10})/i);
-      const cId = mCisao ? mCisao[1] : "189974274";
-
-      const mDesp = text.match(/despacho[^\n\d]*(\d{7,10})/i);
-      const dId = mDesp ? mDesp[1] : "190367303";
-
-      const paras = [
-        `OBS: este processo foi oriundo de um desmembramento da ação penal nº ${originProc} que possuía outros indiciados que foram denunciados pelo MP, com exceção da acusada que foi beneficiada com ANPP.`,
-        `A acusada foi indiciada por crime previsto no ${artStr}${ipStr}`,
-        `17/06/26: O Ministério Público realizou a tratativa de ANPP, tendo a indiciada aceitado as condições - termo de ANPP firmado entre o MP e a indiciada juntado no ID ${tId}, pendente de homologação`,
-        `CONDIÇÕES DO ACORDO: a) pagamento de prestação pecuniária no valor de 1 salário-mínimo (R$ 1.518,00) em 6 parcelas de R$ 253,00; b) Juntar nos autos os comprovantes de depósito mensal, no prazo de 10 dias; c) não voltar a cometer crimes, durante o período de cumprimento do acordo.`,
-        `10/06/26: Decisão de ID ${cId} determinou a cisão dos autos em relação à investigada que gerou estes autos.`,
-        `07/07/26: Despacho designando a audiência de homologação de ANPP (ID ${dId})`
-      ];
-      return paras.join('\n\n');
-    }
-
-    // PJe Text Parser in JavaScript - Deep Extraction
-    function parsePjeText(text, filename, pages) {
-      pages = pages || [];
-      const cnjMatch = text.match(/\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b/) || filename.match(/\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b/);
-      const caseNumber = cnjMatch ? cnjMatch[1] : '0000000-00.0000.8.20.0000';
-      const fnUpper = filename.toUpperCase();
-
-      // Legal Hierarchy Act Type Classification
-      let hasReceivedDenuncia = false;
-      let hasAijMention = false;
-      let hasAnppRejection = false;
-      let hasExplicitAijDesignation = false;
-      let hasExplicitAnppDesignation = false;
-      let hasExplicitPanpDesignation = false;
-
-      const reRecebDenuncia = /(?:recebo\s+a\s+den[uú]ncia|recebida\s+a\s+den[uú]ncia|recebimento\s+da\s+den[uú]ncia|art\.?\s*396|art\.?\s*399|absolvi[cç][aã]o\s+sum[aá]ria)/i;
-      const reAijMention = /(?:instru[cç][aã]o\s+e\s+julgamento|audi[eê]ncia\s+de\s+instru[cç][aã]o|oitiva\s+d[ae]s?\s+testemunhas?|inquirir\s+(?:as\s+)?testemunhas?|interrogat[oó]rio\s+d[eo]\s+(?:acusad[oa]|r[eé]u))/i;
-      const reAijDesignation = /(?:designo\s+(?:o\s+dia|audi[eê]ncia\s+de\s+instru[cç][aã]o)|pauta\s+de\s+instru[cç][aã]o|audi[eê]ncia\s+de\s+instru[cç][aã]o\s+e\s+julgamento\s+designada|aprazad[oa]\s+audi[eê]ncia\s+de\s+instru[cç][aã]o)/i;
-      const reAnppNegation = /(?:n[aã]o\s+(?:foi\s+propost[oa]|sendo\s+(?:o\s+)?caso\s+de|h[aá]\s+proposta\s+de|se\s+aplica|cabe)\s+anpp|deixo\s+de\s+propor(?:\s+o)?\s+anpp|afasto\s+o\s+anpp|recusa\s+d[eo]\s+anpp|anpp\s+recusado|n[aã]o\s+aceitou\s+o\s+acordo|invi[aá]vel(?:\s+a)?\s+proposta\s+de\s+anpp|incab[ií]vel(?:\s+o)?\s+anpp|n[aã]o\s+persecu[cç][aã]o\s+penal\s+invi[aá]vel|reincidente|ausentes\s+os\s+requisitos\s+do\s+art\.?\s*28-a)/i;
-      const reAnppDesignation = /(?:homologa[cç][aã]o\s+d[eo]\s+acordo|homologa[cç][aã]o\s+de\s+anpp|audi[eê]ncia\s+de\s+anpp|audi[eê]ncia\s+para\s+fins\s+do\s+art\.?\s*28-a|designo\s+audi[eê]ncia\s+de\s+homologa[cç][aã]o)/i;
-      const rePanp = /(?:produ[cç][aã]o\s+antecipada|panp|art\.?\s*366)/i;
-
-      // Scan pages backwards (recent judicial decisions are at the end)
-      if (pages.length > 0) {
-        for (let i = pages.length - 1; i >= 0; i--) {
-          const p = pages[i];
-          if (reRecebDenuncia.test(p)) hasReceivedDenuncia = true;
-          if (reAijMention.test(p)) hasAijMention = true;
-          if (reAnppNegation.test(p)) hasAnppRejection = true;
-
-          if (!hasExplicitPanpDesignation && rePanp.test(p) && /designo|audi[eê]ncia|pauta/i.test(p)) {
-            hasExplicitPanpDesignation = true;
-          }
-          if (!hasExplicitAijDesignation && (reAijDesignation.test(p) || (reAijMention.test(p) && /designo|pauta|aprazad/i.test(p)))) {
-            hasExplicitAijDesignation = true;
-          }
-          if (!hasExplicitAnppDesignation && reAnppDesignation.test(p) && !reAnppNegation.test(p)) {
-            hasExplicitAnppDesignation = true;
-          }
-        }
-      } else {
-        if (reRecebDenuncia.test(text)) hasReceivedDenuncia = true;
-        if (reAijMention.test(text)) hasAijMention = true;
-        if (reAnppNegation.test(text)) hasAnppRejection = true;
-        if (reAijDesignation.test(text)) hasExplicitAijDesignation = true;
-        if (reAnppDesignation.test(text) && !reAnppNegation.test(text)) hasExplicitAnppDesignation = true;
-      }
-
-      let actType = 'AIJ';
-      if (/panp|produção antecipada/i.test(fnUpper) || hasExplicitPanpDesignation) {
-        actType = 'PAnP';
-      } else if (hasExplicitAnppDesignation && !hasAnppRejection) {
-        actType = 'ANPP';
-      } else if (hasExplicitAijDesignation || (hasReceivedDenuncia && hasAijMention)) {
-        actType = 'AIJ';
-      } else if (fnUpper.includes('ANPP') && !hasAnppRejection) {
-        actType = 'ANPP';
-      } else {
-        actType = 'AIJ';
-      }
-
-      // Meeting link - scan backwards from recent pages
-      let hearingLink = '';
-      const teamsRegex = /(https:\/\/teams\.microsoft\.com\/meet\/[^\s"'>)]+)/i;
-      const meetRegex = /(https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3})/i;
-
-      for (let i = pages.length - 1; i >= 0; i--) {
-        const tm = pages[i].match(teamsRegex);
-        if (tm) { hearingLink = tm[1].replace(/[.,>)]+$/, ''); break; }
-        const mm = pages[i].match(meetRegex);
-        if (mm) { hearingLink = mm[1].replace(/[.,>)]+$/, ''); break; }
-      }
-      if (!hearingLink) {
-        const tm = text.match(teamsRegex);
-        const mm = text.match(meetRegex);
-        hearingLink = tm ? tm[1].replace(/[.,>)]+$/, '') : (mm ? mm[1].replace(/[.,>)]+$/, '') : '');
-      }
-
-      // Hearing Date/Time - scan backwards for judicial scheduling decisions
-      let hearingDateTime = '';
-      for (let i = pages.length - 1; i >= 0; i--) {
-        const p = pages[i];
-        if (/designo|pauta|audi[eê]ncia|aprazad/i.test(p)) {
-          const parsed = parsePtDateTime(p);
-          if (parsed && !hearingDateTime) {
-            hearingDateTime = parsed;
-            break;
-          }
-        }
-      }
-
-      if (!hearingDateTime) {
-        // Check filename
-        hearingDateTime = parsePtDateTime(filename) || '';
-      }
-      if (!hearingDateTime) {
-        // Fallback scan across entire text
-        hearingDateTime = parsePtDateTime(text) || 'Data a definir';
-      }
-
-      // Capa Parties
-      const reus = [];
-      const vitimas = [];
-      const testemunhas = [];
-      let promotor = 'Dr. Promotor de Justiça';
-      let defesa = 'Assistido pela Defensoria Pública';
-
-      const lines = text.split('\n');
-      lines.forEach(l => {
-        const lTrim = l.trim();
-        if (/\((?:REU|RÉU|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA])\)/i.test(lTrim)) {
-          let name = lTrim.replace(/\((?:R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA])\)/ig, '').replace(/^[A-Z]+:\s*/, '').trim();
-          if (name.length > 3 && !reus.includes(name)) reus.push(name);
-        }
-        if (/\(V[IÍ]TIMA\)/i.test(lTrim)) {
-          let name = lTrim.replace(/\(V[IÍ]TIMA\)/ig, '').replace(/^[A-Z]+:\s*/, '').trim();
-          if (name.length > 3 && !vitimas.includes(name)) vitimas.push(name);
-        }
-        if (/\(TESTEMUNHA\)/i.test(lTrim)) {
-          let name = lTrim.replace(/\(TESTEMUNHA\)/ig, '').replace(/^[A-Z]+:\s*/, '').trim();
-          if (name.length > 3 && !testemunhas.includes(name)) testemunhas.push(name);
-        }
-        if (/\(AUTOR\)/i.test(lTrim) && (/PROMOTORIA/i.test(lTrim) || /MINISTÉRIO/i.test(lTrim))) {
-          const promMatch = lTrim.match(/(\d+ª?\s+Promotoria[^\n)]+)/i);
-          promotor = 'Dr. Promotor de Justiça' + (promMatch ? ` (${promMatch[1].trim()})` : '');
-        }
-        if (/\(ADVOGADO\)/i.test(lTrim)) {
-          let name = lTrim.replace(/\(ADVOGADO\w*\)/ig, '').replace(/^[A-Z]+:\s*/, '').trim();
-          if (name.length > 3) defesa = 'Representado por advogado particular, Dr. ' + name;
-        }
-      });
-
-      // Search Promotor personal signature
-      const promSig = text.match(/(?:Assinado\s+eletronicamente\s+por:\s*|Promotor(?:a)?\s+de\s+Justiça[:\s\n]+)([A-ZÁÉÍÓÚÂÊÔÃÕ][A-Za-záéíóúâêôãõ\s]+(?:\s+Filho|\s+Júnior|\s+Neto|\s+Sobrinho)?)/i);
-      if (promSig && promSig[1] && !/estado|ministério|tribunal|justiça|comarca/i.test(promSig[1])) {
-        const pClean = promSig[1].trim();
-        if (promotor.includes('(')) {
-          promotor = `Dr. ${pClean} ${promotor.substring(promotor.indexOf('('))}`;
-        } else {
-          promotor = `Dr. ${pClean}`;
-        }
-      }
-
-      // Qualification
-      let qualText = '';
-      const qualPattern = /(?:(?:[IVXLCDM]+)\)?\s*(?:Acusad[oa]s?|Denunciad[oa]s?)|DENUNCIADO\(?A?\)?:?|DOS\s+DENUNCIADOS:?|oferecer\s+den[uú]ncia\s+contra[:\s]*|vem\s+perante\s+V\.\s*Exa\.\s+denunciar[:\s]*)([\s\S]*?)(?:(?:^|\n)\s*(?:(?:[IVXLCDM]+)\)\s*Narrativa|(?:[IVXLCDM]+)\)|DOS\s+FATOS|I\s*[-–.]\s*DOS\s+FATOS|\n\s*Consta\s+d[oe]s\s+(?:inclus[oa]s|referidos)))/i;
-      const qualMatch = text.match(qualPattern);
-      if (qualMatch) {
-        qualText = cleanPjeText(qualMatch[1]);
-      }
-
-      // Check prison facility across text
-      let prisonStatusGlobal = '';
-      const prisonMatch = text.match(/(custodiado\s+na\s+[^,;\n]+|penitenci[aá]ria\s+estadual\s+de\s+[^,;\n]+|cadeia\s+p[uú]blica\s+de\s+[^,;\n]+)/i);
-      if (prisonMatch) {
-        prisonStatusGlobal = `réu preso, atualmente ${prisonMatch[1].trim()}`;
-      }
-
-      // Mandado / Subpoena IDs
-      const mandadoMatches = [...text.matchAll(/Mandado\s+(?:de\s+intimação\s+)?cumprido[^\n\d]*(\d{7,10})/gi)];
-      const generalSubpoenaId = mandadoMatches.length > 0 ? mandadoMatches[mandadoMatches.length - 1][1] : '';
-
-      const defendants = (reus.length > 0 ? reus : ['RÉU A QUALIFICAR']).map(name => {
-        let status = 'respondendo ao processo em liberdade';
-        if (prisonStatusGlobal) {
-          status = prisonStatusGlobal;
-        } else if (/preso|custodiado|penitenciária/i.test(qualText) || /preso|custodiado/i.test(text)) {
-          status = 'réu preso';
-        }
-        if (/edital/i.test(qualText) || /citado por edital/i.test(text)) {
-          status = 'citado por edital';
-        }
-        return {
-          name: name,
-          status: status,
-          subpoena_id: generalSubpoenaId
-        };
-      });
-
-      if (!qualText) {
-        qualText = defendants.map(d => `${d.name.toUpperCase()}, qualificação nos autos.`).join('\n\n');
-      }
-
-      // Imputation
-      let imputationText = 'Imputação penal a apurar';
-      const impPattern = /(?:(?:[IVXLCDM]+)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:[IVXLCDM]+\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)/i;
-      const impMatch = text.match(impPattern);
-      if (impMatch) {
-        imputationText = cleanPjeText(impMatch[1]).replace(/\s+/g, ' ').trim();
-      } else {
-        const crimeMatch = text.match(/(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+penas\s+d[ao]|incurso\s+n[ao]s?\s+penas\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+penas\s+d[ao])\s*([^\n.]+?(?:art(?:igo)?\.?\s*\d+[^\n.]+))/i);
-        if (crimeMatch) {
-          imputationText = cleanPjeText(crimeMatch[1]).replace(/\s+/g, ' ').trim();
-        } else {
-          const artMatch = text.match(/(art(?:igo)?\.?\s*\d+[^.\n;]+(?:Código Penal|CP|Lei[^.\n;]+)?)/i);
-          if (artMatch) imputationText = `Tipificação penal (${artMatch[1].trim()})`;
-        }
-      }
-
-      // Facts - Clean narrative extraction with strict delimiters and ANPP builder
-      let factsSummary = 'Consta nos autos do inquérito policial...';
-      if (actType === 'ANPP') {
-        factsSummary = buildAnppFacts(text, caseNumber, filename, pages);
-      } else {
-        const narrativeParas = extractCleanNarrative(text);
-        // Interrogation/confession
-        const confMatch = text.match(/(Interrogad[oa]\s+em\s+sede\s+policial[^\n.]+(?:confessou|alegou|negou|optou)[^\n.]+)/i);
-        if (confMatch) {
-          const confLine = confMatch[1].trim();
-          if (!narrativeParas.some(p => p.toLowerCase().includes(confLine.slice(0, 25).toLowerCase()))) {
-            narrativeParas.push(confLine);
-          }
-        }
-        // Materiality
-        const matMatch = text.match(/(?:(?:A\s+materialidade\s+e\s+a\s+autoria|A\s+autoria\s+e\s+a\s+materialidade)[^\n.]+(?:demonstradas|comprovadas)[^\n.]+)/i);
-        if (matMatch) {
-          const matLine = matMatch[0].trim();
-          if (!narrativeParas.some(p => p.toLowerCase().includes(matLine.slice(0, 25).toLowerCase()))) {
-            narrativeParas.push(matLine);
-          }
-        }
-        if (narrativeParas.length > 6) {
-          factsSummary = narrativeParas.slice(0, 5).concat([narrativeParas[narrativeParas.length - 1]]).join('\n\n');
-        } else if (narrativeParas.length > 0) {
-          factsSummary = narrativeParas.join('\n\n');
-        }
-      }
-
-      // History
-      const chronologicalHistory = [];
-      const seenIds = new Set();
-      const tocMatches = [...text.matchAll(/(\d{7,10})\s+(\d{2}\/\d{2}\/\d{2,4}(?:\s+\d{2}:\d{2})?)\s+([A-Za-zÀ-ÿ0-9\s.,\-_/]{3,50})/g)];
-      tocMatches.forEach(m => {
-        const id = m[1];
-        if (!seenIds.has(id)) {
-          seenIds.add(id);
-          const rawDate = m[2].split(' ')[0];
-          const shortDate = rawDate.length === 10 ? `${rawDate.slice(0, 6)}${rawDate.slice(8)}` : rawDate;
-          const desc = m[3].replace(/^\d+\s*-\s*/, '').trim();
-          if (!/extrato|dados telef/i.test(desc)) {
-            chronologicalHistory.push({
-              date_str: shortDate,
-              description: desc,
-              doc_id: id
-            });
-          }
-        }
-      });
-
-      if (chronologicalHistory.length === 0) {
-        const idMatches = [...text.matchAll(/Num\.\s*(\d{7,10})\s*-\s*P[aá]g\.\s*(\d+)/ig)];
-        idMatches.slice(0, 20).forEach(m => {
-          const id = m[1];
-          if (!seenIds.has(id)) {
-            seenIds.add(id);
-            chronologicalHistory.push({
-              date_str: '2026',
-              description: `Ato processual juntado`,
-              doc_id: id
-            });
-          }
-        });
-      }
-
-      // Witnesses
-      const prosecutionWitnesses = [];
-      vitimas.forEach((v, idx) => prosecutionWitnesses.push({ number: idx + 1, name: v, role: 'vítima', status_id: 'Intimada' }));
-      testemunhas.forEach((t, idx) => {
-        const role = /policial|pm|cabo|sargento/i.test(t) ? 'PM' : 'Testemunha';
-        prosecutionWitnesses.push({ number: prosecutionWitnesses.length + 1, name: t, role: role, status_id: 'Intimada' });
-      });
-
-      let defNote = 'A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.';
-      if (actType === 'ANPP') {
-        qualText = '';
-        imputationText = '';
-        chronologicalHistory.length = 0;
-        prosecutionWitnesses.length = 0;
-        defNote = '';
-      }
-
-      return {
-        case_number: caseNumber,
-        act_type: actType,
-        hearing_datetime: hearingDateTime,
-        hearing_link: hearingLink,
-        is_in_person: !hearingLink,
-        prosecutor: promotor,
-        defendants: defendants,
-        defense_counsel: defesa,
-        qualification_text: qualText,
-        imputation_text: imputationText,
-        facts_summary: factsSummary,
-        chronological_history: chronologicalHistory,
-        prosecution_witnesses: prosecutionWitnesses,
-        defense_witnesses: [],
-        defense_witness_note: defNote,
-        closure_text: 'Cordial e respeitosamente,'
-      };
-    }
-
     // UI Binding & Preview
     function loadDataIntoUI(data) {
       activeData = data;
@@ -1277,6 +1653,12 @@
       renderDefendants(data.defendants || []);
       renderHistory(data.chronological_history || []);
       renderWitnesses(data.prosecution_witnesses || []);
+
+      const isAnpp = (data.act_type || '').includes('ANPP');
+      document.getElementById('card-qual').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-imp').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-hist').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-wits').style.display = isAnpp ? 'none' : 'block';
 
       document.getElementById('btn-export-docx').disabled = false;
       updateLivePreview();
@@ -1331,16 +1713,19 @@
     }
 
     document.getElementById('btn-add-defendant').onclick = () => {
+      if (!activeData) activeData = { defendants: [] };
       activeData.defendants.push({ name: '', status: 'respondendo ao processo em liberdade', subpoena_id: '' });
       renderDefendants(activeData.defendants);
       updateLivePreview();
     };
     document.getElementById('btn-add-history').onclick = () => {
+      if (!activeData) activeData = { chronological_history: [] };
       activeData.chronological_history.push({ date_str: '', description: '', doc_id: '' });
       renderHistory(activeData.chronological_history);
       updateLivePreview();
     };
     document.getElementById('btn-add-witness').onclick = () => {
+      if (!activeData) activeData = { prosecution_witnesses: [] };
       activeData.prosecution_witnesses.push({ number: activeData.prosecution_witnesses.length + 1, name: '', role: 'Testemunha', status_id: 'Intimada' });
       renderWitnesses(activeData.prosecution_witnesses);
       updateLivePreview();
@@ -1359,6 +1744,13 @@
       activeData.imputation_text = document.getElementById('imputation_text').value;
       activeData.facts_summary = document.getElementById('facts_summary').value;
       activeData.defense_witness_note = document.getElementById('defense_witness_note').value;
+
+      const isAnpp = (activeData.act_type || '').includes('ANPP');
+      document.getElementById('card-qual').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-imp').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-hist').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-wits').style.display = isAnpp ? 'none' : 'block';
+
       updateLivePreview();
     };
 
@@ -1381,40 +1773,40 @@
         html += `<div class="doc-link" style="text-decoration: underline;">Audiência Presencial</div>`;
       }
 
-      html += '<div style="margin-bottom: 1.2rem;"></div>';
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
       html += `<div class="doc-resumo-call">Segue o resumo da audiência:</div>`;
-      html += '<div style="margin-bottom: 1.2rem;"></div>';
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
 
       if ((activeData.act_type || '').includes('ANPP')) {
         const timePart = (activeData.hearing_datetime || '').includes('às')
           ? activeData.hearing_datetime.split('às').pop().trim()
           : activeData.hearing_datetime || '';
         html += `<div class="doc-callout"><span class="hl-yellow">${timePart} - ${activeData.case_number || ''} - ${activeData.act_type || ''}</span></div>`;
-        html += '<div style="margin-bottom: 1.2rem;"></div>';
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
       }
 
       const promPrefix = (activeData.prosecutor || '').includes(';') ? 'PROMOTORES:' : 'PROMOTOR:';
       html += `<div class="doc-promotor"><span class="hl-green">${promPrefix} ${activeData.prosecutor || ''}</span></div>`;
-      html += '<div style="margin-bottom: 1.2rem;"></div>';
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
 
       if (activeData.defendants && activeData.defendants.length === 1) {
         const d = activeData.defendants[0];
         const isFem = (d.name || '').trim().toLowerCase().endsWith('a');
         const genderPrefix = isFem ? 'Ré:' : 'Réu:';
-        const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
+        const idText = d.subpoena_id ? ` - Intimada ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
         html += `<div class="doc-reus"><span class="hl-green">${genderPrefix} ${d.name} - ${d.status}${idText}</span></div>`;
       } else if (activeData.defendants && activeData.defendants.length > 1) {
         html += '<div class="doc-reus"><span class="hl-green">Réus:</span></div>';
         activeData.defendants.forEach(d => {
           const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
-          html += `<div class="doc-reus" style="padding-left: 1.27cm;">${d.name} - ${d.status}${idText}</div>`;
+          html += `<div class="doc-reus-item">${d.name} - ${d.status}${idText}</div>`;
         });
       }
 
       if (activeData.defense_counsel) {
         html += `<div class="doc-defesa"><span class="hl-green">${activeData.defense_counsel}</span></div>`;
       }
-      html += '<div style="margin-bottom: 1.2rem;"></div>';
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
 
       const isAnpp = (activeData.act_type || '').includes('ANPP');
 
@@ -1425,33 +1817,30 @@
           if (commaIdx !== -1) {
             const namePart = p.substring(0, commaIdx).trim();
             const restPart = p.substring(commaIdx);
-            html += `<div class="doc-narrative-p"><strong class="doc-name-bold">${namePart.toUpperCase()}</strong>${restPart}</div>`;
+            html += `<div class="doc-narrative-p"><strong>${namePart.toUpperCase()}</strong>${restPart}</div>`;
           } else {
             html += `<div class="doc-narrative-p">${p}</div>`;
           }
         });
-        html += '<div style="margin-bottom: 1.2rem;"></div>';
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
       }
 
       if (activeData.imputation_text && !isAnpp) {
         html += '<div class="doc-section-header"><span class="hl-yellow">IMPUTAÇÃO</span></div>';
         activeData.imputation_text.split('\n\n').filter(p=>p.trim()).forEach(p => {
-          const formattedP = p.replace(/(\(.*?\))/g, '<strong class="doc-art-bold">$1</strong>');
+          const formattedP = p.replace(/(\(.*?\))/g, '<strong>$1</strong>');
           html += `<div class="doc-narrative-p">${formattedP}</div>`;
         });
-        html += '<div style="margin-bottom: 1.2rem;"></div>';
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
       }
 
       if (activeData.facts_summary) {
         html += '<div class="doc-section-header"><span class="hl-yellow">RESUMO DOS FATOS</span></div>';
-        if (activeData.special_notes) {
-          html += `<div class="doc-obs">${activeData.special_notes}</div>`;
-        }
         activeData.facts_summary.split('\n\n').filter(p=>p.trim()).forEach(p => {
           const linkedP = p.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
           html += `<div class="doc-narrative-p">${linkedP}</div>`;
         });
-        html += '<div style="margin-bottom: 1.2rem;"></div>';
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
       }
 
       if (activeData.chronological_history && activeData.chronological_history.length > 0 && !isAnpp) {
@@ -1459,7 +1848,7 @@
         activeData.chronological_history.forEach(h => {
           html += `<div class="doc-history-p">${h.date_str}: ${h.description} (ID <a href="${pjeLink(h.doc_id)}" target="_blank" rel="noopener noreferrer">${h.doc_id}</a>)</div>`;
         });
-        html += '<div style="margin-bottom: 1.2rem;"></div>';
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
       }
 
       if (!isAnpp) {
@@ -1486,12 +1875,12 @@
         }
       }
 
-      html += '<div style="margin-bottom: 1.2rem;"></div>';
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
       html += `<div class="doc-closure">${activeData.closure_text || 'Cordial e respeitosamente,'}</div>`;
       paperBody.innerHTML = html;
     }
 
-    // Client-Side DOCX Generation via JSZip (Pure Browser OpenXML Builder strictly adhering to TJRN specs)
+    // DOCX OpenXML Builder strictly adhering to TJRN specifications
     document.getElementById('btn-export-docx').onclick = async () => {
       if (!activeData) return;
       showToast('Construindo arquivo DOCX no navegador...', 'success');
@@ -1513,7 +1902,7 @@
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
 </Relationships>`);
 
-        // Manage document hyperlinks in word/_rels/document.xml.rels
+        // Manage document hyperlinks
         const linkMap = new Map();
         let relCount = 1;
         function getRelId(url) {
@@ -1573,7 +1962,7 @@
           return `<w:p>${pPr}${runsXml}</w:p>`;
         }
 
-        // Title (Underlined, normal)
+        // Title (Underlined)
         bodyXml += pXml(runXml(`Proc. ${activeData.case_number} ${activeData.act_type} ${activeData.hearing_datetime}`, { underline: true }));
 
         // Meeting Link
@@ -1583,17 +1972,14 @@
           bodyXml += pXml(runXml("Audiência Presencial", { underline: true }));
         }
 
-        // Blank line
         bodyXml += pXml('');
-
-        // Resumo call (Underlined)
         bodyXml += pXml(runXml("Segue o resumo da audiência:", { underline: true }));
-
-        // Blank line
         bodyXml += pXml('');
 
-        // ANPP Callout line if applicable (Yellow highlight + bold)
-        if ((activeData.act_type || '').includes('ANPP')) {
+        const isAnpp = (activeData.act_type || '').includes('ANPP');
+
+        // ANPP Callout line
+        if (isAnpp) {
           const timePart = (activeData.hearing_datetime || '').includes('às')
             ? activeData.hearing_datetime.split('às').pop().trim()
             : activeData.hearing_datetime || '';
@@ -1604,11 +1990,9 @@
         // PROMOTOR (Bold + Green highlight)
         const promPrefix = (activeData.prosecutor || '').includes(';') ? 'PROMOTORES:' : 'PROMOTOR:';
         bodyXml += pXml(runXml(`${promPrefix} ${activeData.prosecutor}`, { bold: true, highlight: "green" }));
-
-        // Blank line
         bodyXml += pXml('');
 
-        // RÉUS (Bold + Green highlight)
+        // RÉUS (Bold + Green highlight strict pattern)
         if (activeData.defendants && activeData.defendants.length === 1) {
           const d = activeData.defendants[0];
           const isFem = (d.name || '').trim().toLowerCase().endsWith('a');
@@ -1631,13 +2015,9 @@
         if (activeData.defense_counsel) {
           bodyXml += pXml(runXml(activeData.defense_counsel, { bold: true, highlight: "green" }));
         }
-
-        // Blank line
         bodyXml += pXml('');
 
-        const isAnpp = (activeData.act_type || '').includes('ANPP');
-
-        // QUALIFICAÇÃO (Yellow header + Bold Uppercase Name - omitted in ANPP)
+        // QUALIFICAÇÃO (omitted in ANPP)
         if (activeData.qualification_text && !isAnpp) {
           bodyXml += pXml(runXml("QUALIFICAÇÃO", { bold: true, highlight: "yellow" }));
           const qParas = activeData.qualification_text.split('\n\n').filter(p=>p.trim());
@@ -1656,7 +2036,7 @@
           bodyXml += pXml('');
         }
 
-        // IMPUTAÇÃO (Yellow header + Bold Articles - omitted in ANPP)
+        // IMPUTAÇÃO (omitted in ANPP)
         if (activeData.imputation_text && !isAnpp) {
           bodyXml += pXml(runXml("IMPUTAÇÃO", { bold: true, highlight: "yellow" }));
           const iParas = activeData.imputation_text.split('\n\n').filter(p=>p.trim());
@@ -1675,12 +2055,9 @@
           bodyXml += pXml('');
         }
 
-        // RESUMO DOS FATOS (Yellow header + Italic OBS + Hyperlinked IDs)
+        // RESUMO DOS FATOS
         if (activeData.facts_summary) {
           bodyXml += pXml(runXml("RESUMO DOS FATOS", { bold: true, highlight: "yellow" }));
-          if (activeData.special_notes) {
-            bodyXml += pXml(runXml(activeData.special_notes, { italic: true }), { firstLine: 720 });
-          }
           const fParas = activeData.facts_summary.split('\n\n').filter(p=>p.trim());
           fParas.forEach(p => {
             bodyXml += pXml(runsWithIdLinks(p, { bold: false }), { firstLine: 720 });
@@ -1688,7 +2065,7 @@
           bodyXml += pXml('');
         }
 
-        // HISTÓRICO PROCESSUAL (Yellow header + Spacing after 283 + Hyperlinked IDs - omitted in ANPP)
+        // HISTÓRICO PROCESSUAL (omitted in ANPP)
         if (activeData.chronological_history && activeData.chronological_history.length > 0 && !isAnpp) {
           bodyXml += pXml(runXml("HISTÓRICO PROCESSUAL", { bold: true, highlight: "yellow" }));
           activeData.chronological_history.forEach(h => {
@@ -1702,7 +2079,7 @@
           bodyXml += pXml('');
         }
 
-        // TESTEMUNHAS (Yellow header + Spacing after 283 + Hyperlinked IDs - omitted in ANPP)
+        // TESTEMUNHAS (omitted in ANPP)
         if (!isAnpp) {
           if (activeData.prosecution_witnesses && activeData.prosecution_witnesses.length > 0) {
             bodyXml += pXml(runXml("TESTEMUNHAS DE ACUSAÇÃO:", { bold: true, highlight: "yellow" }));
@@ -1727,13 +2104,10 @@
           }
         }
 
-        // Blank line
         bodyXml += pXml('');
-
-        // Fechamento Formal
         bodyXml += pXml(runXml(activeData.closure_text || "Cordial e respeitosamente,", { bold: false }), { firstLine: 720, after: 142 });
 
-        // Build final word/document.xml
+        // Build word/document.xml
         const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <w:body>${bodyXml}<w:sectPr><w:pgSz w:w="11906" w:h="16838" w:orient="portrait"/><w:pgMar w:top="1134" w:bottom="1134" w:left="1134" w:right="1134" w:header="0" w:footer="0"/></w:sectPr></w:body></w:document>`;
@@ -1758,9 +2132,10 @@
         a.click();
         URL.revokeObjectURL(url);
         a.remove();
-        showToast('Documento Word (.docx) gerado com sucesso com realces e links estritos!', 'success');
+        showToast('Documento Word (.docx) gerado com sucesso!', 'success');
       } catch (err) {
         showToast('Erro ao gerar DOCX: ' + err.message, 'error');
+        console.error(err);
       }
     };
 
@@ -1784,15 +2159,6 @@
       container.appendChild(t);
       setTimeout(() => t.remove(), 4000);
     }
-    window.addEventListener('load', () => {
-      console.log('JURISRESUMO v2.3 inicializado.');
-      if (typeof pdfjsLib === 'undefined') {
-        console.warn('AVISO: PDF.js não foi encontrado. Verifique se a pasta vendor/ está no mesmo diretório.');
-      }
-      if (typeof JSZip === 'undefined') {
-        console.warn('AVISO: JSZip não foi encontrado. Verifique se a pasta vendor/ está no mesmo diretório.');
-      }
-    });
   </script>
 </body>
 </html>

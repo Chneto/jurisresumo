@@ -412,6 +412,57 @@ Todas as melhorias foram sincronizadas e validadas integralmente em:
 - `index.html` e `ABRIR_APLICATIVO_DIRETO.html` (Versão Portátil Zero-Instalação)
 - Repositório de publicação `gitpost/` (GitHub Release)
 
+---
+
+## 14. Separação Física dos Aplicativos e Motor JavaScript Analítico de Alto Nível (Versão 2.4)
+
+### 14.1. Separação Física em Pastas Distintas
+Para garantir isolamento, autonomia e clareza de uso, o ecossistema JURISRESUMO foi reestruturado em dois ambientes independentes:
+
+1. **`versao_python/` (Backend Completo Autônomo):**
+   - Contém a aplicação Python integral com backend FastAPI, servidor Uvicorn, indexador de autos PJe (`pje_indexer.py`), motor analítico offline (`offline_engine.py`), motor Gemini (`gemini_engine.py`), gerador OpenXML (.docx) com estilos TJRN (`docx_generator.py`), frontend estático (`app/static/`), e suíte de testes completa (`tests/`).
+   - Inicialização silenciosa via `Iniciar_JURISRESUMO.vbs` ou terminal via `python run.py`.
+   - 100% autônomo e testado com 100% de aprovação (exit code 0 em todos os Tiers 1-4).
+
+2. **`versao_javascript/` (Versão Nativa Portátil Zero-Instalação):**
+   - Contém o aplicativo autônomo em HTML5 / CSS3 / JavaScript com bibliotecas locais em `vendor/` (`pdf.min.js`, `pdf.worker.min.js`, `jszip.min.js`), `index.html` e `ABRIR_APLICATIVO_DIRETO.html`.
+   - Opera 100% no navegador do usuário sem necessidade de Python, Node.js ou terminal.
+
+3. **Atalhos e Inicializadores na Raiz do Workspace:**
+   - `ABRIR_VERSAO_PYTHON.vbs`: Inicializador silencioso do backend Python na pasta `versao_python`.
+   - `ABRIR_VERSAO_JAVASCRIPT.html`: Redirecionador imediato para a versão portátil em `versao_javascript/index.html`.
+
+### 14.2. Motor JavaScript Analítico de Alta Fidelidade (Análise Real dos Autos)
+O motor JavaScript portátil foi profundamente reformulado para replicar a inteligência analítica jurídica desenvolvida no motor Python:
+1. **Reconstrução Fidedigna de Linhas por Coordenadas (PDF.js):**
+   - O extrator de texto do PDF.js agora agrupa os itens de texto com base no eixo Y e no eixo X de cada página, preservando quebras de linha essenciais para análise de parágrafos e cabeçalhos.
+2. **Catalogação Completa (TOC) e Correlação com Carimbos Marginais:**
+   - Analisa a Tabela de Documentos das páginas inaugurais (capa e índice de peças) para mapear `doc_id`, `date_str`, `doc_name` e `doc_type`.
+   - Correlaciona com os carimbos de rodapé `Num. <ID> - Pág. <P>` de cada página, calculando o intervalo exato de páginas (`start_page` a `end_page`) e o texto integral de cada documento individual.
+3. **Localização Precisa da Denúncia Ministerial:**
+   - Varredura reversa no catálogo priorizando a peça inaugural do Ministério Público (`Denúncia`, `Queixa`, `Petição Inicial`), descartando expressamente cotas ministeriais, petições avulsas de defesa, certidões, antecedentes e extratos BNMP/SEEU.
+4. **Análise e Síntese dos Fatos:**
+   - Extração da narrativa ministerial delimitada rigidamente por termos de início (`Consta nos autos...`, `DOS FATOS`) e encerramento (`ROL DE TESTEMUNHAS`, `PEDIDOS`, `COTA`).
+   - Identificação e incorporação automática de confissão/interrogatório policial e de laudos periciais e boletins de ocorrência que comprovam autoria e materialidade.
+5. **Classificação Jurídica do Tipo de Ato (Hierarquia Processual Penal):**
+   - Aplica a hierarquia estrita: PAnP (art. 366 CPP) $\rightarrow$ ANPP (homologação de acordo com exclusão de rejeição por `ANPP_NEGATION_REGEX`) $\rightarrow$ AIJ (designação de instrução e julgamento ou recebimento de denúncia + atos instrutórios) $\rightarrow$ Custódia $\rightarrow$ Sursis Processual.
+6. **Estrutura Canônica de ANPP (6 Parágrafos Analíticos):**
+   - Gera os 6 parágrafos analíticos de referência com identificação do processo originário desmembrado, indiciamento penal e ID do IP, data e ID do termo de acordo firmado, condições detalhadas do acordo (prestação pecuniária, prestação de contas e não reiteração), data e ID da decisão de cisão, e data/horário e ID do despacho de designação da audiência.
+7. **Análise de Réus, Estabelecimentos Prisionais e Mandados:**
+   - Varredura de estabelecimentos prisionais em todo o feito (`custodiado na...`, `penitenciária...`) para classificar réus presos com respectiva unidade prisional, réus soltos, citados por edital ou não localizados.
+   - Cruzamento de nomes com mandados e certidões para preenchimento exato dos IDs de citação e intimação.
+8. **Análise do Rol de Testemunhas e Situação Cumprida:**
+   - Extração direta do `ROL DE TESTEMUNHAS` da denúncia ministerial com classificação do papel da testemunha (vítima, PM condutor, testemunha presencial).
+   - Cruzamento com mandados e certidões para certificar cumprimento (`Intimada ID`, `Intimado ID`, `Ofício enviado ID` ou `Certidão contrafé negativa IDs ...`).
+9. **Histórico Processual Substantivo:**
+   - Poda documentos secundários e constrói resumo jurídico claro para cada marco processual relevante no formato canônico `DD/MM/AA: [Ato] (ID [número])`.
+10. **Padrões Estritos de Marcatexto:**
+    - Múltiplos réus: apenas o cabeçalho `Réus:` recebe realce verde (`w:val="green"`, negrito); itens individuais abaixo com recuo, sem negrito, sem realce e ID em azul.
+    - Réu único: linha inteira com realce verde e ID em azul.
+    - Títulos de seções em amarelo (`w:val="yellow"`) e corpo sem realce.
+    - Nota defensiva em negrito com realce amarelo.
+    - ANPP omite estritamente Qualificação, Imputação, Histórico e Testemunhas.
+
 
 
 
