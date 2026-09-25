@@ -32,15 +32,15 @@
 ## Real-World Application Scenarios (Tier 4)
 | # | Scenario | Reference Case | Features Exercised | Complexity |
 |---|---|---|---|---|
-| S1 | Standard AIJ Single Accused with Video Intimations | `Proc. 0801889-53.2023.8.20.5001` | F01, F03, F05, F06-F12, F18 | High |
-| S2 | Multi-Accused Complex Robbery & PM Witnesses | `Proc. 0820550-12.2025.8.20.5001` | F03, F06, F07, F10, F11, F18 | High |
-| S3 | AIJ with Extensive Police Inquérito & Forensic IDs | `Proc. 0821902-39.2024.8.20.5001` | F03, F04, F05, F09, F10, F18 | High |
-| S4 | ANPP Hearing with Agreement Conditions & OBS | `Proc. 0860849-94.2026.8.20.5001` | F03, F05, F06, F10, F13, F18 | Medium |
-| S5 | PAnP Suspended Case (Art. 366 CPP) & Precautionary Measures | `Proc. 0804041-57.2022.8.20.5600` | F03, F05, F06, F10, F13, F18 | High |
-| S6 | Presencial Hearing with Complex Intimations | `Proc. 0876503-58.2025.8.20.5001` | F03, F06, F10, F11, F18 | Medium |
-| S7 | GAECO / Multi-Defendant Complex Fraud Case | `Proc. 0802487-75.2026.8.20.5300` | F03, F05, F06, F07, F10, F18 | Very High |
-| S8 | Declining Jurisdiction & Nested PDF Structure | `Proc. 0844118-57.2025.8.20.5001` | F03, F05, F06, F10, F18 | High |
-| S9 | e-SAJ/TJSP Imported Records with Vertical Margin Stamps | `Proc. 0806049-87.2024.8.20.5001` | F03, F05, F06, F10, F18 | High |
+| S1 | Standard AIJ Single Accused with Video Intimations | `Proc. 0801889-XX.2023.8.20.5001` | F01, F03, F05, F06-F12, F18 | High |
+| S2 | Multi-Accused Complex Robbery & PM Witnesses | `Proc. 0820550-XX.2025.8.20.5001` | F03, F06, F07, F10, F11, F18 | High |
+| S3 | AIJ with Extensive Police Inquérito & Forensic IDs | `Proc. 0821902-XX.2024.8.20.5001` | F03, F04, F05, F09, F10, F18 | High |
+| S4 | ANPP Hearing with Agreement Conditions & OBS | `Proc. 0860849-XX.2026.8.20.5001` | F03, F05, F06, F10, F13, F18 | Medium |
+| S5 | PAnP Suspended Case (Art. 366 CPP) & Precautionary Measures | `Proc. 0804041-XX.2022.8.20.5600` | F03, F05, F06, F10, F13, F18 | High |
+| S6 | Presencial Hearing with Complex Intimations | `Proc. 0876503-XX.2025.8.20.5001` | F03, F06, F10, F11, F18 | Medium |
+| S7 | GAECO / Multi-Defendant Complex Fraud Case | `Proc. 0802487-XX.2026.8.20.5300` | F03, F05, F06, F07, F10, F18 | Very High |
+| S8 | Declining Jurisdiction & Nested PDF Structure | `Proc. 0844118-XX.2025.8.20.5001` | F03, F05, F06, F10, F18 | High |
+| S9 | e-SAJ/TJSP Imported Records with Vertical Margin Stamps | `Proc. 0806049-XX.2024.8.20.5001` | F03, F05, F06, F10, F18 | High |
 
 ## Test Architecture
 - **Runner:** `python -m pytest tests/` and dedicated runner `python tests/run_all_tests.py`.

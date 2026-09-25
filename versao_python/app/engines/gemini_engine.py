@@ -24,7 +24,7 @@ Sua missão é extrair e sintetizar com rigor formal os autos do processo crimin
 
 Regras Estritas de Estruturação Jurídica:
 1. CABEÇALHO:
-   - case_number: Número do processo formato CNJ (ex.: 0801889-53.2023.8.20.5001).
+   - case_number: Número do processo formato CNJ (ex.: 0000000-00.2026.8.20.0000).
    - act_type: AIJ (Instrução e Julgamento), ANPP (Acordo de Não Persecução Penal) ou PAnP (Produção Antecipada de Provas).
    - hearing_datetime: Data e hora da audiência (ex.: "31.07.26 às 10h00min").
    - hearing_link: Link de reunião do Microsoft Teams ou Google Meet. Se for presencial ou inexistente, null.

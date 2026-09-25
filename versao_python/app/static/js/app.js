@@ -646,6 +646,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       syncDataFromForm();
+
+      // Envia feedback de edições do usuário para treinar o classificador JEV/LEYA
+      if (originalData && activeData) {
+        fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ original: originalData, edited: activeData })
+        }).catch(() => {});
+      }
+
       const safeCase = (activeData.case_number || 'Processo').replace(/[\/\\]/g, '-');
       const filename = `Resumo - ${safeCase} ${activeData.act_type || 'AIJ'}.docx`;
 

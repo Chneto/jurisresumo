@@ -32,3 +32,5 @@ Proc.*
 *.pdf
 test_output_*.docx
 scratch/
+*user_feedback_rules.json
+

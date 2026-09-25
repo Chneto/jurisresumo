@@ -152,16 +152,16 @@ graph TD
      - Tier 4: Validação em cenários do mundo real (10 testes).
      - Unit M1: Indexador PJe e parsing de carimbos (25 testes).
      - Testes de rotas FastAPI, DOCX generator, paridade de motores e indexadores.
-  2. Execução da suíte de validação do motor JS nos 9 casos reais do TJRN (`tests/test_js_logic_verification.py`):
-     - `Proc. 0801889-53` (AIJ, ré única, 3 testemunhas)
-     - `Proc. 0802487-75` (AIJ, réu único, 5 testemunhas)
-     - `Proc. 0804041-57` (PAnP art. 366, réu único, 3 testemunhas)
-     - `Proc. 0806049-87` (AIJ, 4 réus, 7 testemunhas, 46 atos)
-     - `Proc. 0820550-12` (AIJ, 2 réus, 6 testemunhas)
-     - `Proc. 0821902-39` (AIJ, 1 ré, 11 testemunhas, autos volumosos > 140 MB)
-     - `Proc. 0844118-57` (AIJ, réu único, 8 testemunhas)
-     - `Proc. 0860849-94` (ANPP, ré única, 0 testemunhas, estrutura de 6 parágrafos)
-     - `Proc. 0876503-58` (AIJ, 3 réus, 9 testemunhas, delimitadores estritos)
+  2. Execução da suíte de validação do motor JS nos 9 cenários criminais de referência:
+     - `Cenário 1` (AIJ, ré única, 3 testemunhas)
+     - `Cenário 2` (AIJ, réu único, 5 testemunhas)
+     - `Cenário 3` (PAnP art. 366, réu único, 3 testemunhas)
+     - `Cenário 4` (AIJ, 4 réus, 7 testemunhas, 46 atos)
+     - `Cenário 5` (AIJ, 2 réus, 6 testemunhas)
+     - `Cenário 6` (AIJ, 1 ré, 11 testemunhas, autos volumosos)
+     - `Cenário 7` (AIJ, réu único, 8 testemunhas)
+     - `Cenário 8` (ANPP, ré única, 0 testemunhas, estrutura de 6 parágrafos)
+     - `Cenário 9` (AIJ, 3 réus, 9 testemunhas, delimitadores estritos)
   3. Verificação de paridade de comportamento entre `versao_python` e `versao_javascript`.
 * **Ferramentas e Escopos Autorizados:** `pytest`, scripts em `tests/`, subprocessos Python para auditoria.
 * **Limites Operacionais & Anti-patterns:**

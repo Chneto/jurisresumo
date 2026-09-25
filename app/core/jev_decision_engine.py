@@ -261,6 +261,14 @@ class JEVDecisionEngine:
         if "cota" in meta and not ("denúncia" in meta or "denuncia" in meta):
             score -= 0.30
 
+        # Ajuste adaptativo do LearningStore (aprendizado contínuo offline)
+        try:
+            from app.core.learning_store import LearningStore
+            delta = LearningStore.get_instance().compute_learned_adjustment(text)
+            score += delta
+        except Exception:
+            pass
+
         return max(0.0, min(1.0, score))
 
     def score_relevance(self, text: str, meta: str = "") -> float:
@@ -271,7 +279,14 @@ class JEVDecisionEngine:
         pos_count = len(DENUNCIA_POSITIVE_REGEX.findall(text)) + len(DECISAO_POSITIVE_REGEX.findall(text))
         neg_count = len(BANKING_NOISE_REGEX.findall(text)) + len(ADMIN_NOISE_REGEX.findall(text))
 
-        raw_score = 0.50 + (pos_count * 0.08) - (neg_count * 0.20)
+        # Ajuste adaptativo do LearningStore (aprendizado contínuo offline)
+        try:
+            from app.core.learning_store import LearningStore
+            delta = LearningStore.get_instance().compute_learned_adjustment(text)
+        except Exception:
+            delta = 0.0
+
+        raw_score = 0.50 + (pos_count * 0.08) - (neg_count * 0.20) + delta
         return max(0.0, min(1.0, round(raw_score, 2)))
 
     def filter_noise_lines(self, lines: List[str]) -> List[str]:

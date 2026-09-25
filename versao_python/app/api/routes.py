@@ -119,3 +119,24 @@ def generate_docx_endpoint(data: HearingSummaryData) -> Response:
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar documento DOCX: {str(exc)}")
+
+
+@router.post("/feedback")
+def submit_user_feedback(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Receives user edits, additions, and removals to train the local adaptive JEV/LEYA model."""
+    try:
+        from app.core.learning_store import LearningStore
+        store = LearningStore.get_instance()
+        original = payload.get("original", {})
+        edited = payload.get("edited", {})
+        stats = store.record_feedback(original, edited)
+        return {
+            "status": "success",
+            "message": "Feedback assimilado pelo motor JEV/LEYA com sucesso.",
+            "stats": stats,
+            "penalized_count": len(store.penalized_terms),
+            "boosted_count": len(store.boosted_terms),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Erro ao processar feedback: {str(exc)}")
+

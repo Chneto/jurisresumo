@@ -1,4 +1,4 @@
-﻿"""JURISRESUMO - Desktop Launcher powered by Eel & Microsoft Edge.
+"""JURISRESUMO - Desktop Launcher powered by Eel & Microsoft Edge.
 
 Desenvolvido por FChNeto.
 """
@@ -21,8 +21,9 @@ STATIC_DIR = BASE_DIR / "app" / "static"
 if not str(BASE_DIR) in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-# Ensure root sample directory is findable if needed
-ROOT_DIR = BASE_DIR.parent if (BASE_DIR.parent / "Proc. 0801889-53.2023.8.20.5001").exists() else BASE_DIR
+# Ensure root directory is findable if needed
+ROOT_DIR = BASE_DIR.parent if (BASE_DIR.parent / "versao_javascript").exists() else BASE_DIR
+
 
 from app.core.models import HearingSummaryData
 from app.engines import get_engine
