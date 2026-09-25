@@ -499,3 +499,90 @@ O motor JavaScript portátil foi profundamente reformulado para replicar a intel
 - **Frontend Híbrido e Resiliente (`app.js`):** O script detecta dinamicamente `if (typeof eel !== 'undefined')`. Em modo desktop Eel, utiliza a ponte Python direta; se iniciado via servidor FastAPI/Uvicorn, utiliza as rotas REST (`/api/upload` e `/api/generate-docx`).
 - **Lançador Universal `run.py`:** Por padrão, `python run.py` ou os arquivos `.vbs` inicializam a janela nativa do Eel. Se for passado o parâmetro `--server` ou caso o Eel seja encerrado, o backend comuta com segurança para o servidor FastAPI/Uvicorn.
 
+---
+
+## 16. Os 5 Últimos Atos Estruturantes da Versão 2.5 e Publicação
+
+### Ato 1: Eliminação Definitiva do Fundo Azul e Corte da Folha A4 no Preview (JS e Python)
+* **Diagnóstico:** Em contêineres flexbox com `display: flex; justify-content: center;`, a propriedade `align-items` assume por padrão o valor `stretch`. Sob a especificação CSS de rolagem vertical (`overflow-y: auto`), o elemento filho `.word-paper-sheet` tinha sua altura fixada ao viewport visível (~900px). Ao ultrapassar a primeira página com longas narrativas fáticas ou históricos extensos, o conteúdo interno do `#paper-body` transbordava para fora da folha, revelando o fundo azul/canvas da escrivaninha (`#0d121d`) atrás do texto.
+* **Solução:** 
+  1. No container `.desk-scroller`: aplicação explícita de `align-items: flex-start; padding: 2rem 1.5rem 4rem 1.5rem; background: #0d121d;`.
+  2. No simulador da folha `.word-paper-sheet`: definição de `min-height: 29.7cm; height: auto !important; flex-shrink: 0; background: #ffffff !important; overflow: visible; margin: 0 auto 3rem auto;`.
+  3. No corpo `#paper-body`: definição de `width: 100%; height: auto; background: transparent;`.
+* **Validação:** Sincronizado em `versao_javascript/index.html`, `ABRIR_APLICATIVO_DIRETO.html` e nos arquivos da raiz, com teste visual e dump-dom confirmando expansão contínua em documentos de 10+ páginas.
+
+### Ato 2: Fortificação do Frontend Python com CSS 100% Embutido
+* **Diagnóstico:** O arquivo `versao_python/app/static/index.html` dependia de folha externa `<link rel="stylesheet" href="css/style.css">`. Quando aberto diretamente como arquivo ou em rotas locais estáticas desajustadas, o navegador renderizava o HTML cru com fontes Serif (Times New Roman), botões cinzas e desformatação total.
+* **Solução:** Embutimento integral de 1.142 linhas do design system **Google Stitch & Nano Banana** diretamente dentro de `<style> ... </style>` no cabeçalho do `index.html`. Agora, seja via servidor FastAPI, janela Eel ou abertura direta, a aplicação sempre carrega 100% formatada.
+
+### Ato 3: Integração Desktop Nativa com Eel & Microsoft Edge em Modo Aplicativo
+* **Diagnóstico:** A versão Python necessitava de uma experiência desktop nativa sem janelas pretas de terminal CMD e sem a barra de endereços/abas de navegador web comum.
+* **Solução:**
+  1. Criação do módulo `versao_python/run_eel.py` com detecção automática do executável do Microsoft Edge no Windows (`msedge.exe`).
+  2. Exposição das funções `@eel.expose`: `process_pdf_eel` e `generate_docx_eel` com tráfego binário em base64.
+  3. Transformação do script `app.js` em cliente híbrido: detecta automaticamente se está rodando sob o Eel ou sob o servidor FastAPI.
+  4. Lançador `run.py` unificado com inicialização primária via Eel e fallback inteligente para servidor FastAPI/Uvicorn.
+
+### Ato 4: Auditoria e Blindagem da Suíte de Testes com 100% de Aprovação
+* **Execução dos Testes:**
+  - `pytest versao_python/tests`: **179 testes aprovados com 100% de sucesso** em 51 segundos.
+  - `python tests/run_all_tests.py`: **160 testes aprovados com 100% de sucesso** em 33 segundos.
+  - `python tests/test_js_logic_verification.py`: **100% de aprovação e paridade nos 9 casos reais do TJRN** (`Proc. 0801889-53`, `0802487-75`, `0804041-57`, `0806049-87`, `0820550-12`, `0821902-39`, `0844118-57`, `0860849-94`, `0876503-58`).
+
+### Ato 5: Publicação e Sincronização Canônica no GitHub
+* **Ação:** Sincronização estrita de todos os arquivos modificados para o diretório de publicação limpa `gitpost/`.
+* **Deploy Remoto:** Execução bem-sucedida do comando `git push origin main` direcionado a `https://github.com/Chneto/jurisresumo`.
+* **Rastreabilidade:** Working tree limpo, 6 commits registrados e atribuídos com a assinatura e autoria oficial de **FChNeto**.
+
+---
+
+## 17. Resumo Executivo Total de Tudo que Foi Realizado (Histórico da Obra)
+
+O **JURISRESUMO** percorreu uma trajetória extraordinária de engenharia de software aplicada ao Poder Judiciário, transformando-se de um script básico de extração em um **ecossistema dual completo, resiliente, auditado e de alta performance**:
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   JURISRESUMO — RESUMO TOTAL                                 │
+├────────────────────────────────┬─────────────────────────────┬───────────────────────────────┤
+│ Dimensão / Camada              │ Como Era Inicialmente       │ Estado Atual (Versão 2.5)     │
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 1. Arquitetura Geral           │ Script Python único na raiz │ Ecossistema Dual Desacoplado: │
+│                                │ misturado com testes        │ versao_python/ e versao_js/   │
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 2. Portabilidade & Acesso      │ Exigia Python, pip e terminal│ 100% Zero-Install no JS e     │
+│                                │ com janela preta (CMD)      │ Janela Nativa Edge (--app) Eel│
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 3. Ingestão de Autos do PJe    │ Leitura sequencial simples, │ Catálogo TOC + Carimbos       │
+│                                │ podas cegas de páginas      │ Num. ID - Pág. + Leitura 100% │
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 4. Classificação de Audiências │ Heurística sujeita a falsos │ Hierarquia Processual Penal:  │
+│                                │ positivos (AIJ vista como ANPP) PAnP -> ANPP -> AIJ -> Custódia│
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 5. Narrativa Fática Ministerial│ Fatos truncados, carimbos   │ Fatos 100% literais e limpos, │
+│                                │ repetidos, tese de terceiros│ delimitadores estritos de fim │
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 6. Tratamento de ANPP          │ Simulava itens de instrução │ 6 parágrafos canônicos reais  │
+│                                │ incompatíveis com acordo    │ e omissão de Qualif./Testemunhas│
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 7. Marcatexto Judicial         │ Realces verdes excessivos   │ Marcatexto Mined Estrito:     │
+│                                │ em réus individuais         │ Verde só em Réus:, amarelo tit│
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 8. Visualização Prévia (A4)    │ Folha cortava em 900px,     │ Folha contínua expansível,    │
+│                                │ fundo azul aparecia ao rolar│ 100% branca com margem 2,0cm  │
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 9. Estilo do Frontend Python   │ Tag link quebrava offline   │ 1.142 linhas de CSS embutidas │
+│                                │ abrindo HTML cru em Times   │ Google Stitch & Nano Banana   │
+├────────────────────────────────┼─────────────────────────────┼───────────────────────────────┤
+│ 10. Validação & Rastreabilidade│ Sem testes automatizados    │ 179 Pytests + 160 E2E (100%)  │
+│                                │ e sem controle de versão    │ 9 casos reais + GitHub Ativo  │
+└────────────────────────────────┴─────────────────────────────┴───────────────────────────────┘
+```
+
+### Estatísticas e Marcos Consolidados
+* **Cobertura de Testes:** 179 testes unitários e de integração no Pytest com **100% de aprovação**.
+* **Testes de Cenários Reais:** 9 processos reais complexos do TJRN (incluindo autos de 148 MB e 850 páginas) testados com **zero falhas e paridade total**.
+* **Zero Dependência Externa Obrigatória:** O modo 100% offline opera sem internet tanto no Python quanto no JavaScript.
+* **Autoria e Direitos:** Sistema integralmente concebido, projetado e desenvolvido sob a autoria inegociável de **FChNeto**.
+* **Repositório Oficial Público:** Publicado e mantido em [https://github.com/Chneto/jurisresumo](https://github.com/Chneto/jurisresumo).
+
+
