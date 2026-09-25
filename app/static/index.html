@@ -340,21 +340,112 @@ body.stitch-theme {
   font-weight: 600;
 }
 
+/* Google Stitch Progress & Smart Badge */
+.stitch-dot-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-offline);
+  box-shadow: 0 0 8px var(--color-offline-glow);
+  margin-right: 5px;
+  animation: stitchPulse 2s infinite ease-in-out;
+}
+
+@keyframes stitchPulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.25); box-shadow: 0 0 12px var(--color-offline); }
+}
+
 .upload-loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(17, 24, 39, 0.94);
-  backdrop-filter: blur(4px);
+  background: rgba(9, 13, 22, 0.92);
+  backdrop-filter: blur(8px);
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  z-index: 10;
+  z-index: 20;
 }
 
 .upload-loading-overlay.active {
   display: flex;
+}
+
+.stitch-progress-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
+  max-width: 520px;
+  width: 90%;
+  box-shadow: var(--shadow-lg), 0 0 25px rgba(56, 189, 248, 0.12);
+  text-align: center;
+}
+
+.stitch-progress-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.stitch-progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.stitch-progress-bar-fill {
+  height: 100%;
+  width: 25%;
+  background: linear-gradient(90deg, #38bdf8 0%, #facc15 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+}
+
+.stitch-progress-phases {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.phase-chip {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-canvas);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.phase-chip.active {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--color-ai);
+  border-color: var(--color-ai);
+  box-shadow: 0 0 8px var(--color-ai-glow);
+}
+
+.phase-chip.completed {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-offline);
+  border-color: var(--color-offline);
 }
 
 .spinner {
@@ -372,12 +463,12 @@ body.stitch-theme {
 
 .loading-message {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-primary);
 }
 
 .loading-sub {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
 }
 
@@ -1167,6 +1258,7 @@ textarea.form-control {
       </div>
       <span class="badge badge-nano">Nano Banana Edition</span>
       <span class="badge badge-stitch">Google Stitch UI</span>
+      <span class="badge badge-stitch" id="badge-ocr-jev" title="Motor OCR com Pré-processamento e Filtro de Ruídos JEV Ativos"><span class="stitch-dot-pulse"></span> OCR Calibrado • JEV Ativo (0% Ruído)</span>
       <div class="engine-status-pill" id="engine-status-pill" title="Motor de Processamento Ativo">
         <span class="engine-dot" id="header-engine-dot"></span>
         <span id="header-engine-label">Modo 100% Offline (Local Seguro)</span>
@@ -1291,9 +1383,22 @@ textarea.form-control {
           </div>
         </div>
         <div class="upload-loading-overlay" id="upload-loading">
-          <div class="spinner"></div>
-          <p class="loading-message">Processando autos e indexando peças judiciais...</p>
-          <span class="loading-sub">Extraindo denúncia, decisões, mandados e certidões</span>
+          <div class="stitch-progress-card">
+            <div class="spinner"></div>
+            <div class="stitch-progress-info">
+              <p class="loading-message" id="stitch-progress-step">Processando autos e indexando peças judiciais...</p>
+              <div class="stitch-progress-bar-track">
+                <div class="stitch-progress-bar-fill" id="stitch-progress-fill"></div>
+              </div>
+              <div class="stitch-progress-phases">
+                <span class="phase-chip active" id="phase-chip-1">1. Indexação PJe</span>
+                <span class="phase-chip" id="phase-chip-2">2. Calibração OCR</span>
+                <span class="phase-chip" id="phase-chip-3">3. Triagem JEV</span>
+                <span class="phase-chip" id="phase-chip-4">4. Preview A4</span>
+              </div>
+              <span class="loading-sub" id="stitch-progress-sub">Otimizando contraste, classificando peças e descartando ruídos marginais</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

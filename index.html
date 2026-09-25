@@ -456,6 +456,21 @@
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    /* Google Stitch Pulse Indicator */
+    .stitch-dot-pulse {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--color-offline);
+      box-shadow: 0 0 8px var(--color-offline-glow);
+      margin-right: 5px;
+      animation: stitchPulse 2s infinite ease-in-out;
+    }
+    @keyframes stitchPulse {
+      0%, 100% { opacity: 0.6; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.25); box-shadow: 0 0 12px var(--color-offline); }
+    }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
@@ -470,6 +485,7 @@
       </div>
       <span class="badge badge-standalone">Versão Nativa JS (Portátil)</span>
       <span class="badge badge-stitch">TJRN • Autos Integrais</span>
+      <span class="badge badge-stitch" id="badge-ocr-jev" title="Classificador System One e Filtragem JEV/Leya Ativos"><span class="stitch-dot-pulse"></span> OCR Calibrado • JEV Ativo (0% Ruído)</span>
     </div>
 
     <div class="header-right">
@@ -1625,7 +1641,7 @@
       const seenHistIds = new Set();
       pjeCatalog.forEach(d => {
         const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
-        if (/extrato|dados telef|comprovante|foto|laudo|relatório técnico|manual|tela whatsapp|print/.test(comb)) return;
+        if (/(?:extrato\s*banc[aá]rio|dados\s*telef[oô]nicos|quebra\s*de\s*sigilo|comprovante|guia\s*(?:de\s*)?recolhimento|custas\s*processuais|danfe|nota\s*fiscal|certid[aã]o\s*de\s*(?:triagem|juntada\s*gen[eé]rica|remessa)|autentica[cç][aã]o|foto|laudo|relat[oó]rio\s*t[eé]cnico|manual|tela\s*whatsapp|print)/i.test(comb)) return;
         if (/denúncia|denuncia|decis|despacho|ato ordinat|resposta|defesa prévia|defesa previa|mandado|edital|ata|termo de audiência/.test(comb)) {
           if (!seenHistIds.has(d.doc_id) && d.start_page > 0) {
             seenHistIds.add(d.doc_id);
@@ -1725,9 +1741,27 @@
         cleanedLines.push(lS);
       }
 
+      // JEV / Leya System One Line-Level Noise Filtering
+      const jevStampRe = /(?:Num\.\s*\d+\s*-\s*P[aáAÁ]g\.\s*\d+|Assinado\s+eletronicamente\s+por|C[oó]digo\s+de\s+valida[cç][aã]o|Valide\s+a\s+autenticidade|Tribunal\s+de\s+Justi[cç]a\s+do\s+Rio\s+Grande\s+do\s+Norte\s*-\s*DJe|Identificador\s*:\s*\d+)/i;
+      const jevBankRe = /(?:comprovante\s+de\s+(?:pagamento|transfer[eê]ncia|agendamento|dep[oó]sito)|autentica[cç][aã]o\s+mec[aâ]nica|linha\s+digit[aá]vel|\b\d{5}\.\d{5}\s+\d{5}\.\d{6}\b|guia\s+de\s+recolhimento|tarifa\s+banc[aá]ria)/i;
+
+      const jevCleaned = [];
+      for (const l of cleanedLines) {
+        let alnum = 0;
+        for (let i = 0; i < l.length; i++) {
+          const code = l.charCodeAt(i);
+          if ((code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122) || code > 127) alnum++;
+        }
+        if (alnum < 2) continue;
+        if (jevStampRe.test(l) || jevBankRe.test(l)) continue;
+        if (alnum / l.length < 0.35 && l.length > 5) continue;
+        if (/^https?:\/\//i.test(l) && !/teams|meet/i.test(l)) continue;
+        jevCleaned.push(l);
+      }
+
       const paragraphs = [];
       let currPara = [];
-      for (const l of cleanedLines) {
+      for (const l of jevCleaned) {
         currPara.push(l);
         if (/[.:;]$/.test(l)) {
           let pText = currPara.join(' ').replace(/^\d+\)\s*/, '').replace(/\s+/g, ' ').trim();

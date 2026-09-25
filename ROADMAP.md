@@ -4,7 +4,7 @@
 > **Sistema:** JURISRESUMO — Síntese Automatizada de Processos Criminais PJe para Audiências  
 > **Comarca / Tribunal:** Varas Criminais • Tribunal de Justiça do Estado do Rio Grande do Norte (TJRN)  
 > **Autor e Desenvolvedor:** FChNeto  
-> **Estado Atual:** Versão 2.5 (100% Validada • Repositório GitHub Ativo)  
+> **Estado Atual:** Versão 2.6 (100% Validada • OCR/JEV Calibrados • Repositório GitHub Ativo)  
 
 ---
 
@@ -87,6 +87,13 @@ timeline
 - **Frontend Python Blindado:** Inclusão de 1.142 linhas do design system Google Stitch & Nano Banana diretamente no `<style>` do `index.html`, prevenindo renderização desformatada.
 - **Integração Desktop Nativa com Eel (`run_eel.py`):** Lançamento em modo de aplicativo dedicado do Microsoft Edge (`--app`), sem barras de endereço, sem abas e com alta performance de comunicação local.
 - **Publicação Rastreável no GitHub:** Repositório sincronizado e publicado no GitHub ([https://github.com/Chneto/jurisresumo](https://github.com/Chneto/jurisresumo)) sob autoria de `FChNeto`.
+
+#### 📦 Versão 2.6 — Recalibração OCR/Tesseract, Mecanismos JEV & Leya e Google Stitch UI
+- **Recalibração do Motor OCR/Tesseract:** Pré-processamento visual de alta fidelidade (escala de cinza, autocontraste dinâmico, realce de contraste 1.6x, sharpening e limiarização Otsu adaptativa) e margens proporcionais dinâmicas (5.5% superior e 7.5% inferior), neutralizando carimbos marginais sem decepar o texto.
+- **Classificador Estruturado JEV (System One Model):** Implementação de decisões discretas tipadas com pontuação probabilística de relevância (0.0 a 1.0) para roteamento preciso de peças fundamentais (`DENUNCIA_FATOS`, `DECISAO_AIJ`, `DECISAO_ANPP`, `DECISAO_PANP`, `ROL_TESTEMUNHAS`, `MANDADO_CUMPRIDO`).
+- **Filtro de Descarte Leya:** Rejeição rigorosa de comprovantes de pagamento bancário, guias de recolhimento de custas, autenticações mecânicas, certidões puramente ordinatórias de triagem e ruídos de digitalização, impedindo qualquer contaminação fática.
+- **Harmonização Google Stitch:** Barra de progresso multifásica com 4 microestados dinâmicos (`Indexação PJe` $\rightarrow$ `Calibração OCR` $\rightarrow$ `Triagem JEV` $\rightarrow$ `Preview A4`) e Smart Badge com pulso suave no cabeçalho.
+- **Cobertura de 189 Testes Automatizados:** Suíte Pytest ampliada para 189 testes com 100% de aprovação e validação em todos os 9 processos reais do TJRN.
 
 ---
 

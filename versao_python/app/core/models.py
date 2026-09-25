@@ -89,3 +89,25 @@ class OCRResult(BaseModel):
     lines: List[OCRLine] = Field(default_factory=list)
     page_number: Optional[int] = None
     is_scanned: bool = True
+
+
+class DocumentCategory(str):
+    """Categorias judiciais determinadas pelo classificador JEV / Leya."""
+    DENUNCIA_FATOS = "DENUNCIA_FATOS"
+    DECISAO_AIJ = "DECISAO_AIJ"
+    DECISAO_ANPP = "DECISAO_ANPP"
+    DECISAO_PANP = "DECISAO_PANP"
+    QUALIFICACAO = "QUALIFICACAO"
+    ROL_TESTEMUNHAS = "ROL_TESTEMUNHAS"
+    MANDADO_CUMPRIDO = "MANDADO_CUMPRIDO"
+    RUIDO_IRRELEVANTE = "RUIDO_IRRELEVANTE"
+
+
+class JEVDecisionResult(BaseModel):
+    """Resultado da tomada de decisão estruturada pelo motor JEV / Leya (System One)."""
+    category: str = DocumentCategory.RUIDO_IRRELEVANTE
+    relevance_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    is_essential: bool = False
+    rationale: str = ""
+    extracted_entities: dict = Field(default_factory=dict)
+

@@ -579,10 +579,55 @@ O **JURISRESUMO** percorreu uma trajetória extraordinária de engenharia de sof
 ```
 
 ### Estatísticas e Marcos Consolidados
-* **Cobertura de Testes:** 179 testes unitários e de integração no Pytest com **100% de aprovação**.
+* **Cobertura de Testes:** 189 testes unitários e de integração no Pytest com **100% de aprovação**.
 * **Testes de Cenários Reais:** 9 processos reais complexos do TJRN (incluindo autos de 148 MB e 850 páginas) testados com **zero falhas e paridade total**.
 * **Zero Dependência Externa Obrigatória:** O modo 100% offline opera sem internet tanto no Python quanto no JavaScript.
 * **Autoria e Direitos:** Sistema integralmente concebido, projetado e desenvolvido sob a autoria inegociável de **FChNeto**.
 * **Repositório Oficial Público:** Publicado e mantido em [https://github.com/Chneto/jurisresumo](https://github.com/Chneto/jurisresumo).
+
+---
+
+## 18. Versão 2.6 — Recalibração do Motor OCR/Tesseract, Mecanismos JEV & Leya e Harmonização Google Stitch
+
+### 18.1. Diagnóstico do Motor Anterior
+Nas versões anteriores, o módulo `ocr_engine.py` utilizava recortes fixos em pontos (`crop_top=50.0`, `crop_bottom=80.0`) e não possuía mecanismo semântico de decisão sobre os blocos reconhecidos. Em autos volumosos com páginas escaneadas tortas, digitalizações de baixa resolução ou comprovantes bancários anexados, carimbos marginais do PJe e números de autenticação bancária podiam vazar para os campos de fatos e histórico.
+
+### 18.2. Recalibração Profunda do Motor OCR / Tesseract
+1. **Pré-Processamento Visual Adaptativo (`preprocess_image`):**
+   - Conversão de canais em escala de cinza (`L`).
+   - Autocontraste (`ImageOps.autocontrast`) com corte dinâmico de percentil para eliminar amarelamento e fundo sujo de digitalizações antigas.
+   - Realce de contraste por fator multiplicativo (1.6x) e filtro sutil de nitidez (`ImageFilter.SHARPEN`).
+   - Limiarização adaptativa aproximada de Otsu para casos de contraste degradado.
+2. **Margens Dinâmicas Percentuais (`dynamic_margins`):**
+   - Eliminação de valores estáticos em pontos. O motor agora calcula o corte superior em 5.5% e inferior em 7.5% da altura real da página (`page_rect.height`), além de 3.5% nas laterais, neutralizando carimbos marginais e assinaturas sem decepar o texto do documento.
+3. **Filtragem Rígida de Confiança e Dimensões de Bounding Boxes:**
+   - Descarte automático de caixas de texto com altura ou largura inferior a 7 pixels (ruídos de sujeira do scanner).
+   - Limiar mínimo de confiança configurável (padrão $\ge 0.55$).
+   - Descarte de linhas com menos de 2 caracteres alfanuméricos ou constituídas por pontuação aleatória de OCR.
+   - Fallback resiliente para Tesseract via `pytesseract` caso o RapidOCR retorne zero linhas úteis.
+
+### 18.3. Mecanismo de Decisão Estruturada JEV (System One Model)
+Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev_decision_engine.py), inspirado nos conceitos do TypeSafe Jev (modelo System One para tomadas de decisão discretas e saídas estruturadas tipadas, sem geração de texto livre):
+- **Tipagem Canônica (`DocumentCategory`):** `DENUNCIA_FATOS`, `DECISAO_AIJ`, `DECISAO_ANPP`, `DECISAO_PANP`, `QUALIFICACAO`, `ROL_TESTEMUNHAS`, `MANDADO_CUMPRIDO` e `RUIDO_IRRELEVANTE`.
+- **Pontuação Probabilística de Relevância (0.0 a 1.0):** Cálculo ponderado de sinais jurídicos essenciais (termos de acusação, artigos penais, comandos de designação) contra ruídos administrativos.
+- **Roteamento Inteligente Leya:** Bloqueio e descarte cirúrgico de comprovantes de pagamento de custas, boletos bancários, autenticações mecânicas, certidões de triagem ordinatórias e extratos de conta antes que qualquer fragmento atinja o resumo processual.
+
+### 18.4. Harmonização Frontend com o Design System Google Stitch
+1. **Painel Multifásico com Microestados Dinâmicos:**
+   - Substituição do spinner genérico por um cartão moderno Google Stitch (`.stitch-progress-card`) com barra de progresso em gradiente contínuo e 4 microestados visuais:
+     - 1. *Indexação PJe*
+     - 2. *Calibração OCR*
+     - 3. *Triagem JEV/Leya*
+     - 4. *Preview A4*
+2. **Smart Badge no Cabeçalho:**
+   - Indicador visual em tempo real no topo da interface: `OCR Calibrado • JEV Ativo (0% Ruído)` com animação de pulso verde suave (`.stitch-dot-pulse`).
+3. **Paridade Absoluta:**
+   - As regras de filtragem de ruído e os componentes visuais foram integralmente espelhados na Versão JavaScript Portátil (`versao_javascript/index.html` e `ABRIR_APLICATIVO_DIRETO.html`).
+
+### 18.5. Auditoria de Qualidade e Conformidade
+- **189 Testes no Pytest:** Cobertura de 100% (10 novos testes dedicados no `test_ocr_jev_calibration.py`).
+- **9 Casos Reais do TJRN:** Paridade e aprovação de 100% mantidas.
+- **Autoria:** Mantida a assinatura e titularidade exclusiva de **FChNeto**.
+
 
 

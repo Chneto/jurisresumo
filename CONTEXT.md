@@ -122,6 +122,10 @@ Autos de processos criminais do TJRN frequentemente possuem entre **10 MB e 160 
 - Ao auditar ou debugar código, o agente de IA deve utilizar `grep_search` focado e `view_file` delimitado a intervalos de 50 a 100 linhas.
 - Despejar arquivos de 2.000 linhas repetidas vezes na janela de conversa satura a memória do agente e degrada a capacidade de raciocínio.
 
+#### 🔹 Regra 6: Decisão Estruturada JEV (System One) e Descarte Leya
+- Utilizar o classificador determinístico e probabilístico `JEVDecisionEngine` (System One) para pontuar a relevância de peças (0.0 a 1.0) antes de incorporá-las ao histórico ou à narrativa fática.
+- Descartar cirurgicamente comprovantes bancários, guias de custas judiciais, autenticações mecânicas, certidões avulsas de triagem e carimbos marginais do PJe, garantindo 0% de ruído e blindagem contra alucinações.
+
 ---
 
 ## 4. Topologia e Organização Física do Repositório

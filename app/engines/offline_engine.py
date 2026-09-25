@@ -23,6 +23,8 @@ from app.core.models import (
     PJeDocument,
     Witness,
 )
+from app.core.jev_decision_engine import JEVDecisionEngine
+from app.core.ocr_engine import OCREngine
 from app.core.pje_indexer import index_pje_pdf, prune_documents
 from app.engines.base import BaseExtractionEngine
 
@@ -383,13 +385,18 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         return reus, advs, vitimas, testemunhas, prom
 
     def _extract_doc_text(self, doc: pymupdf.Document, p_doc: Optional[PJeDocument]) -> str:
-        """Extracts text for a specific PJe document based on page range with fallback."""
+        """Extracts text for a specific PJe document based on page range with fallback and calibrated OCR."""
         if not p_doc:
             return ""
         if p_doc.start_page > 0:
             text_parts = []
             for p in range(p_doc.start_page - 1, min(p_doc.end_page, len(doc))):
-                text_parts.append(doc[p].get_text())
+                p_text = doc[p].get_text()
+                if not p_text.strip() or (p_doc.is_scanned and len(p_text.strip()) < 50):
+                    ocr_res = OCREngine.get_instance().ocr_page(doc[p])
+                    if ocr_res and ocr_res.text.strip():
+                        p_text = ocr_res.text
+                text_parts.append(p_text)
             txt = "\n".join(text_parts).strip()
             if txt:
                 return txt
@@ -400,6 +407,10 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             for p in range(len(doc)):
                 p_text = doc[p].get_text()
                 if id_str in p_text:
+                    if not p_text.strip() or (p_doc.is_scanned and len(p_text.strip()) < 50):
+                        ocr_res = OCREngine.get_instance().ocr_page(doc[p])
+                        if ocr_res and ocr_res.text.strip():
+                            p_text = ocr_res.text
                     return p_text
 
         return ""
@@ -1048,6 +1059,9 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                 continue
             cleaned_lines.append(l_s)
 
+        # Apply JEV System One noise filtering to strip OCR artifacts and margin noise
+        cleaned_lines = JEVDecisionEngine.get_instance().filter_noise_lines(cleaned_lines)
+
         paragraphs: List[str] = []
         curr_para: List[str] = []
 
@@ -1105,10 +1119,15 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         type_l = p_doc.doc_type.lower()
         name_l = raw_name.lower()
 
-        # Extract page text
+        # Extract page text with calibrated OCR fallback for scanned pieces
         txt = ""
         for p in range(p_doc.start_page - 1, min(p_doc.end_page, len(doc))):
-            txt += doc[p].get_text() + "\n"
+            p_txt = doc[p].get_text()
+            if not p_txt.strip() or (p_doc.is_scanned and len(p_txt.strip()) < 50):
+                ocr_res = OCREngine.get_instance().ocr_page(doc[p])
+                if ocr_res and ocr_res.text.strip():
+                    p_txt = ocr_res.text
+            txt += p_txt + "\n"
         txt_l = txt.lower()
 
         # 1. Denúncia

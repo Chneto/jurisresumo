@@ -231,6 +231,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function updateProgressPhase(phaseNumber, stepText, subText, percent) {
+    const stepEl = document.getElementById('stitch-progress-step');
+    const subEl = document.getElementById('stitch-progress-sub');
+    const fillEl = document.getElementById('stitch-progress-fill');
+    if (stepEl && stepText) stepEl.textContent = stepText;
+    if (subEl && subText) subEl.textContent = subText;
+    if (fillEl && percent !== undefined) fillEl.style.width = `${percent}%`;
+
+    for (let i = 1; i <= 4; i++) {
+      const chip = document.getElementById(`phase-chip-${i}`);
+      if (chip) {
+        if (i < phaseNumber) {
+          chip.className = 'phase-chip completed';
+        } else if (i === phaseNumber) {
+          chip.className = 'phase-chip active';
+        } else {
+          chip.className = 'phase-chip';
+        }
+      }
+    }
+  }
+
   async function handleFileUpload(file) {
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       showToast('Por favor, selecione um arquivo em formato PDF do PJe.', 'error');
@@ -238,8 +260,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     uploadLoading.classList.add('active');
+    updateProgressPhase(1, 'Indexando catálogo de documentos (TOC) e carimbos Num. ID...', 'Mapeamento de capa, réus e catalogação de peças', 25);
+
+    const timer1 = setTimeout(() => {
+      updateProgressPhase(2, 'Otimizando contraste e calibrando OCR...', 'Otsu adaptativo, detecção de margens dinâmicas e RapidOCR', 50);
+    }, 600);
+
+    const timer2 = setTimeout(() => {
+      updateProgressPhase(3, 'Executando decisão System One (JEV/Leya)...', 'Classificação de peças, descarte de carimbos e comprovantes bancários', 75);
+    }, 1500);
 
     try {
+      let data = null;
       if (typeof eel !== 'undefined' && eel.process_pdf_eel) {
         // Modo Desktop Nativo via Eel
         const base64 = await fileToBase64(file);
@@ -247,8 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (res.error) {
           throw new Error(res.error);
         }
-        loadDataIntoUI(res.data);
-        showToast(`Processo ${res.data.case_number || 'sintetizado'} com sucesso via Motor Desktop!`, 'success');
+        data = res.data;
+        updateProgressPhase(4, 'Sintetizando fatos e formatando folha A4 contínua...', 'Padronização OpenXML TJRN e hiperlinks nativos PJe', 100);
+        loadDataIntoUI(data);
+        showToast(`Processo ${data.case_number || 'sintetizado'} com sucesso via Motor Desktop!`, 'success');
       } else {
         // Modo Web padrão via FastAPI
         const formData = new FormData();
@@ -266,13 +300,16 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error(err.detail || 'Falha ao processar os autos do PJe.');
         }
 
-        const data = await response.json();
+        data = await response.json();
+        updateProgressPhase(4, 'Sintetizando fatos e formatando folha A4 contínua...', 'Padronização OpenXML TJRN e hiperlinks nativos PJe', 100);
         loadDataIntoUI(data);
         showToast(`Processo ${data.case_number} sintetizado com sucesso!`, 'success');
       }
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       uploadLoading.classList.remove('active');
       fileInput.value = '';
     }

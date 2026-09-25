@@ -55,12 +55,18 @@ KEY_DOCUMENT_PATTERNS = [
     re.compile(r"revoga[cç][aã]o", re.IGNORECASE),
 ]
 
-# Patterns of documents that are strictly non-essential bulk data (e.g. SIMBA, phone logs)
+# Patterns of documents that are strictly non-essential bulk data (JEV / Leya noise rejection)
 BULK_EXCLUDE_PATTERNS = [
     re.compile(r"extrato\s*banc[aá]rio", re.IGNORECASE),
     re.compile(r"dados\s*telef[oô]nicos", re.IGNORECASE),
     re.compile(r"quebra\s*de\s*sigilo", re.IGNORECASE),
     re.compile(r"relat[oó]rio\s*t[eé]cnico\s*de\s*an[aá]lise", re.IGNORECASE),
+    re.compile(r"comprovante\s*(?:de\s*)?(?:pagamento|dep[oó]sito|transfer[eê]ncia|agendamento)", re.IGNORECASE),
+    re.compile(r"guia\s*(?:de\s*)?recolhimento", re.IGNORECASE),
+    re.compile(r"custas\s*processuais", re.IGNORECASE),
+    re.compile(r"danfe|nota\s*fiscal", re.IGNORECASE),
+    re.compile(r"certid[aã]o\s*de\s*(?:triagem|juntada\s*gen[eé]rica|remessa\s*ao\s*dje)", re.IGNORECASE),
+    re.compile(r"autentica[cç][aã]o\s*mec[aâ]nica", re.IGNORECASE),
 ]
 
 
