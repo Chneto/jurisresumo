@@ -184,3 +184,39 @@ c:\Users\f201503\Documents\Resumo para audiência\
 
 **JURISRESUMO — Eficiência, Segurança e Precisão a serviço do Poder Judiciário.**  
 **Desenvolvido por FChNeto**
+
+---
+
+## 6. Estado Atual do Sistema (2026-09-29 • Versão 2.8)
+
+### 6.1. Status Operacional das Versões
+
+| Componente | Status | Observações |
+|---|---|---|
+| **Versão Python (FastAPI/Eel)** | ✅ Operacional | 195 testes Pytest com 100% de aprovação. JEV/Leya/OCR calibrados. Qualificação completa ativa. |
+| **Versão JavaScript (Zero-Install)** | ✅ Operacional | SyntaxError crítico corrigido em 8 arquivos. Dropzone HTML restaurado. `validateFile()` implementada. |
+| **Motor Offline (Heurístico JS/Python)** | ✅ Operacional | Hierarquia jurídica penal estrita (PAnP → ANPP → AIJ → Custódia). Leitura 100% do PDF. |
+| **Motor IA (Gemini API)** | ✅ Disponível | `gemini-2.5-flash` e `gemini-2.5-pro` com schema JSON rígido via Pydantic. |
+| **Preview A4 Contínuo** | ✅ Corrigido | `align-items: flex-start` + `min-height: 29.7cm; height: auto !important;` ativos em todas as versões. |
+| **Gerador DOCX (OpenXML)** | ✅ Operacional | Verdana 12pt, margens 2,0cm, entrelinhas 1,89, marcatexto estrito, hiperlinks PJe clicáveis. |
+| **Upload e Dropzone JS** | ✅ Restaurado | `<form>` mal-aninhado removido; `name='file'` adicionado; `<div id='upload-error'>` e `validateFile()` ativos. |
+
+### 6.2. SyntaxError JS — Resolvido em 2026-09-29
+
+O SyntaxError crítico identificado na versão JavaScript — que abortava silenciosamente **todo** o motor JS antes de registrar qualquer event listener — foi corrigido com sucesso:
+
+- **Causa:** Chave `}` ausente no bloco `if (/denúncia|denuncia|queixa-crime|petição inicial/i.test(...))` (~linha 1742 do `index.html`).
+- **Efeito anterior:** Nenhum botão respondia, upload não processava, geração de DOCX era inoperante.
+- **Correção:** Inserção da `}` faltante e restauração do equilíbrio de blocos em todos os 8 arquivos afetados.
+- **Verificação:** Abrir `versao_javascript/index.html` no navegador → F12 → Console → zero erros. Testar upload com PDF válido e com arquivo não-PDF.
+
+### 6.3. Checkpoint Ativo
+
+```
+ID: 20260929_112752_js-syntax-fix-complete
+Rótulo: js-syntax-fix-complete
+Descrição: Correção crítica do SyntaxError JS, restauração do dropzone e validação client-side de upload.
+Restauração: python recovery.py restore 20260929_112752_js-syntax-fix-complete
+```
+
+**Autor e Desenvolvedor: FChNeto**

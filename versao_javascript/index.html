@@ -541,14 +541,17 @@
       <div class="dropzone-inline" id="dropzone">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--banana-500);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
         <span>Arraste o PDF integral dos autos aqui ou <strong>clique para selecionar</strong></span>
-        <input type="file" id="file-input" accept="application/pdf" style="display:none;">
+        <input type="file" id="file-input" name="file" accept="application/pdf" style="display:none;">
       </div>
+
+      <div id="upload-error" style="color:#e53e3e;margin-top:0.5rem;display:none;"></div>
 
       <div class="upload-loading" id="upload-loading">
         <div class="spinner"></div>
         <span id="loading-msg">Lendo e analisando os autos judiciais...</span>
       </div>
     </div>
+
 
     <!-- Content Split: Forms (Left) vs Preview (Right) -->
     <div class="content-split">
@@ -762,16 +765,33 @@
     const uploadLoading = document.getElementById('upload-loading');
     const loadingMsg = document.getElementById('loading-msg');
 
+    // Validate file type: only PDF allowed
+    function validateFile(file) {
+      const errEl = document.getElementById('upload-error');
+      if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+        if (errEl) { errEl.textContent = 'Formato de arquivo inválido. Por favor, envie apenas PDFs.'; errEl.style.display = 'block'; }
+        return false;
+      }
+      if (errEl) errEl.style.display = 'none';
+      return true;
+    }
+
     dropzone.onclick = () => fileInput.click();
     dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('dragover'); };
     dropzone.ondragleave = () => dropzone.classList.remove('dragover');
     dropzone.ondrop = (e) => {
       e.preventDefault();
       dropzone.classList.remove('dragover');
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) processPdfFile(e.dataTransfer.files[0]);
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        const f = e.dataTransfer.files[0];
+        if (validateFile(f)) processPdfFile(f);
+      }
     };
     fileInput.onchange = (e) => {
-      if (e.target.files && e.target.files[0]) processPdfFile(e.target.files[0]);
+      if (e.target.files && e.target.files[0]) {
+        const f = e.target.files[0];
+        if (validateFile(f)) processPdfFile(f);
+      }
     };
 
     // Text Cleaning Helper
@@ -1729,6 +1749,7 @@
               doc_id: d.doc_id
             });
           }
+        }
       });
 
       // Sort strictly in ascending chronological order:

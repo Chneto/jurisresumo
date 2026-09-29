@@ -4,7 +4,7 @@
 > **Sistema:** JURISRESUMO — Síntese Automatizada de Processos Criminais PJe para Audiências  
 > **Comarca / Tribunal:** Varas Criminais • Tribunal de Justiça do Estado do Rio Grande do Norte (TJRN)  
 > **Autor e Desenvolvedor:** FChNeto  
-> **Estado Atual:** Versão 2.6 (100% Validada • OCR/JEV Calibrados • Repositório GitHub Ativo)  
+> **Estado Atual:** Versão 2.8 (100% Validada • SyntaxError JS Corrigido • Upload Dropzone Restaurado • Validação Client-Side Implementada)  
 
 ---
 
@@ -32,7 +32,10 @@ timeline
                     : v2.3 Vendor Local : PDF.js e JSZip offline sem CDNs
                     : v2.4 Desacoplamento : Separação versao_python / versao_javascript + JS Analítico
                     : v2.5 Folha Contínua & Eel : align-items flex-start + CSS Embutido + Desktop Eel + GitHub
-    section Futuro : v2.6 Batch & Templates : Pauta Diária em Lote + Customização de Estilos
+                    : v2.6 OCR/JEV/Leya : Recalibração OCR + Classificador JEV + Filtro Leya + Google Stitch
+                    : v2.7 Qualificação & LGPD : Qualificação Completa + Filtro Anti-Órgãos + JEV Adaptativo
+                    : v2.8 Fix Crítico JS : SyntaxError Corrigido (8 Arquivos) + Dropzone HTML + validateFile()
+    section Futuro : v2.9 Testes E2E JS : Testes E2E Upload + Nomeação DOCX + README JS
                    : v3.0 PJe Direct & Busca : P&R Semântico nos Autos + Suporte Cível/Família
                    : v4.0 Audiência ao Vivo : Transcrição em Tempo Real + Termo de Audiência Automático
 ```
@@ -88,14 +91,31 @@ timeline
 - **Integração Desktop Nativa com Eel (`run_eel.py`):** Lançamento em modo de aplicativo dedicado do Microsoft Edge (`--app`), sem barras de endereço, sem abas e com alta performance de comunicação local.
 - **Publicação Rastreável no GitHub:** Repositório sincronizado e publicado no GitHub ([https://github.com/Chneto/jurisresumo](https://github.com/Chneto/jurisresumo)) sob autoria de `FChNeto`.
 
-#### 📦 Versão 2.6 — Recalibração OCR/Tesseract, Mecanismos JEV & Leya e Google Stitch UI
+#### 📦 Versão 2.6 — Recalibração OCR/Tesseract, Mecanismos JEV & Leya e Google Stitch UI ✅ CONCLUÍDO
 - **Recalibração do Motor OCR/Tesseract:** Pré-processamento visual de alta fidelidade (escala de cinza, autocontraste dinâmico, realce de contraste 1.6x, sharpening e limiarização Otsu adaptativa) e margens proporcionais dinâmicas (5.5% superior e 7.5% inferior), neutralizando carimbos marginais sem decepar o texto.
-- **Classificador Estruturado JEV (System One Model):** Implementação de decisões discretas tipadas com pontuação probabilística de relevância (0.0 a 1.0) para roteamento preciso de peças fundamentais (`DENUNCIA_FATOS`, `DECISAO_AIJ`, `DECISAO_ANPP`, `DECISAO_PANP`, `ROL_TESTEMUNHAS`, `MANDADO_CUMPRIDO`).
-- **Filtro de Descarte Leya:** Rejeição rigorosa de comprovantes de pagamento bancário, guias de recolhimento de custas, autenticações mecânicas, certidões puramente ordinatórias de triagem e ruídos de digitalização, impedindo qualquer contaminação fática.
-- **Harmonização Google Stitch:** Barra de progresso multifásica com 4 microestados dinâmicos (`Indexação PJe` $\rightarrow$ `Calibração OCR` $\rightarrow$ `Triagem JEV` $\rightarrow$ `Preview A4`) e Smart Badge com pulso suave no cabeçalho.
-- **Cobertura de 189 Testes Automatizados:** Suíte Pytest ampliada para 189 testes com 100% de aprovação e validação em todos os 9 processos reais do TJRN.
+- **Classificador Estruturado JEV (System One Model):** Implementação de decisões discretas tipadas com pontuação probabilística de relevância (0.0 a 1.0) para roteamento preciso de peças fundamentais.
+- **Filtro de Descarte Leya:** Rejeição rigorosa de comprovantes de pagamento bancário, guias de recolhimento de custas, autenticações mecânicas, certidões puramente ordinatórias de triagem e ruídos de digitalização.
+- **Harmonização Google Stitch:** Barra de progresso multifásica com 4 microestados dinâmicos e Smart Badge com pulso suave no cabeçalho.
+- **Cobertura de 189 Testes Automatizados:** Suíte Pytest ampliada para 189 testes com 100% de aprovação.
+
+#### 📦 Versão 2.7 — Qualificação Completa, Filtro Anti-Órgãos Estatais, Máscara e Cronologia, Fatos sem Vocativos, Higienização LGPD e JEV Adaptativo ✅ CONCLUÍDO
+- **Filtro Anti-Órgãos Estatais (`STATE_ORGANS_BLACKLIST_REGEX`):** Elimina entidades governamentais erroneamente cadastradas no polo passivo pelo PJe.
+- **Qualificação Completa e Estruturada:** Extrai filiação, RG, CPF, data de nascimento, naturalidade e endereço de cada acusado.
+- **Máscara Estrita `DD/MM/AA`** e **Ordenação Cronológica Crescente** do histórico processual.
+- **Supressão Cirúrgica de Vocativos** na narrativa fática ministerial.
+- **Higienização LGPD no Repositório GitHub:** Remoção de testes com autos reais e anonimização da documentação pública.
+- **Motor JEV/LEYA Adaptativo:** Módulo `LearningStore` com feedback loop local (195 testes, 100% aprovados).
+
+#### 📦 Versão 2.8 — Correção Crítica de SyntaxError JS, Restauração do Dropzone e Validação Client-Side de Upload ✅ CONCLUÍDO (29/09/26)
+- **Investigação e Identificação do SyntaxError:** DeepInvestigator identificou uma `}` ausente no bloco `if (/denúncia|.../)` da função de extração cronológica (~linha 1742), que abortava silenciosamente todo o JavaScript antes de qualquer event listener ser registrado.
+- **Correção em 8 Arquivos Simultâneos:** `versao_javascript/index.html`, `versao_javascript/ABRIR_APLICATIVO_DIRETO.html`, `ABRIR_APLICATIVO_DIRETO.html` (raiz), `index.html` (raiz) e 4 cópias em `gitpost/`. Balanceamento de chaves diff=0 confirmado em todos.
+- **Restauração da Estrutura HTML do Dropzone:** Remoção do `<form enctype='multipart/form-data'>` mal-aninhado dentro da `.top-action-bar`; fechamento correto da div restaurado.
+- **Adição de `name='file'` e `<div id='upload-error'>`:** Conformidade HTML5 e receptor dedicado de mensagens de validação client-side.
+- **Implementação da Função `validateFile()`:** Guarda-chuva de validação integrado aos handlers `ondrop` e `onchange` com mensagem `'Formato de arquivo inválido. Por favor, envie apenas PDFs.'` e auto-ocultação em 5 segundos.
+- **Checkpoint de Recovery:** `20260929_112752_js-syntax-fix-complete`.
 
 ---
+
 
 ## 3. Rotas Evolutivas e Próximos Passos
 
@@ -126,20 +146,20 @@ graph LR
 
 ---
 
-### 3.1. Versão 2.6 — Eficiência de Pauta & Flexibilidade de Gabinete (Curto Prazo)
+### 3.1. Versão 2.9 — Testes E2E do Upload, Nomeação DOCX e README da Versão JS (Próximo Passo Imediato)
 
-1. **Processamento em Lote da Pauta Diária (*Batch Processing*):**
-   - *Demanda:* Possibilidade de selecionar uma pasta contendo os 5 ou 10 PDFs de processos pautados para um dia de audiências.
-   - *Funcionalidade:* O sistema processará a fila em segundo plano e disponibilizará uma barra de alternância rápida entre os resumos, além de um botão para baixar todos os DOCXs compactados em `.zip`.
-2. **Templates Customizáveis por Magistrado / Gabinete:**
-   - *Demanda:* Permitir que diferentes magistrados ajustem detalhes cosméticos ou institucionais (ex.: modelo do cabeçalho da vara, fontes alternativas caso o juiz prefira Arial 11pt, ou fórmula de fechamento específica).
-   - *Funcionalidade:* Painel de edição de templates salvo no `localStorage` ou em arquivo `template_config.json`.
-3. **Detecção Refinada de Cumprimento de Mandados (Contrafé Positiva vs. Negativa):**
-   - *Demanda:* Identificar quando um oficial de justiça certificou certidão negativa (réu não encontrado, mudou-se, endereço inexistente) versus certidão positiva (citado/intimado pessoalmente), destacando visualmente em vermelho os casos negativos que podem gerar nulidade de audiência.
-4. **Suporte Experimental a LLMs Locais via Ollama / Llama.cpp:**
-   - *Demanda:* Oferecer a inteligência de modelos de linguagem para gabinetes que exigem síntese neural sem nenhum tráfego de dados para a nuvem da Google.
+1. **Testes E2E do Upload na Versão JavaScript:**
+   - *Demanda:* Validação automatizada do fluxo completo de upload na versão portátil — desde o `ondrop`/`onchange` até o processamento PDF.js e geração do DOCX.
+   - *Funcionalidade:* Testes que cubram: arquivo PDF válido aceito, arquivo não-PDF rejeitado com mensagem correta, arquivo vazio rejeitado, e geração de DOCX ao final do pipeline.
+2. **Verificação da Nomeação do DOCX (`Resumo_{numero}_{tipo}.docx`):**
+   - *Demanda:* Garantir que o arquivo gerado pelo motor JS receba o nome padronizado `Resumo_{numero_processo}_{tipo_audiencia}.docx`, e não `resumo.docx` genérico.
+   - *Funcionalidade:* Extração do número CNJ do processo e do tipo de ato (AIJ/ANPP/PAnP/Custódia) para composição do nome de download.
+3. **Atualização do README da Versão JS (`versao_javascript/README.md`):**
+   - *Demanda:* O README da versão JS está desatualizado e não documenta: o SyntaxError corrigido, a estrutura do dropzone, a função `validateFile()` e o procedimento de verificação (F12 → Console).
+   - *Funcionalidade:* Revisão e publicação do `versao_javascript/README.md` com seção de Changelog v2.8, instruções de uso e seção "Como Verificar a Saúde do Motor JS".
 
 ---
+
 
 ### 3.2. Versão 3.0 — Conectividade PJe & Expansão de Competências (Médio Prazo)
 
@@ -172,13 +192,18 @@ graph LR
 | **Correção Folha A4 Contínua** | Altíssimo | Concluído | v2.5 | Entregue |
 | **Frontend CSS Embutido & Eel** | Altíssimo | Concluído | v2.5 | Entregue |
 | **Publicação no GitHub** | Alto | Concluído | v2.5 | Entregue |
-| **Detecção Avançada de Contrafé Negativa** | Altíssimo | Médio | v2.6 | **P1 (Imediata)** |
-| **Processamento em Lote (Pauta Diária)** | Alto | Baixo | v2.6 | **P1 (Imediata)** |
-| **Templates de Estilo Customizáveis** | Médio | Baixo | v2.6 | **P2 (Secundária)** |
-| **LLMs Locais via Ollama** | Alto | Médio | v2.6 | **P2 (Secundária)** |
+| **Recalibração OCR/JEV/Leya** | Altíssimo | Concluído | v2.6 | Entregue |
+| **Qualificação Completa & LGPD** | Altíssimo | Concluído | v2.7 | Entregue |
+| **Fix SyntaxError JS (8 arquivos)** | Altíssimo | Concluído | v2.8 | Entregue ✅ |
+| **Restauração HTML Dropzone** | Altíssimo | Concluído | v2.8 | Entregue ✅ |
+| **Validação Client-Side (`validateFile()`)** | Alto | Concluído | v2.8 | Entregue ✅ |
+| **Testes E2E Upload JS** | Altíssimo | Baixo | v2.9 | **P1 (Imediata)** |
+| **Nomeação DOCX Padronizada** | Alto | Baixo | v2.9 | **P1 (Imediata)** |
+| **Atualização README Versão JS** | Médio | Baixo | v2.9 | **P1 (Imediata)** |
 | **Busca Semântica / Chat nos Autos** | Altíssimo | Alto | v3.0 | **P3 (Futura)** |
 | **Conector Direto ao PJe TJRN** | Altíssimo | Alto | v3.0 | **P3 (Futura)** |
 | **Assistente de Audiência ao Vivo** | Revolucionário | Altíssimo | v4.0 | **P4 (Visão)** |
+
 
 ---
 

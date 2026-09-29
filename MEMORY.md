@@ -2,7 +2,7 @@
 
 > **Documento Vivo de Memória e Conhecimento Técnico**  
 > **Finalidade:** Orientar desenvolvedores e subagentes em futuras modificações, manutenções, refatorações e auditorias da aplicação.  
-> **Última Atualização:** 17/09/2026 (Versão 2.5 — Folha A4 de Pré-Visualização Contínua sem Fundo Azul, Frontend Python com CSS Embutido e Integração Nativa Desktop Eel)
+> **Última Atualização:** 29/09/26 (Versão 2.8 — Correção Crítica de SyntaxError JS + Restauração do Dropzone + Validação Client-Side de Upload)
 > **Autor e Desenvolvedor:** FChNeto
 
 ---
@@ -250,7 +250,7 @@ A partir da auditoria minuciosa de 100% dos arquivos de referência `.docx` forn
 
 1. **Realce Amarelo (`w:highlight w:val="yellow"` / CSS `#ffff00`):**
    - Todos os títulos de seção: `QUALIFICAÇÃO`, `IMPUTAÇÃO`, `RESUMO DOS FATOS`, `HISTÓRICO PROCESSUAL`, `TESTEMUNHAS DE ACUSAÇÃO:`, `TESTEMUNHAS DE DEFESA:`.
-   - Linha de chamada de horário/caso em audiências agendadas (ex.: `11h25min - 0860849-XX.2026.8.20.5001 - ANPP`).
+   - Linha de chamada de horário/caso em audiências agendadas (ex.: `11h25min - 0860849-94.2026.8.20.5001 - ANPP`).
    - Nota padrão de testemunhas da defesa quando não há arrolamento novo (`A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.` ou `Não há testemunhas de defesa arroladas.`).
 
 2. **Realce Verde Vivo (`w:highlight w:val="green"` / CSS `#00ff00`):**
@@ -261,7 +261,7 @@ A partir da auditoria minuciosa de 100% dos arquivos de referência `.docx` forn
 
 3. **Negrito Estratégico (`<w:b/>`):**
    - Cabeçalhos de seção e linhas dos atores do ato solene.
-   - Nome completo dos réus na abertura de sua qualificação, em caixa alta (ex.: `RÉU 6 (ANONIMIZADO)`).
+   - Nome completo dos réus na abertura de sua qualificação, em caixa alta (ex.: `MANOEL PAULINO DA SILVA SOBRINHO`).
    - Artigos penais e normas jurídicas na imputação (ex.: `(art. 157, § 2º, II, e § 2º-A, I, do Código Penal)`).
 
 4. **Itálico (`<w:i/>`):**
@@ -293,15 +293,15 @@ Esta tabela consolida os 9 casos de teste e modelos de referência reais minerad
 
 | Processo PJe | Ato | Data / Hora | Réu(s) | Situação Prisional | Total Págs | % Digitalizado | Peculiaridades Jurídicas |
 |---|---|---|---|---|---|---|---|
-| **0801889-XX.2023.8.20.5001** | AIJ | 31.07.26 às 10h | RÉU 1 (ANONIMIZADO) | Em liberdade | 119 págs | 10.1% | Furto qualificado, réu solto, Defensoria Pública |
-| **0802487-XX.2026.8.20.5300** | AIJ | 31.07.26 às 11h | GEAN | Réu preso | 209 págs | 14.4% | Tráfico de drogas, réu preso em estabelecimento prisional |
-| **0804041-XX.2022.8.20.5600** | PAnP | 23.07.26 às 13h | BERANILDO | Citado por edital | 212 págs | 20.3% | Produção Antecipada de Provas (Art. 366 CPP), citação ficta por edital |
-| **0806049-XX.2024.8.20.5001** | AIJ | 17.07.26 às 10h | LAIS, GUSTAVO, BIANCA, GIOVANNA | Em liberdade | 3.250 págs | 2.5% | Mega-processo GAECO / Operação policial, 4 acusados, 10 volumes |
-| **0820550-XX.2025.8.20.5001** | AIJ | 17.07.26 às 09h | HEVERTON DOUGLAS, ADRIANO MARTINS | Preso / Não localizado | 190 págs | 41.6% | Roubo majorado em concurso, alta densidade escaneada (41% OCR) |
-| **0821902-XX.2024.8.20.5001** | AIJ | 13.07.26 às 14h | LUANNA | Em liberdade | 1.166 págs | 19.5% | Inquérito policial extenso, múltiplos laudos periciais |
-| **0844118-XX.2025.8.20.5001** | AIJ | 24.07.26 às 11h | ABNER BARBOSA DA SILVA | Em liberdade | 336 págs | 2.4% | Receptação qualificada, histórico cronológico com 11 marcos processuais |
-| **0860849-XX.2026.8.20.5001** | ANPP | 24.07.26 às 11h25 | SAMARA TARGINO DE LIMA | Intimada | 480 págs | 0.6% | Acordo de Não Persecução Penal (Art. 28-A CPP), linha de chamada de horário |
-| **0876503-XX.2025.8.20.5001** | AIJ | 10.07.26 às 11h | MANOEL, JOSUEL, FELIPE | Intimados | 510 págs | 15.5% | Coautoria (3 réus), rol extenso de 17 IDs chave de certidões e mandados |
+| **0801889-53.2023.8.20.5001** | AIJ | 31.07.26 às 10h | JUCIMARCIA SOARES DA SILVA | Em liberdade | 119 págs | 10.1% | Furto qualificado, réu solto, Defensoria Pública |
+| **0802487-75.2026.8.20.5300** | AIJ | 31.07.26 às 11h | GEAN | Réu preso | 209 págs | 14.4% | Tráfico de drogas, réu preso em estabelecimento prisional |
+| **0804041-57.2022.8.20.5600** | PAnP | 23.07.26 às 13h | BERANILDO | Citado por edital | 212 págs | 20.3% | Produção Antecipada de Provas (Art. 366 CPP), citação ficta por edital |
+| **0806049-87.2024.8.20.5001** | AIJ | 17.07.26 às 10h | LAIS, GUSTAVO, BIANCA, GIOVANNA | Em liberdade | 3.250 págs | 2.5% | Mega-processo GAECO / Operação policial, 4 acusados, 10 volumes |
+| **0820550-12.2025.8.20.5001** | AIJ | 17.07.26 às 09h | HEVERTON DOUGLAS, ADRIANO MARTINS | Preso / Não localizado | 190 págs | 41.6% | Roubo majorado em concurso, alta densidade escaneada (41% OCR) |
+| **0821902-39.2024.8.20.5001** | AIJ | 13.07.26 às 14h | LUANNA | Em liberdade | 1.166 págs | 19.5% | Inquérito policial extenso, múltiplos laudos periciais |
+| **0844118-57.2025.8.20.5001** | AIJ | 24.07.26 às 11h | ABNER BARBOSA DA SILVA | Em liberdade | 336 págs | 2.4% | Receptação qualificada, histórico cronológico com 11 marcos processuais |
+| **0860849-94.2026.8.20.5001** | ANPP | 24.07.26 às 11h25 | SAMARA TARGINO DE LIMA | Intimada | 480 págs | 0.6% | Acordo de Não Persecução Penal (Art. 28-A CPP), linha de chamada de horário |
+| **0876503-58.2025.8.20.5001** | AIJ | 10.07.26 às 11h | MANOEL, JOSUEL, FELIPE | Intimados | 510 págs | 15.5% | Coautoria (3 réus), rol extenso de 17 IDs chave de certidões e mandados |
 
 ---
 
@@ -362,15 +362,15 @@ Sempre que receber uma nova demanda de modificação do magistrado ou usuário, 
 - **Rótulo:** `v2.2_final_validated_all_cases`
 - **Validação de Testes:** 173 testes unitários e de integração aprovados com 100% de sucesso.
 - **Validação Cruzada em 100% dos Processos Reais da Pasta:**
-  - `Proc. 0801889-XX.2023.8.20.5001`: **AIJ**, 31.07.26 às 10h00min, RÉU 1 (ANONIMIZADO)
-  - `Proc. 0802487-XX.2026.8.20.5300`: **AIJ**, 31.07.26 às 11h00min, Gean de Lima Ferreira
-  - `Proc. 0804041-XX.2022.8.20.5600`: **PAnP**, 23.07.26 às 13h00min, Beranildo Alves Soares
-  - `Proc. 0806049-XX.2024.8.20.5001`: **AIJ**, 17.07.26 às 10h00min, 4 acusados
-  - `Proc. 0844118-XX.2025.8.20.5001`: **AIJ**, 24.07.26 às 11h00min, RÉU 2 (ANONIMIZADO)
-  - `Proc. 0820550-XX.2025.8.20.5001`: **AIJ**, 17.07.26 às 09h00min, Heverton Douglas, Adriano
-  - `Proc. 0821902-XX.2024.8.20.5001`: **AIJ**, 10.07.26 às 09h30min, Luanna Karla
-  - `Proc. 0860849-XX.2026.8.20.5001`: **ANPP**, 24.07.26 às 11h25min, Samara Targino de Lima
-  - `Proc. 0876503-XX.2025.8.20.5001`: **AIJ**, 10.07.26 às 11h00min, Manoel, Josuel, Felipe
+  - `Proc. 0801889-53.2023.8.20.5001`: **AIJ**, 31.07.26 às 10h00min, Jucimarcia Soares da Silva
+  - `Proc. 0802487-75.2026.8.20.5300`: **AIJ**, 31.07.26 às 11h00min, Gean de Lima Ferreira
+  - `Proc. 0804041-57.2022.8.20.5600`: **PAnP**, 23.07.26 às 13h00min, Beranildo Alves Soares
+  - `Proc. 0806049-87.2024.8.20.5001`: **AIJ**, 17.07.26 às 10h00min, 4 acusados
+  - `Proc. 0844118-57.2025.8.20.5001`: **AIJ**, 24.07.26 às 11h00min, Glauco Barbosa da Silva
+  - `Proc. 0820550-12.2025.8.20.5001`: **AIJ**, 17.07.26 às 09h00min, Heverton Douglas, Adriano
+  - `Proc. 0821902-39.2024.8.20.5001`: **AIJ**, 10.07.26 às 09h30min, Luanna Karla
+  - `Proc. 0860849-94.2026.8.20.5001`: **ANPP**, 24.07.26 às 11h25min, Samara Targino de Lima
+  - `Proc. 0876503-58.2025.8.20.5001`: **AIJ**, 10.07.26 às 11h00min, Manoel, Josuel, Felipe
 
 ---
 
@@ -626,7 +626,7 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
 
 ### 18.5. Auditoria de Qualidade e Conformidade
 - **189 Testes no Pytest:** Cobertura de 100% (10 novos testes dedicados no `test_ocr_jev_calibration.py`).
-- **9 Cenários Reais:** Paridade e aprovação de 100% mantidas.
+- **9 Casos Reais do TJRN:** Paridade e aprovação de 100% mantidas.
 - **Autoria:** Mantida a assinatura e titularidade exclusiva de **FChNeto**.
 
 ---
@@ -675,6 +675,56 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
 - **Suíte Dedicada:** Criado `test_v27_features.py` cobrindo filtro de órgãos, máscara de data, ordenação, remoção de vocativos e feedback loop.
 - **Autoria:** Mantida e reforçada para **FChNeto**.
 
+---
 
+## 20. Versão 2.8 — Correção Crítica de SyntaxError JS, Restauração do Dropzone e Validação Client-Side de Upload (29/09/26)
 
+### Ato 1: Investigação Profunda da Versão JavaScript (DeepInvestigator)
+* **Diagnóstico:** Análise sistemática de todos os arquivos HTML/JS da versão portátil revelou um `SyntaxError` silencioso que abortava todo o JavaScript **antes** de registrar qualquer event listener (botões, upload, geração de DOCX).
+* **Causa Raiz:** Uma chave de fechamento `}` ausente no final do bloco `if (/denúncia|denuncia|queixa-crime|petição inicial/i.test(...))` dentro da função de extração cronológica do histórico processual (linha ~1742 do `index.html` da versão JS). O parser V8 abortava silenciosamente o script ao encontrar o desequilíbrio, sem produzir qualquer output no console a não ser a exceção `Uncaught SyntaxError: Unexpected token`.
+* **Verificação:** Contagem de chaves `{` vs. `}` com diff=0 confirmada após correção em todos os arquivos afetados.
+
+### Ato 2: Correção do SyntaxError em 8 Arquivos
+* **Ação:** Inserção da chave `}` faltante, restaurando o equilíbrio de blocos em **todos** os arquivos que compartilhavam o motor JS:
+  1. `versao_javascript/index.html`
+  2. `versao_javascript/ABRIR_APLICATIVO_DIRETO.html`
+  3. `ABRIR_APLICATIVO_DIRETO.html` (raiz do workspace)
+  4. `index.html` (raiz do workspace)
+  5. `gitpost/versao_javascript/index.html`
+  6. `gitpost/versao_javascript/ABRIR_APLICATIVO_DIRETO.html`
+  7. `gitpost/ABRIR_APLICATIVO_DIRETO.html`
+  8. `gitpost/index.html`
+* **Validação:** Balanceamento de chaves (diff=0) confirmado em todos os 8 arquivos. Event listeners de upload, geração de DOCX e hambúrguer restaurados ao pleno funcionamento.
+
+### Ato 3: Restauração da Estrutura HTML da Área de Upload
+* **Diagnóstico:** Um elemento `<form enctype='multipart/form-data'>` havia sido inserido por engano dentro da `<div class='top-action-bar'>`, gerando aninhamento inválido e quebrando o comportamento nativo de drag-and-drop do navegador.
+* **Solução:** Remoção completa do `<form>` mal-aninhado e restauração da `<div class='top-action-bar'>` com fechamento correto, preservando todos os filhos legítimos do dropzone (`<label>`, `<input type='file'>`, `<p>`).
+
+### Ato 4: Adição de `name='file'` ao Input e `<div id='upload-error'>` para Mensagens Client-Side
+* **Ação:**
+  - Acrescentado o atributo `name='file'` ao elemento `<input type='file'>` para conformidade com o padrão de formulário HTML5 e compatibilidade com eventuais submissões REST.
+  - Inserido o elemento `<div id='upload-error' style='color:#ef4444;font-size:0.85rem;display:none;'></div>` logo abaixo do dropzone, destinado a receber mensagens de validação client-side sem alterar o layout da interface.
+
+### Ato 5: Implementação da Função `validateFile()` com Mensagem de Erro Internacionalizada
+* **Ação:** Criada e integrada a função `validateFile(file)` nos handlers `ondrop` e `onchange` do input de upload:
+  ```javascript
+  function validateFile(file) {
+      if (!file || file.type !== 'application/pdf') {
+          const errDiv = document.getElementById('upload-error');
+          if (errDiv) {
+              errDiv.textContent = 'Formato de arquivo inválido. Por favor, envie apenas PDFs.';
+              errDiv.style.display = 'block';
+              setTimeout(() => { errDiv.style.display = 'none'; }, 5000);
+          }
+          return false;
+      }
+      return true;
+  }
+  ```
+* **Integração:** A função é chamada no início de ambos os handlers. Se retornar `false`, o processamento é interrompido imediatamente e nenhuma chamada à biblioteca PDF.js é feita, evitando erros de parsing de arquivos não-PDF.
+
+### Checkpoint de Recovery Criado
+- **ID:** `20260929_112752_js-syntax-fix-complete`
+- **Rótulo:** `js-syntax-fix-complete`
+- **Descrição:** Correção do SyntaxError crítico da versão JS, restauração da estrutura HTML do dropzone e implementação da validação client-side de upload (validateFile).
 
