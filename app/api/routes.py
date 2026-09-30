@@ -1,6 +1,7 @@
 """FastAPI API routes for Judicial Case Summary application."""
 
 import os
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -109,8 +110,8 @@ def generate_docx_endpoint(data: HearingSummaryData) -> Response:
     """Generates and returns byte-perfect DOCX file from edited hearing summary data."""
     try:
         docx_bytes = generate_docx_summary(data)
-        safe_case = data.case_number.replace("/", "-").replace(" ", "_")
-        filename = f"Resumo - {safe_case} {data.act_type}.docx"
+        safe_case = re.sub(r'[^\w\-.]', '_', data.case_number)
+        filename = f"Resumo_{safe_case}_{data.act_type}.docx"
 
         return Response(
             content=docx_bytes,

@@ -1,0 +1,236 @@
+[
+  {
+    "id": "20260916_093852_v1_0_baseline_aprovada",
+    "label": "v1.0_baseline_aprovada",
+    "description": "Versao estavel e completa com 169 testes passando",
+    "created_at": "2026-09-16T09:38:52.458941",
+    "file_count": 36,
+    "archive": "20260916_093852_v1_0_baseline_aprovada.zip",
+    "size_kb": 98.72
+  },
+  {
+    "id": "20260916_093926_v1_1_memory_and_recovery_ready",
+    "label": "v1.1_memory_and_recovery_ready",
+    "description": "Versao com MEMORY.md e recovery.py integrados e operacionais",
+    "created_at": "2026-09-16T09:39:26.024206",
+    "file_count": 37,
+    "archive": "20260916_093926_v1_1_memory_and_recovery_ready.zip",
+    "size_kb": 104.05
+  },
+  {
+    "id": "20260916_095542_pre_user_enhancements",
+    "label": "pre_user_enhancements",
+    "description": "Backup antes de aplicar melhorias solicitadas pelo usuario",
+    "created_at": "2026-09-16T09:55:42.823435",
+    "file_count": 37,
+    "archive": "20260916_095542_pre_user_enhancements.zip",
+    "size_kb": 104.05
+  },
+  {
+    "id": "20260916_100020_v2_0_standalone_hamburger_dualscroll_fchneto",
+    "label": "v2.0_standalone_hamburger_dualscroll_fchneto",
+    "description": "Versao completa com standalone HTML, dual scroll, menu hamburguer e FChNeto",
+    "created_at": "2026-09-16T10:00:20.806033",
+    "file_count": 37,
+    "archive": "20260916_100020_v2_0_standalone_hamburger_dualscroll_fchneto.zip",
+    "size_kb": 108.52
+  },
+  {
+    "id": "20260916_100805_pre_format_strict_highlight_fix",
+    "label": "pre_format_strict_highlight_fix",
+    "description": "Antes de aplicar padronizacao rigida de marcacao amarelo/verde e motor offline",
+    "created_at": "2026-09-16T10:08:05.651187",
+    "file_count": 37,
+    "archive": "20260916_100805_pre_format_strict_highlight_fix.zip",
+    "size_kb": 108.51
+  },
+  {
+    "id": "20260916_101709_v2_1_strict_formatting_highlights_fixed",
+    "label": "v2.1_strict_formatting_highlights_fixed",
+    "description": "Formatacao estrita rigorosa (marcações amarelo e verde, negrito nos réus e artigos, itálico em notas, hiperlinks nos IDs) no gerador DOCX, no preview web e na versao standalone HTML",
+    "created_at": "2026-09-16T10:17:09.368423",
+    "file_count": 37,
+    "archive": "20260916_101709_v2_1_strict_formatting_highlights_fixed.zip",
+    "size_kb": 111.49
+  },
+  {
+    "id": "20260916_102122_v2_1_memory_fully_updated",
+    "label": "v2.1_memory_fully_updated",
+    "description": "MEMORY.md atualizado com matriz dos 9 processos reais, gramatica visual v2.1, historico de checkpoints e protocolos operacionais",
+    "created_at": "2026-09-16T10:21:22.126808",
+    "file_count": 37,
+    "archive": "20260916_102122_v2_1_memory_fully_updated.zip",
+    "size_kb": 114.53
+  },
+  {
+    "id": "20260916_131009_pre_offline_engine_overhaul",
+    "label": "pre_offline_engine_overhaul",
+    "description": "Backup antes da reformulacao profunda do motor offline (identificacao de AIJ vs ANPP, leitura completa dos autos, TOC e client-side)",
+    "created_at": "2026-09-16T13:10:09.488689",
+    "file_count": 37,
+    "archive": "20260916_131009_pre_offline_engine_overhaul.zip",
+    "size_kb": 118.7
+  },
+  {
+    "id": "20260916_133015_v2_2_offline_engine_full_reading_and_aij_fixed",
+    "label": "v2.2_offline_engine_full_reading_and_aij_fixed",
+    "description": "",
+    "created_at": "2026-09-16T13:30:15.322483",
+    "file_count": 37,
+    "archive": "20260916_133015_v2_2_offline_engine_full_reading_and_aij_fixed.zip",
+    "size_kb": 121.01
+  },
+  {
+    "id": "20260916_134935_v2_2_final_validated_all_cases",
+    "label": "v2.2_final_validated_all_cases",
+    "description": "",
+    "created_at": "2026-09-16T13:49:35.209281",
+    "file_count": 37,
+    "archive": "20260916_134935_v2_2_final_validated_all_cases.zip",
+    "size_kb": 122.58
+  },
+  {
+    "id": "20260916_143944_Preparo_do_diretorio_gitpost_e_repositorio_Git_v2_2_para_publicacao_no_GitHub",
+    "label": "Preparo do diretorio gitpost e repositorio Git v2.2 para publicacao no GitHub",
+    "description": "",
+    "created_at": "2026-09-16T14:39:44.755521",
+    "file_count": 37,
+    "archive": "20260916_143944_Preparo_do_diretorio_gitpost_e_repositorio_Git_v2_2_para_publicacao_no_GitHub.zip",
+    "size_kb": 122.88
+  },
+  {
+    "id": "20260917_105459_v2_3_-_Versao_JavaScript_HTML5_CSS3_autonoma_com_index_html_raiz_e_vendor_offline_sem_CORS",
+    "label": "v2.3 - Versao JavaScript/HTML5/CSS3 autonoma com index.html raiz e vendor offline sem CORS",
+    "description": "",
+    "created_at": "2026-09-17T10:54:59.402610",
+    "file_count": 38,
+    "archive": "20260917_105459_v2_3_-_Versao_JavaScript_HTML5_CSS3_autonoma_com_index_html_raiz_e_vendor_offline_sem_CORS.zip",
+    "size_kb": 127.23
+  },
+  {
+    "id": "20260917_114929_v2_3_1_strict_highlights_and_clean_facts",
+    "label": "v2_3_1_strict_highlights_and_clean_facts",
+    "description": "Padronizacao estrita de marcatexto para reus multiplos e eliminacao de fatos desnecessarios",
+    "created_at": "2026-09-17T11:49:29.368647",
+    "file_count": 38,
+    "archive": "20260917_114929_v2_3_1_strict_highlights_and_clean_facts.zip",
+    "size_kb": 131.55
+  },
+  {
+    "id": "20260917_123521_v2_4_separacao_pastas_e_motor_js_analitico",
+    "label": "v2_4_separacao_pastas_e_motor_js_analitico",
+    "description": "",
+    "created_at": "2026-09-17T12:35:21.407542",
+    "file_count": 87,
+    "archive": "20260917_123521_v2_4_separacao_pastas_e_motor_js_analitico.zip",
+    "size_kb": 741.51
+  },
+  {
+    "id": "20260917_130257_v2_4_1_js_engine_analise_total_e_correcao_testemunhas",
+    "label": "v2_4_1_js_engine_analise_total_e_correcao_testemunhas",
+    "description": "",
+    "created_at": "2026-09-17T13:02:57.466133",
+    "file_count": 87,
+    "archive": "20260917_130257_v2_4_1_js_engine_analise_total_e_correcao_testemunhas.zip",
+    "size_kb": 752.56
+  },
+  {
+    "id": "20260917_160139_v2_5_eel_desktop_frontend_python_e_folha_branca_continua_js",
+    "label": "v2_5_eel_desktop_frontend_python_e_folha_branca_continua_js",
+    "description": "Versao 2.5: Folha de pre-visualizacao A4 continua sem fundo azul e integracao desktop Eel com CSS embutido no frontend Python",
+    "created_at": "2026-09-17T16:01:39.303266",
+    "file_count": 89,
+    "archive": "20260917_160139_v2_5_eel_desktop_frontend_python_e_folha_branca_continua_js.zip",
+    "size_kb": 767.09
+  },
+  {
+    "id": "20260925_121841_v2_5_1_framework_agents_roadmap_context_memory_completo",
+    "label": "v2_5_1_framework_agents_roadmap_context_memory_completo",
+    "description": "Adicao de AGENTS.md, ROADMAP.md, CONTEXT.md e atualizacao profunda de MEMORY.md com os 5 ultimos atos e resumo total",
+    "created_at": "2026-09-25T12:18:41.457344",
+    "file_count": 92,
+    "archive": "20260925_121841_v2_5_1_framework_agents_roadmap_context_memory_completo.zip",
+    "size_kb": 790.56
+  },
+  {
+    "id": "20260925_140020_v2_5_2_pre_ocr_jev_calibration",
+    "label": "v2.5.2_pre_ocr_jev_calibration",
+    "description": "Pre-calibracao OCR e motor JEV Leya",
+    "created_at": "2026-09-25T14:00:20.107104",
+    "file_count": 92,
+    "archive": "20260925_140020_v2_5_2_pre_ocr_jev_calibration.zip",
+    "size_kb": 790.5
+  },
+  {
+    "id": "20260925_141451_v2_6_ocr_jev_calibrated_stitch_ui",
+    "label": "v2.6_ocr_jev_calibrated_stitch_ui",
+    "description": "Versao 2.6: OCR recalibrado com dynamic margins e Otsu, motor de decisao JEV Leya, Google Stitch UI com progresso multifasico e Smart Badge, 189 pytests 100% aprovados",
+    "created_at": "2026-09-25T14:14:51.136658",
+    "file_count": 94,
+    "archive": "20260925_141451_v2_6_ocr_jev_calibrated_stitch_ui.zip",
+    "size_kb": 807.55
+  },
+  {
+    "id": "20260929_112445_js-syntax-fix",
+    "label": "js-syntax-fix",
+    "description": "Correção de SyntaxError: chave } faltando em index.html e ABRIR_APLICATIVO_DIRETO.html",
+    "created_at": "2026-09-29T11:24:45.218092",
+    "file_count": 100,
+    "archive": "20260929_112445_js-syntax-fix.zip",
+    "size_kb": 833.81
+  },
+  {
+    "id": "20260929_112752_js-syntax-fix-complete",
+    "label": "js-syntax-fix-complete",
+    "description": "Correção completa de SyntaxError: chave } faltando em index.html e ABRIR_APLICATIVO_DIRETO.html (versao_javascript/, gitpost/ e raiz)",
+    "created_at": "2026-09-29T11:27:52.112591",
+    "file_count": 100,
+    "archive": "20260929_112752_js-syntax-fix-complete.zip",
+    "size_kb": 833.8
+  },
+  {
+    "id": "20260929_115529_v2_8-final-validated",
+    "label": "v2.8-final-validated",
+    "description": "Versao 2.8 100% validada: SyntaxError JS corrigido, upload UI restaurado com validação client-side, 195 Pytests passados e nomeação DOCX padronizada.",
+    "created_at": "2026-09-29T11:55:29.435381",
+    "file_count": 100,
+    "archive": "20260929_115529_v2_8-final-validated.zip",
+    "size_kb": 837.23
+  },
+  {
+    "id": "20260929_130705_v2_9-qualif-imputacao-rigida",
+    "label": "v2.9-qualif-imputacao-rigida",
+    "description": "Extração rígida e literal de qualificação e imputação penal v2.9",
+    "created_at": "2026-09-29T13:07:05.467352",
+    "file_count": 102,
+    "archive": "20260929_130705_v2_9-qualif-imputacao-rigida.zip",
+    "size_kb": 847.38
+  },
+  {
+    "id": "20260930_100323_v2_9-qualif-imputacao-rigida",
+    "label": "v2.9-qualif-imputacao-rigida",
+    "description": "Versao 2.9: Extracao rigida e literal de qualificacao e imputacao penal ampla aprovada em 199 testes Pytest.",
+    "created_at": "2026-09-30T10:03:23.894136",
+    "file_count": 102,
+    "archive": "20260930_100323_v2_9-qualif-imputacao-rigida.zip",
+    "size_kb": 849.38
+  },
+  {
+    "id": "20260930_104213_v3_0-unnamed-defense-and-witness-merge",
+    "label": "v3_0-unnamed-defense-and-witness-merge",
+    "description": "Suporte a resposta a acusacao inominada, correus distintos, deduplicacao e rotulagem unificada de testemunhas (FChNeto)",
+    "created_at": "2026-09-30T10:42:13.422463",
+    "file_count": 103,
+    "archive": "20260930_104213_v3_0-unnamed-defense-and-witness-merge.zip",
+    "size_kb": 916.29
+  },
+  {
+    "id": "20260930_105136_v3_0_1_unnamed_defense_and_witness_merge_reviewed",
+    "label": "v3_0_1_unnamed_defense_and_witness_merge_reviewed",
+    "description": "Versao 3.0.1: Revisao profunda de respostas inominadas, correus e combinacao multipartidaria de testemunhas arroladas",
+    "created_at": "2026-09-30T10:51:36.934698",
+    "file_count": 106,
+    "archive": "20260930_105136_v3_0_1_unnamed_defense_and_witness_merge_reviewed.zip",
+    "size_kb": 928.38
+  }
+]

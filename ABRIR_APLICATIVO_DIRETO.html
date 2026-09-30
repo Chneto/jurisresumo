@@ -1717,7 +1717,7 @@
         const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
         if (/denúncia|denuncia|decis|despacho|mandado|extrato|dados telef|laudo|inquérito|certidão de triagem/.test(comb)) return;
         const isNamedDef = /resposta.*acusa[cç][aã]o|defesa\s*pr[eé]via|defesa\s*preliminar|defesa\s*escrita/i.test(comb);
-        const isUnnamedPet = /peti[cç][aã]o|manifesta[cç][aã]o|avulsa|intermediária|outras peças|requerimento/i.test(comb);
+        const isUnnamedPet = /peti[cç][aã]o|manifesta[cç][aã]o|avulsa|intermediária|outras peças|requerimento|defesa|resposta|contesta[cç][aã]o|documento diverso|outros|peça|peca/i.test(comb);
         if (!isNamedDef && !isUnnamedPet) return;
 
         const dTxt = d.text || '';
@@ -1961,27 +1961,29 @@
           });
 
           let tag = '';
-          if (defensesRolling.length === defenseDocs.length && defenseDocs.length > 0) {
-            if (defenseDocs.length > 1) {
-              tag = '(arrolada por todos)';
-            } else {
-              const dSingle = defenseDocs[0];
-              if (dSingle.is_defensoria) {
-                tag = '(arrolada pelo Ministério Público e pela Defensoria Pública)';
-              } else {
-                const lawN = dSingle.lawyer_name || 'Advogado';
-                const repN = dSingle.represented_defendants.join(', ') || 'do réu';
-                tag = `(arrolada pelo Ministério Público e pelo Advogado Dr. ${lawN}, em defesa de ${repN})`;
-              }
-            }
+          if (defensesRolling.length === defenseDocs.length && defenseDocs.length > 1) {
+            tag = '(arrolada por todos)';
           } else if (defensesRolling.length > 0) {
-            const dFirst = defensesRolling[0];
-            if (dFirst.is_defensoria) {
-              tag = '(arrolada pelo Ministério Público e pela Defensoria Pública)';
-            } else {
-              const lawN = dFirst.lawyer_name || 'Advogado';
-              const repN = dFirst.represented_defendants.join(', ') || 'do réu';
-              tag = `(arrolada pelo Ministério Público e pelo Advogado Dr. ${lawN}, em defesa de ${repN})`;
+            const parties = [];
+            defensesRolling.forEach(d => {
+              if (d.is_defensoria) {
+                const rep = (d.represented_defendants || []).join(', ');
+                if (rep && defenseDocs.length > 1) {
+                  parties.push(`pela Defensoria Pública, em defesa de ${rep}`);
+                } else {
+                  parties.push('pela Defensoria Pública');
+                }
+              } else {
+                const lawN = d.lawyer_name || 'Advogado';
+                const repN = (d.represented_defendants || []).join(', ') || 'do réu';
+                parties.push(`pelo Advogado Dr. ${lawN}, em defesa de ${repN}`);
+              }
+            });
+
+            if (parties.length === 1) {
+              tag = `(arrolada pelo Ministério Público e ${parties[0]})`;
+            } else if (parties.length > 1) {
+              tag = `(arrolada pelo Ministério Público, ${parties.slice(0, -1).join(', ')} e ${parties[parties.length - 1]})`;
             }
           }
 

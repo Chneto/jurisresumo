@@ -330,21 +330,112 @@ body.stitch-theme {
   font-weight: 600;
 }
 
+/* Google Stitch Progress & Smart Badge */
+.stitch-dot-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-offline);
+  box-shadow: 0 0 8px var(--color-offline-glow);
+  margin-right: 5px;
+  animation: stitchPulse 2s infinite ease-in-out;
+}
+
+@keyframes stitchPulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.25); box-shadow: 0 0 12px var(--color-offline); }
+}
+
 .upload-loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(17, 24, 39, 0.94);
-  backdrop-filter: blur(4px);
+  background: rgba(9, 13, 22, 0.92);
+  backdrop-filter: blur(8px);
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  z-index: 10;
+  z-index: 20;
 }
 
 .upload-loading-overlay.active {
   display: flex;
+}
+
+.stitch-progress-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
+  max-width: 520px;
+  width: 90%;
+  box-shadow: var(--shadow-lg), 0 0 25px rgba(56, 189, 248, 0.12);
+  text-align: center;
+}
+
+.stitch-progress-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.stitch-progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.stitch-progress-bar-fill {
+  height: 100%;
+  width: 25%;
+  background: linear-gradient(90deg, #38bdf8 0%, #facc15 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+}
+
+.stitch-progress-phases {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.phase-chip {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-canvas);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.phase-chip.active {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--color-ai);
+  border-color: var(--color-ai);
+  box-shadow: 0 0 8px var(--color-ai-glow);
+}
+
+.phase-chip.completed {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-offline);
+  border-color: var(--color-offline);
 }
 
 .spinner {
@@ -362,12 +453,12 @@ body.stitch-theme {
 
 .loading-message {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-primary);
 }
 
 .loading-sub {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
 }
 

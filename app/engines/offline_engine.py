@@ -1353,7 +1353,11 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                 or "defesa escrita" in comb
             )
             is_unnamed_petition = bool(
-                any(k in comb for k in ["petição", "peticao", "manifestação", "manifestacao", "avulsa", "intermediária", "outras peças", "requerimento"])
+                any(k in comb for k in [
+                    "petição", "peticao", "manifestação", "manifestacao", "avulsa",
+                    "intermediária", "outras peças", "requerimento", "defesa", "resposta",
+                    "contestação", "contestacao", "documento diverso", "outros", "peça", "peca",
+                ])
             )
 
             if not (is_named_defense or is_unnamed_petition):
@@ -1852,25 +1856,26 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                                 break
 
                 tag = ""
-                if len(defenses_rolling) == len(defense_docs) and len(defense_docs) > 0:
-                    if len(defense_docs) > 1:
-                        tag = "(arrolada por todos)"
-                    else:
-                        d_single = defense_docs[0]
-                        if d_single.get("is_defensoria", False):
-                            tag = "(arrolada pelo Ministério Público e pela Defensoria Pública)"
-                        else:
-                            lawyer_n = d_single.get("lawyer_name") or "Advogado"
-                            rep_n = ", ".join(d_single.get("represented_defendants", [])) or "do réu"
-                            tag = f"(arrolada pelo Ministério Público e pelo Advogado Dr. {lawyer_n}, em defesa de {rep_n})"
+                if len(defenses_rolling) == len(defense_docs) and len(defense_docs) > 1:
+                    tag = "(arrolada por todos)"
                 elif len(defenses_rolling) > 0:
-                    d_first = defenses_rolling[0]
-                    if d_first.get("is_defensoria", False):
-                        tag = "(arrolada pelo Ministério Público e pela Defensoria Pública)"
-                    else:
-                        lawyer_n = d_first.get("lawyer_name") or "Advogado"
-                        rep_n = ", ".join(d_first.get("represented_defendants", [])) or "do réu"
-                        tag = f"(arrolada pelo Ministério Público e pelo Advogado Dr. {lawyer_n}, em defesa de {rep_n})"
+                    parties = []
+                    for d in defenses_rolling:
+                        if d.get("is_defensoria", False):
+                            rep = ", ".join(d.get("represented_defendants", []))
+                            if rep and len(defense_docs) > 1:
+                                parties.append(f"pela Defensoria Pública, em defesa de {rep}")
+                            else:
+                                parties.append("pela Defensoria Pública")
+                        else:
+                            lawyer_n = d.get("lawyer_name") or "Advogado"
+                            rep_n = ", ".join(d.get("represented_defendants", [])) or "do réu"
+                            parties.append(f"pelo Advogado Dr. {lawyer_n}, em defesa de {rep_n}")
+
+                    if len(parties) == 1:
+                        tag = f"(arrolada pelo Ministério Público e {parties[0]})"
+                    elif len(parties) > 1:
+                        tag = f"(arrolada pelo Ministério Público, {', '.join(parties[:-1])} e {parties[-1]})"
 
                 if tag:
                     w.role = f"{w.role} {tag}"
