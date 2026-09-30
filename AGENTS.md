@@ -106,11 +106,14 @@ graph TD
   4. **Integração Desktop com Eel (`run_eel.py`):**
      - Inicialização silenciosa da interface em janela dedicada via Microsoft Edge em modo aplicativo (`--app`), sem barras de endereço nem abas.
      - Implementação de ponte bidirecional híbrida em `app.js` (detecta `window.eel` ou utiliza chamadas REST `/api`).
+  5. **Blindagem Sintática de Scripts Embutidos:**
+     - Garantir que 100% dos scripts JavaScript embutidos em arquivos `.html` passem pela auditoria de balanceamento de chaves `{}` e parênteses `()` antes de qualquer commit ou release.
 * **Ferramentas e Escopos Autorizados:** HTML5, CSS3 avançado, JavaScript Vanilla (ES6+), biblioteca `eel`, Microsoft Edge DevTools.
 * **Limites Operacionais & Anti-patterns:**
   - ❌ **Proibido:** Permitir que o documento Word simulado fique azul ao rolar além da 1ª página.
   - ❌ **Proibido:** Depender de conexões externas de CDN para fontes ou bibliotecas fundamentais em modo offline.
   - ❌ **Proibido:** Quebrar a sincronização reativa em tempo real (qualquer alteração no formulário deve refletir imediatamente no preview).
+  - ❌ **Proibido:** Salvar ou comitar arquivos HTML com scripts JavaScript desbalanceados ou contendo erros de sintaxe.
 
 ---
 
