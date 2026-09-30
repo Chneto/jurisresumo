@@ -23,10 +23,23 @@ from app.core.models import (
     PJeDocument,
     Witness,
 )
+from app.core.crime_taxonomy import annotate_imputation_text
 from app.core.jev_decision_engine import JEVDecisionEngine
 from app.core.ocr_engine import OCREngine
 from app.core.pje_indexer import index_pje_pdf, prune_documents
 from app.engines.base import BaseExtractionEngine
+
+
+# ANPP and PSCP revocation regexes (retomada da marcha penal -> AIJ)
+ANPP_REVOCATION_REGEX = re.compile(
+    r"(?:revog(?:a[cç][aã]o|ou|ando|ado|o)?|rescis[aã]o|rescind(?:iu|indo|ida|ido)?|descumprimento)\s+(?:d[eoa]\s+|[oa]\s+)?(?:acordo\s+de\s+n[aã]o\s+persecu[cç][aã]o(?:\s+penal)?|anpp)|(?:anpp|acordo)\s+(?:foi\s+)?revogad[ao]|revogo\s+o\s+(?:acordo|anpp)",
+    re.IGNORECASE,
+)
+
+PSCP_REVOCATION_REGEX = re.compile(
+    r"(?:revog(?:a[cç][aã]o|ou|ando|ado|o)?|descumprimento)\s+(?:d[eoa]\s+|[oa]\s+)?(?:suspens[aã]o\s+condicional\s+do\s+processo|pscp|benef[ií]cio\s+do\s+art\.?\s*89)|descumprimento\s+d[ae]\s+(?:condi[cç][oõ]es\s+da\s+)?(?:suspens[aã]o|pscp)|(?:suspens[aã]o\s+condicional\s+do\s+processo|pscp)\s+(?:foi\s+)?revogad[ao]|revogo\s+a\s+suspens[aã]o\s+condicional\s+do\s+processo",
+    re.IGNORECASE,
+)
 
 
 # Standard regex for Brazilian judicial case numbers (CNJ)
@@ -488,6 +501,15 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                         has_aij_mention = True
                     if ANPP_NEGATION_REGEX.search(txt) or "não sendo caso de anpp" in txt or "afasto o anpp" in txt or "recusa do anpp" in txt or "anpp recusado" in txt or "deixo de propor anpp" in txt:
                         has_anpp_rejection = True
+
+        # Check 0: Revocation of ANPP or PSCP (mandatory AIJ - retomada da marcha penal)
+        if pje_catalog:
+            for p_doc in pje_catalog:
+                comb = f"{p_doc.doc_name} {p_doc.doc_type}".lower()
+                if any(k in comb for k in ["decis", "despacho", "ato ordinat", "termo"]):
+                    txt = self._extract_doc_text(doc, p_doc)
+                    if ANPP_REVOCATION_REGEX.search(txt) or PSCP_REVOCATION_REGEX.search(txt):
+                        return "AIJ"
 
         # Check 1: PAnP (Produção Antecipada de Provas - Art. 366 CPP)
         if re.search(r"\b(produ[cç][aã]o\s+antecipada|panp|art\.?\s*366)\b", h_comb, re.I):
@@ -1023,10 +1045,10 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                             missing.append(art)
             if missing:
                 final_imp += " c/c " + " c/c ".join(missing)
-            return final_imp
+            return annotate_imputation_text(final_imp)
 
         if all_articles:
-            return f"Imputação penal ({', '.join(all_articles)})"
+            return annotate_imputation_text(f"Imputação penal ({', '.join(all_articles)})")
 
         return "Artigo de lei a ser apurado"
 
@@ -1178,7 +1200,36 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             narrative_paragraphs = narrative_paragraphs[:5] + [narrative_paragraphs[-1]]
 
         facts_result = "\n\n".join(narrative_paragraphs) if narrative_paragraphs else "Fatos narrados na denúncia."
-        return facts_result, None
+
+        # Check revocation of ANPP or PSCP to inject into special_notes
+        anpp_rev_doc = None
+        pscp_rev_doc = None
+        if pje_catalog:
+            for p_doc in reversed(pje_catalog):
+                comb = f"{p_doc.doc_name} {p_doc.doc_type}".lower()
+                if any(k in comb for k in ["decis", "despacho", "ato ordinat", "termo"]):
+                    txt = self._extract_doc_text(doc, p_doc)
+                    if not anpp_rev_doc and ANPP_REVOCATION_REGEX.search(txt):
+                        anpp_rev_doc = p_doc
+                    if not pscp_rev_doc and PSCP_REVOCATION_REGEX.search(txt):
+                        pscp_rev_doc = p_doc
+
+        rev_notes = []
+        if anpp_rev_doc and pscp_rev_doc:
+            rev_notes.append(
+                f"Obs.: Audiência de Instrução e Julgamento designada após decisões que revogaram o Acordo de Não Persecução Penal (ANPP) (ID {anpp_rev_doc.doc_id}) e a Suspensão Condicional do Processo (PSCP - art. 89 da Lei 9.099/95) (ID {pscp_rev_doc.doc_id}), com a retomada do curso regular da ação penal."
+            )
+        elif anpp_rev_doc:
+            rev_notes.append(
+                f"Obs.: Audiência de Instrução e Julgamento designada após decisão que revogou o Acordo de Não Persecução Penal (ANPP) (ID {anpp_rev_doc.doc_id}), com a retomada do curso regular da ação penal."
+            )
+        elif pscp_rev_doc:
+            rev_notes.append(
+                f"Obs.: Audiência de Instrução e Julgamento designada após decisão que revogou a Suspensão Condicional do Processo (PSCP - art. 89 da Lei 9.099/95) (ID {pscp_rev_doc.doc_id}), com a retomada do curso regular da ação penal."
+            )
+
+        special_notes = " ".join(rev_notes) if rev_notes else None
+        return facts_result, special_notes
 
     def _extract_clean_narrative(self, raw_text: str) -> List[str]:
         """Extracts clean, reflowed narrative paragraphs terminated at strict procedural boundaries."""
@@ -1601,6 +1652,17 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         for d_info in defense_docs:
             if d_info["doc_id"] not in key_doc_ids:
                 key_docs.append(d_info["doc"])
+                key_doc_ids.add(d_info["doc_id"])
+
+        # Ensure any decision revoking ANPP or PSCP is included in key_docs
+        for p_doc in pje_catalog:
+            comb = f"{p_doc.doc_name} {p_doc.doc_type}".lower()
+            if any(k in comb for k in ["decis", "despacho", "ato ordinat", "termo"]):
+                txt = self._extract_doc_text(doc, p_doc)
+                if ANPP_REVOCATION_REGEX.search(txt) or PSCP_REVOCATION_REGEX.search(txt):
+                    if p_doc.doc_id not in key_doc_ids:
+                        key_docs.append(p_doc)
+                        key_doc_ids.add(p_doc.doc_id)
 
         for p_doc in key_docs:
             if p_doc.doc_id in seen_ids or p_doc.start_page == 0:
@@ -1653,12 +1715,14 @@ class OfflineExtractionEngine(BaseExtractionEngine):
 
         # 2. Decisão
         if "decisão" in name_l or "decisao" in name_l:
+            if ANPP_REVOCATION_REGEX.search(txt_l):
+                return "Decisão revogando o Acordo de Não Persecução Penal (ANPP)"
+            if PSCP_REVOCATION_REGEX.search(txt_l) or ("revoga" in txt_l and ("suspensão" in txt_l or "sursis" in txt_l)):
+                return "Decisão revogando a Suspensão Condicional do Processo (PSCP)"
             if "recebo a denúncia" in txt_l or "recebida a denúncia" in txt_l or "recebimento da denúncia" in txt_l:
                 if "pauta" in txt_l or "designo" in txt_l:
                     return "Decisão recebendo a denúncia e designando audiência"
                 return "Decisão recebendo a denúncia"
-            if "revoga" in txt_l and ("suspensão" in txt_l or "sursis" in txt_l):
-                return "Decisão revogando a Suspensão Condicional do Processo e designando AIJ"
             if "produção antecipada" in txt_l or "art. 366" in txt_l:
                 return "Decisão suspendendo o processo (art. 366 CPP) e designando produção antecipada de provas"
             if "pauta" in txt_l or "designo" in txt_l or "instrução" in txt_l:

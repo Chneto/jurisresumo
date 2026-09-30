@@ -2,8 +2,9 @@
 
 Implementa um classificador determinístico e probabilístico de alto desempenho (System One),
 sem dependências externas de rede, para aferição de relevância, descarte rigoroso de ruídos de OCR
-(carimbos, comprovantes bancários, certidões avulsas) e roteamento de peças essenciais
-(Denúncia/Fatos, Decisões de Audiência, Qualificação e Testemunhas).
+(carimbos, comprovantes bancários, certidões avulsas), controle estrito de fronteiras documentais,
+taxonomia penal com colchetes e roteamento de peças essenciais segundo a hierarquia canônica do CPP
+(Revogação ANPP/PSCP -> PAnP -> ANPP -> AIJ -> Custódia -> Sursis).
 
 Inspirado nos conceitos de TypeSafe Jev (decisão estruturada e tipada) e Leya (precisão de
 fluxos jurídicos e ground-truth documental).
@@ -14,10 +15,12 @@ Desenvolvido por FChNeto.
 __author__ = "FChNeto"
 DEVELOPED_BY = "FChNeto"
 
+import math
 import re
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from app.core.models import DocumentCategory, JEVDecisionResult, OCRLine
+from app.core.crime_taxonomy import annotate_imputation_text
+from app.core.models import DocumentCategory, JEVDecisionResult, OCRLine, PJeDocument
 
 
 # PJe Marginal Stamps, Signature Footers and Electronic Certifications
@@ -118,6 +121,163 @@ TESTEMUNHAS_POSITIVE_REGEX = re.compile(
     re.IGNORECASE,
 )
 
+# Signals for ANPP / PSCP Revocation (Retomada da Ação Penal -> AIJ Obrigatória)
+ANPP_REVOCATION_REGEX = re.compile(
+    r"(?:"
+    r"revog(?:a[cç][aã]o|ou|ando|ado)?\s+(?:d[eo]\s+)?(?:acordo\s+de\s+n[aã]o\s+persecu[cç][aã]o(?:\s+penal)?|anpp)|"
+    r"rescind(?:iu|indo|ida|ido)?\s+(?:o\s+)?(?:anpp|acordo)|"
+    r"descumprimento\s+d[eo]\s+(?:acordo|anpp)|"
+    r"(?:anpp|acordo)\s+(?:foi\s+)?revogad[ao]|"
+    r"revogo\s+o\s+(?:acordo|anpp)"
+    r")",
+    re.IGNORECASE,
+)
+
+PSCP_REVOCATION_REGEX = re.compile(
+    r"(?:"
+    r"revog(?:a[cç][aã]o|ou|ando|ado)?\s+(?:da\s+)?(?:suspens[aã]o\s+condicional\s+do\s+processo|pscp|benef[ií]cio\s+do\s+art\.?\s*89)|"
+    r"descumprimento\s+d[ae]\s+(?:condi[cç][oõ]es\s+da\s+)?(?:suspens[aã]o|pscp)|"
+    r"(?:suspens[aã]o\s+condicional\s+do\s+processo|pscp)\s+(?:foi\s+)?revogad[ao]|"
+    r"revogo\s+a\s+suspens[aã]o\s+condicional\s+do\s+processo"
+    r")",
+    re.IGNORECASE,
+)
+
+
+class NoiseAndNullGate:
+    """Mecanismo Multi-Critérios de Filtragem e Rejeição de Nulos e Ruídos (System One)."""
+
+    @staticmethod
+    def evaluate(text: str, metadata: str = "") -> Dict[str, Any]:
+        """Avalia de forma probabilística e determinística a relevância de um bloco de texto.
+
+        Returns:
+            Dict com flags is_null, chance_noise, chance_essential, passed e rationale.
+        """
+        if not text or not text.strip():
+            return {
+                "is_null": True,
+                "chance_noise": 1.0,
+                "chance_essential": 0.0,
+                "passed": False,
+                "rationale": "Bloco de texto vazio, nulo ou composto exclusivamente por espaços.",
+            }
+
+        cleaned = re.sub(r"\s+", " ", text).strip()
+        total_len = len(cleaned)
+        alphanumeric_count = sum(c.isalnum() for c in cleaned)
+        alpha_ratio = alphanumeric_count / max(1, total_len)
+
+        # 1. Quase sem caracteres alfanuméricos (ruído de digitalização)
+        if alphanumeric_count < 3 or (alpha_ratio < 0.30 and total_len > 10):
+            return {
+                "is_null": False,
+                "chance_noise": 0.95,
+                "chance_essential": 0.05,
+                "passed": False,
+                "rationale": "Densidade alfanumérica extremamente baixa (artefatos de OCR).",
+            }
+
+        combined_meta = metadata.lower()
+
+        # 2. Ruído bancário / financeiro
+        if BANKING_NOISE_REGEX.search(cleaned) or BANKING_NOISE_REGEX.search(combined_meta):
+            return {
+                "is_null": False,
+                "chance_noise": 0.95,
+                "chance_essential": 0.05,
+                "passed": False,
+                "rationale": "Comprovante bancário, guia de custas ou extrato financeiro irrelevante.",
+            }
+
+        # 3. Certidão administrativa estéril
+        if ADMIN_NOISE_REGEX.search(cleaned) and not DENUNCIA_POSITIVE_REGEX.search(cleaned):
+            return {
+                "is_null": False,
+                "chance_noise": 0.85,
+                "chance_essential": 0.15,
+                "passed": False,
+                "rationale": "Certidão puramente administrativa de trâmite sem teor fático.",
+            }
+
+        # 4. Texto aprovado pelo Gate
+        return {
+            "is_null": False,
+            "chance_noise": 0.10,
+            "chance_essential": 0.90,
+            "passed": True,
+            "rationale": "Conteúdo substancial processual aprovado pelo Gate de Validação.",
+        }
+
+
+class ClassificationHierarchyCPP:
+    """Matriz de Classificação de Audiência com a Hierarquia Estrita do Processo Penal."""
+
+    @staticmethod
+    def classify(
+        h_comb: str,
+        fn_upper: str,
+        pje_catalog: List[PJeDocument],
+        anpp_rev_doc: Optional[PJeDocument] = None,
+        pscp_rev_doc: Optional[PJeDocument] = None,
+        has_received_denuncia: bool = False,
+        has_aij_mention: bool = False,
+        has_anpp_rejection: bool = False,
+        has_denuncia: bool = True,
+    ) -> str:
+        """Determina o tipo de ato da audiência segundo as prioridades do CPP.
+
+        Hierarquia:
+        1. Revogação de ANPP ou PSCP -> AIJ (retomada da marcha penal)
+        2. PAnP (art. 366 CPP) -> PAnP
+        3. ANPP (art. 28-A CPP) -> ANPP (se não houver revogação nem rejeição)
+        4. AIJ (Instrução e Julgamento) -> AIJ
+        5. Custódia (APF sem denúncia) -> Custódia
+        6. Sursis Processual (art. 89 Lei 9.099/95) -> Sursis
+        """
+        # Prioridade 1: Revogação de ANPP ou PSCP impõe obrigatoriamente AIJ
+        if anpp_rev_doc or pscp_rev_doc:
+            return "AIJ"
+
+        # Prioridade 2: PAnP (Art. 366 CPP)
+        if re.search(r"\b(produ[cç][aã]o\s+antecipada|panp|art\.?\s*366)\b", h_comb, re.I) or "PANP" in fn_upper:
+            return "PAnP"
+
+        # Prioridade 3: ANPP homologatório em designação afirmativa
+        is_anpp_in_hearing = bool(
+            re.search(
+                r"(?:homologa[cç][aã]o\s+d[eo]\s+(?:acordo(?:\s+de\s+n[aã]o\s+persecu[cç][aã]o(?:\s+penal)?)?|anpp)|audi[eê]ncia\s+(?:de\s+anpp|para\s+fins\s+do\s+art\.?\s*28-a|para\s+homologa[cç][aã]o\s+d[eo]\s+acordo))",
+                h_comb,
+                re.I,
+            )
+        )
+        if is_anpp_in_hearing and not has_anpp_rejection:
+            return "ANPP"
+
+        # Prioridade 4: AIJ explícita
+        if re.search(r"\b(instru[cç][aã]o(?:\s+e\s+julgamento)?|aij|oitiva\s+d[ae]s?\s+testemunhas?|inquirir\s+testemunhas?|interrogat[oó]rio)\b", h_comb, re.I):
+            return "AIJ"
+
+        # Prioridade 5: Custódia (sem denúncia)
+        if re.search(r"\b(audi[eê]ncia\s+de\s+cust[oó]dia|termo\s+de\s+audi[eê]ncia\s+de\s+cust[oó]dia)\b", h_comb, re.I) and not has_denuncia:
+            return "Custódia"
+
+        # Prioridade 6: Sursis
+        if re.search(r"\b(audi[eê]ncia\s+de\s+suspens[aã]o|sursis\s+processual|admonit[oó]ria)\b", h_comb, re.I):
+            return "Sursis"
+
+        # Prioridade 7: Recebimento de denúncia com atos de instrução
+        if has_received_denuncia and has_aij_mention:
+            return "AIJ"
+
+        # Fallback pelo nome do arquivo
+        if "ANPP" in fn_upper and not has_anpp_rejection:
+            return "ANPP"
+        if "AIJ" in fn_upper:
+            return "AIJ"
+
+        return "AIJ"
+
 
 class JEVDecisionEngine:
     """Motor de Classificação e Decisão Estruturada System One para Processamento Criminal PJe."""
@@ -130,6 +290,35 @@ class JEVDecisionEngine:
         if cls._instance is None:
             cls._instance = JEVDecisionEngine()
         return cls._instance
+
+    def evaluate_noise_and_null_gate(self, text: str, metadata: str = "") -> Dict[str, Any]:
+        """Acesso público ao Gate Multi-Critérios de Nulos e Ruídos."""
+        return NoiseAndNullGate.evaluate(text, metadata)
+
+    def classify_act_hierarchy(
+        self,
+        h_comb: str,
+        fn_upper: str,
+        pje_catalog: List[PJeDocument],
+        anpp_rev_doc: Optional[PJeDocument] = None,
+        pscp_rev_doc: Optional[PJeDocument] = None,
+        has_received_denuncia: bool = False,
+        has_aij_mention: bool = False,
+        has_anpp_rejection: bool = False,
+        has_denuncia: bool = True,
+    ) -> str:
+        """Classifica o ato da audiência de acordo com a hierarquia canônica do CPP."""
+        return ClassificationHierarchyCPP.classify(
+            h_comb=h_comb,
+            fn_upper=fn_upper,
+            pje_catalog=pje_catalog,
+            anpp_rev_doc=anpp_rev_doc,
+            pscp_rev_doc=pscp_rev_doc,
+            has_received_denuncia=has_received_denuncia,
+            has_aij_mention=has_aij_mention,
+            has_anpp_rejection=has_anpp_rejection,
+            has_denuncia=has_denuncia,
+        )
 
     def classify_text_block(
         self,
@@ -147,33 +336,18 @@ class JEVDecisionEngine:
         Returns:
             JEVDecisionResult contendo categoria, score de relevância e justificativa.
         """
-        if not text or not text.strip():
-            return JEVDecisionResult(
-                category=DocumentCategory.RUIDO_IRRELEVANTE,
-                relevance_score=0.0,
-                is_essential=False,
-                rationale="Bloco de texto vazio ou nulo.",
-            )
-
         combined_meta = f"{doc_title} {doc_type}".lower()
+        gate_res = NoiseAndNullGate.evaluate(text, combined_meta)
+
+        if not gate_res["passed"]:
+            return JEVDecisionResult(
+                category=DocumentCategory.RUIDO_IRRELEVANTE,
+                relevance_score=gate_res["chance_essential"],
+                is_essential=False,
+                rationale=gate_res["rationale"],
+            )
+
         cleaned_text = self.clean_text_for_evaluation(text)
-
-        # 1. Checagem imediata de ruído financeiro / bancário / administrativo (System One fast-path)
-        if BANKING_NOISE_REGEX.search(cleaned_text) or BANKING_NOISE_REGEX.search(combined_meta):
-            return JEVDecisionResult(
-                category=DocumentCategory.RUIDO_IRRELEVANTE,
-                relevance_score=0.05,
-                is_essential=False,
-                rationale="Identificado comprovante bancário, guia de custas ou extrato financeiro irrelevante.",
-            )
-
-        if ADMIN_NOISE_REGEX.search(cleaned_text) and not DENUNCIA_POSITIVE_REGEX.search(cleaned_text):
-            return JEVDecisionResult(
-                category=DocumentCategory.RUIDO_IRRELEVANTE,
-                relevance_score=0.15,
-                is_essential=False,
-                rationale="Certidão puramente administrativa de trâmite/juntada sem teor fático.",
-            )
 
         # 2. Avaliação de Rol de Testemunhas
         witness_matches = len(TESTEMUNHAS_POSITIVE_REGEX.findall(cleaned_text))
@@ -261,7 +435,6 @@ class JEVDecisionEngine:
         if "cota" in meta and not ("denúncia" in meta or "denuncia" in meta):
             score -= 0.30
 
-        # Ajuste adaptativo do LearningStore (aprendizado contínuo offline)
         try:
             from app.core.learning_store import LearningStore
             delta = LearningStore.get_instance().compute_learned_adjustment(text)
@@ -279,7 +452,6 @@ class JEVDecisionEngine:
         pos_count = len(DENUNCIA_POSITIVE_REGEX.findall(text)) + len(DECISAO_POSITIVE_REGEX.findall(text))
         neg_count = len(BANKING_NOISE_REGEX.findall(text)) + len(ADMIN_NOISE_REGEX.findall(text))
 
-        # Ajuste adaptativo do LearningStore (aprendizado contínuo offline)
         try:
             from app.core.learning_store import LearningStore
             delta = LearningStore.get_instance().compute_learned_adjustment(text)
@@ -290,39 +462,27 @@ class JEVDecisionEngine:
         return max(0.0, min(1.0, round(raw_score, 2)))
 
     def filter_noise_lines(self, lines: List[str]) -> List[str]:
-        """Filtra rigorosamente linhas individuais de ruído de OCR, carimbos e lixo digital.
-
-        Args:
-            lines: Lista de linhas de texto extraídas.
-
-        Returns:
-            Lista de linhas úteis limpas.
-        """
+        """Filtra rigorosamente linhas individuais de ruído de OCR, carimbos e lixo digital."""
         filtered: List[str] = []
         for line in lines:
             trimmed = line.strip()
             if not trimmed:
                 continue
 
-            # Elimina linhas muito curtas sem caracteres alfanuméricos úteis (ex: '.', '-', '--', '~', '||')
             alphanumeric_count = sum(c.isalnum() for c in trimmed)
             if alphanumeric_count < 2:
                 continue
 
-            # Elimina carimbos de margem do PJe
             if PJE_MARGIN_STAMPS_REGEX.search(trimmed):
                 continue
 
-            # Elimina códigos de barras ou comprovantes de autenticação mecânica
             if BANKING_NOISE_REGEX.search(trimmed):
                 continue
 
-            # Elimina linhas compostas quase que exclusivamente por pontuação de OCR danificado
             ratio = alphanumeric_count / len(trimmed)
             if ratio < 0.35 and len(trimmed) > 5:
                 continue
 
-            # Elimina links avulsos que não sejam de videoconferência (Teams/Meet)
             if re.match(r"^https?://", trimmed, re.I) and not ("teams" in trimmed.lower() or "meet" in trimmed.lower()):
                 continue
 
@@ -350,7 +510,6 @@ class JEVDecisionEngine:
 
     def clean_text_for_evaluation(self, text: str) -> str:
         """Normaliza espaços e remove quebras espúrias para avaliação semântica."""
-        # Unir palavras com hífen quebrado na quebra de linha (ex: de-\n signou -> designou)
         text = re.sub(r"(\w+)-\s*\n\s*(\w+)", r"\1\2", text)
         return re.sub(r"\s+", " ", text).strip()
 
@@ -365,6 +524,7 @@ class JEVDecisionEngine:
 
         - Verifica se a qualificação traz documentos (RG/CPF) e filiação (filho/filha); se faltar, aciona fallback no IP/Denúncia.
         - Verifica se todos os artigos de lei narrados na denúncia constam na imputação; se faltar algum, incorpora-os.
+        - Aplica anotação taxonômica estrita de todos os artigos penais com o nomen juris exato entre colchetes.
         """
         audited_qual = qualification_text or ""
         audited_imp = imputation_text or ""
@@ -426,5 +586,8 @@ class JEVDecisionEngine:
                 else:
                     audited_imp = f"Imputação penal ({', '.join(all_detected)})"
 
-        return audited_qual, audited_imp
+        # 3. Anotação Taxonômica Rigorosa com Nomen Juris entre Colchetes
+        if audited_imp and audited_imp != "Artigo de lei a ser apurado":
+            audited_imp = annotate_imputation_text(audited_imp)
 
+        return audited_qual, audited_imp
