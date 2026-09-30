@@ -29,19 +29,9 @@ from app.core.models import (
 )
 
 # Project root directory
-def _resolve_project_root() -> Path:
-    candidates = [
-        Path.cwd(),
-        Path(__file__).resolve().parent,
-        Path(__file__).resolve().parent.parent,
-        Path(__file__).resolve().parent.parent.parent,
-    ]
-    for c in candidates:
-        if any(c.glob("Proc.*")):
-            return c
-    return Path(__file__).resolve().parent.parent
-
-PROJECT_ROOT = _resolve_project_root()
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if not any(PROJECT_ROOT.glob("Proc.*")) and any(PROJECT_ROOT.parent.glob("Proc.*")):
+    PROJECT_ROOT = PROJECT_ROOT.parent
 
 
 # XML Namespaces for OpenXML inspection

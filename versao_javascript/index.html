@@ -1711,132 +1711,7 @@
         }
       }
 
-      // 12. Defense Documents Parsing (Named and Inominada)
-      const defenseDocs = [];
-      pjeCatalog.forEach(d => {
-        const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
-        if (/denúncia|denuncia|decis|despacho|mandado|extrato|dados telef|laudo|inquérito|certidão de triagem/.test(comb)) return;
-        const isNamedDef = /resposta.*acusa[cç][aã]o|defesa\s*pr[eé]via|defesa\s*preliminar|defesa\s*escrita/i.test(comb);
-        const isUnnamedPet = /peti[cç][aã]o|manifesta[cç][aã]o|avulsa|intermediária|outras peças|requerimento|defesa|resposta|contesta[cç][aã]o|documento diverso|outros|peça|peca/i.test(comb);
-        if (!isNamedDef && !isUnnamedPet) return;
-
-        const dTxt = d.text || '';
-        if (!dTxt.trim()) return;
-        const txtL = dTxt.toLowerCase();
-
-        const hasArt396 = /art(?:igo)?s?\.?\s*396(?:-A)?\b/i.test(txtL) || txtL.includes('396-a') || txtL.includes('396 e 396-a');
-        const hasDefHeader = /resposta\s*(?:[aà]\s*)?acusa[cç][aã]o|defesa\s*pr[eé]via|defesa\s*preliminar|defesa\s*escrita/i.test(txtL);
-        const hasAbsolvicao = txtL.includes('absolvição sumária') || txtL.includes('absolvicao sumaria') || txtL.includes('art. 397') || txtL.includes('artigo 397');
-        const hasPrelim = /inépcia da denúncia|inepcia da denuncia|falta de justa causa|nulidade|preliminarmente|preliminar de/i.test(txtL);
-        const hasReserva = /reserva-se|reservando-se|alegações finais|alegacoes finais|oportunidade própria|mérito da ação|momento oportuno/i.test(txtL);
-        const hasWitReq = /rol de testemunhas|rol testemunhal|mesmas testemunhas|testemunhas arroladas na denúncia|mesmo rol|reitera o rol/i.test(txtL);
-
-        if (!isNamedDef && !(hasArt396 || hasDefHeader || (hasAbsolvicao && (hasPrelim || hasReserva || hasWitReq)))) return;
-
-        let isDefensoria = false;
-        if (/defensoria pública|defensoria publica|defensor público|defensora pública|dpe\/rn/i.test(txtL)) {
-          isDefensoria = true;
-        } else if (/advogado|advogada|oab/i.test(txtL)) {
-          isDefensoria = false;
-        } else {
-          isDefensoria = advsCapa.some(a => a.toLowerCase().includes('defensor'));
-        }
-
-        let lawyerName = '';
-        let lawyerOab = '';
-        let petitionerStr = 'pela Defensoria Pública';
-
-        if (!isDefensoria) {
-          const oabM = dTxt.match(/OAB[/\s]+([A-Z]{2}\s*n?\.?\s*[\d.]+)/i) || dTxt.match(/OAB[^\n,;)]+/i);
-          if (oabM) lawyerOab = oabM[0].trim();
-          const advM = dTxt.match(/(?:Assinado\s+eletronicamente\s+por:\s*|Advogad[oa]:?\s*|Dr\(?a\)?\.?\s+)([A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõ]+(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõ]+)+)/);
-          if (advM && !/estado|comarca|natal|tribunal|secretaria|justiça/i.test(advM[1])) {
-            lawyerName = advM[1].toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase());
-          }
-          if (!lawyerName && advsCapa.length > 0) {
-            const priv = advsCapa.filter(a => !/defensoria|defensor|procuradoria/.test(a.toLowerCase()));
-            if (priv.length > 0) lawyerName = priv[0].toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase());
-          }
-          petitionerStr = lawyerName ? (lawyerOab ? `pelo Advogado Dr. ${lawyerName} (${lawyerOab})` : `pelo Advogado Dr. ${lawyerName}`) : 'por advogado particular';
-        } else {
-          petitionerStr = 'pela Defensoria Pública';
-        }
-
-        const repDefendants = [];
-        filteredCapaReus.forEach(rName => {
-          const parts = rName.split(' ');
-          const fn = parts[0].toLowerCase();
-          const ln = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
-          if (txtL.includes(rName.toLowerCase()) || (fn.length > 3 && ln.length > 3 && txtL.includes(fn) && txtL.includes(ln))) {
-            repDefendants.push(rName.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()));
-          }
-        });
-        if (repDefendants.length === 0 && filteredCapaReus.length === 1) {
-          repDefendants.push(filteredCapaReus[0].toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()));
-        }
-
-        const repStr = repDefendants.length > 0 ? ` em defesa de ${repDefendants.join(', ')}` : '';
-        const reqList = [];
-        if (hasPrelim) {
-          if (/inépcia|inepcia/i.test(txtL)) reqList.push('arguindo preliminar de inépcia da denúncia');
-          else if (/falta de justa causa/i.test(txtL)) reqList.push('arguindo preliminar de ausência de justa causa');
-          else if (/nulidade/i.test(txtL)) reqList.push('arguindo preliminar de nulidade');
-          else reqList.push('arguindo preliminares');
-        }
-        if (hasAbsolvicao) reqList.push('pugnando pela absolvição sumária');
-        if (hasReserva && !hasAbsolvicao) reqList.push('reservando-se para o mérito em alegações finais');
-
-        const adoptsMp = /mesmas testemunhas|mesmo rol|reitera o rol|adota o rol|testemunhas arroladas na denúncia|testemunhas da acusação|oitiva de todas as testemunhas arroladas na denúncia/i.test(txtL);
-        
-        // Extract explicit defense witnesses
-        const explicitDefWitnesses = [];
-        const mDefRol = dTxt.match(/(?:(?:^|\n)\s*(?:[IVXLCDM]+\)?\.?\s*)?(?:ROL\s+(?:DE\s+)?TESTEMUNHAS?\s*(?:\([^)]*\))?|ROL\s+TESTEMUNHAL|TESTEMUNHAS\s*:))/i);
-        if (mDefRol) {
-          const subDef = dTxt.substring(mDefRol.index + mDefRol[0].length);
-          const stopM = subDef.match(/(?:^|\n)\s*(?:Termos\s+em\s+que|Nestes\s+termos|Pede\s+deferimento|Pede\s+e\s+espera|Local\s+e\s+data|Assinatura)/i);
-          const rolDefBody = stopM ? subDef.substring(0, stopM.index) : subDef;
-          const defLines = rolDefBody.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-          const blacklistDefRx = /\b(?:rua|avenida|travessa|alameda|telefone|e-mail|whatsapp|cpf|rg|cep|residente|domiciliado|bairro|natal|termos|requer|pede|defensoria|advogado|mesmas\s+testemunhas|reitera|protesta|apresenta|oab|comarca)\b/i;
-          defLines.forEach(l => {
-            const wm = l.match(/^(?:\d+[\s.)-]+)?([A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ\s.]{3,60}?)(?:[-–,]\s*|\s*\((.*?)\)|\s+[-–]\s*(.*)|$)/);
-            if (wm) {
-              const defName = wm[1].trim();
-              if (defName.length > 3 && !blacklistDefRx.test(defName)) {
-                explicitDefWitnesses.push(defName.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()));
-              }
-            }
-          });
-        }
-
-        if (adoptsMp) reqList.push('requerendo a oitiva das mesmas testemunhas da acusação');
-        else if (explicitDefWitnesses.length > 0) reqList.push(`arrolando ${explicitDefWitnesses.length} testemunha${explicitDefWitnesses.length > 1 ? 's' : ''}`);
-        else if (/rol de testemunhas|rol testemunhal/i.test(txtL)) reqList.push('arrolando testemunhas');
-
-        if (/liberdade provisória|revogação da prisão|revogação da preventiva/i.test(txtL)) reqList.push('pleiteando a revogação da prisão preventiva');
-        if (reqList.length === 0) reqList.push('pugnando pela absolvição sumária do acusado');
-
-        let reqSummary = '';
-        if (reqList.length === 1) reqSummary = reqList[0];
-        else if (reqList.length === 2) reqSummary = `${reqList[0]} e ${reqList[1]}`;
-        else reqSummary = `${reqList.slice(0, -1).join(', ')} e ${reqList[reqList.length - 1]}`;
-
-        const summaryHist = `Resposta à acusação apresentada ${petitionerStr}${repStr}, ${reqSummary}`;
-
-        defenseDocs.push({
-          doc_id: d.doc_id,
-          date_str: formatShortDate(d.date_str),
-          is_defensoria: isDefensoria,
-          lawyer_name: lawyerName,
-          lawyer_oab: lawyerOab,
-          represented_defendants: repDefendants,
-          adopts_mp_witnesses: adoptsMp,
-          explicit_witnesses: explicitDefWitnesses,
-          summary_for_history: summaryHist,
-          doc: d
-        });
-      });
-
-      // 13. Witnesses Extraction & Unified Deduplication
+      // 12. Witnesses Extraction
       const prosWitnesses = [];
       const seenWitnessNames = new Set();
       let witNum = 1;
@@ -1881,7 +1756,12 @@
         const mStop = sub.match(stopPat);
         const rolBody = mStop ? sub.substring(0, mStop.index) : sub;
 
-        const blacklistRx = /\b(?:rua|avenida|travessa|alameda|telefone|e-mail|whatsapp|cpf|rg|cep|residente|domiciliado|bairro|natal|termos|requer|pede|ministério|promotoria|defesa|secretaria|vara|tribunal|estado|assinado|documento|pág|registre|dessa\s+maneira|cota|rol\s+de|declarantes|promotor)\b/i;
+        const blacklist = [
+          'rua', 'avenida', 'travessa', 'alameda', 'telefone', 'e-mail', 'whatsapp', 'cpf', 'rg', 'cep',
+          'residente', 'domiciliado', 'bairro', 'natal', 'termos', 'requer', 'pede', 'ministério',
+          'promotoria', 'defesa', 'secretaria', 'vara', 'tribunal', 'estado', 'assinado', 'documento',
+          'pág', 'registre', 'dessa maneira', 'cota', 'rol de', 'declarantes', 'promotor'
+        ];
 
         const lines = rolBody.split('\n').map(l => l.trim()).filter(l => l.length > 0);
         const hasNumbers = lines.some(l => /^\d+[\s.)-]/.test(l));
@@ -1893,7 +1773,7 @@
           if (m) {
             const wn = m[1].trim();
             const wnLower = wn.toLowerCase();
-            if (wn.length <= 3 || blacklistRx.test(wnLower)) return;
+            if (wn.length <= 3 || blacklist.some(b => wnLower.includes(b))) return;
 
             const ext1 = m[2] || '';
             const ext2 = m[3] || '';
@@ -1942,92 +1822,16 @@
         }
       });
 
-      // Deduplication & Unified Labeling of Common Witnesses in JS
-      const defWitnesses = [];
-      if (defenseDocs.length > 0) {
-        prosWitnesses.forEach(w => {
-          const wNameClean = w.name.toLowerCase();
-          const defensesRolling = [];
-          defenseDocs.forEach(dInfo => {
-            if (dInfo.adopts_mp_witnesses) {
-              defensesRolling.push(dInfo);
-            } else {
-              dInfo.explicit_witnesses.forEach(exW => {
-                if (exW.toLowerCase().includes(wNameClean) || wNameClean.includes(exW.toLowerCase())) {
-                  defensesRolling.push(dInfo);
-                }
-              });
-            }
-          });
-
-          let tag = '';
-          if (defensesRolling.length === defenseDocs.length && defenseDocs.length > 1) {
-            tag = '(arrolada por todos)';
-          } else if (defensesRolling.length > 0) {
-            const parties = [];
-            defensesRolling.forEach(d => {
-              if (d.is_defensoria) {
-                const rep = (d.represented_defendants || []).join(', ');
-                if (rep && defenseDocs.length > 1) {
-                  parties.push(`pela Defensoria Pública, em defesa de ${rep}`);
-                } else {
-                  parties.push('pela Defensoria Pública');
-                }
-              } else {
-                const lawN = d.lawyer_name || 'Advogado';
-                const repN = (d.represented_defendants || []).join(', ') || 'do réu';
-                parties.push(`pelo Advogado Dr. ${lawN}, em defesa de ${repN}`);
-              }
-            });
-
-            if (parties.length === 1) {
-              tag = `(arrolada pelo Ministério Público e ${parties[0]})`;
-            } else if (parties.length > 1) {
-              tag = `(arrolada pelo Ministério Público, ${parties.slice(0, -1).join(', ')} e ${parties[parties.length - 1]})`;
-            }
-          }
-
-          if (tag) {
-            w.role = `${w.role} ${tag}`;
-          }
-        });
-
-        // Exclusive defense witnesses
-        const prosNames = new Set(prosWitnesses.map(w => w.name.toLowerCase()));
-        let defWitNum = 1;
-        defenseDocs.forEach(dInfo => {
-          dInfo.explicit_witnesses.forEach(exW => {
-            if (![...prosNames].some(pn => exW.toLowerCase().includes(pn) || pn.includes(exW.toLowerCase()))) {
-              prosNames.add(exW.toLowerCase());
-              defWitnesses.push({
-                number: defWitNum++,
-                name: exW,
-                role: 'Testemunha de Defesa',
-                status_id: findSubpoenaStatus(exW, false)
-              });
-            }
-          });
-        });
-      }
-
-      // 14. Chronological History with Deep Defense Synthesis
+      // 13. Chronological History
       const chronologicalHistory = [];
       const seenHistIds = new Set();
-      const defenseDocsMap = {};
-      defenseDocs.forEach(d => { defenseDocsMap[d.doc_id] = d; });
-
       pjeCatalog.forEach(d => {
         const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
         if (/(?:extrato\s*banc[aá]rio|dados\s*telef[oô]nicos|quebra\s*de\s*sigilo|comprovante|guia\s*(?:de\s*)?recolhimento|custas\s*processuais|danfe|nota\s*fiscal|certid[aã]o\s*de\s*(?:triagem|juntada\s*gen[eé]rica|remessa)|autentica[cç][aã]o|foto|laudo|relat[oó]rio\s*t[eé]cnico|manual|tela\s*whatsapp|print)/i.test(comb)) return;
-        if (/denúncia|denuncia|decis|despacho|ato ordinat|resposta|defesa prévia|defesa previa|petição|peticao|manifestação|manifestacao|mandado|edital|ata|termo de audiência/.test(comb) || defenseDocsMap[d.doc_id]) {
+        if (/denúncia|denuncia|decis|despacho|ato ordinat|resposta|defesa prévia|defesa previa|mandado|edital|ata|termo de audiência/.test(comb)) {
           if (!seenHistIds.has(d.doc_id) && d.start_page > 0) {
             seenHistIds.add(d.doc_id);
-            let desc = '';
-            if (defenseDocsMap[d.doc_id]) {
-              desc = defenseDocsMap[d.doc_id].summary_for_history;
-            } else {
-              desc = summarizeHistoryAct(d.doc_name, d.doc_type, d.text);
-            }
+            const desc = summarizeHistoryAct(d.doc_name, d.doc_type, d.text);
             chronologicalHistory.push({
               date_str: formatShortDate(d.date_str),
               description: desc,
@@ -2040,39 +1844,10 @@
       // Sort strictly in ascending chronological order:
       chronologicalHistory.sort((a, b) => parseDateSortKey(a.date_str, a.doc_id) - parseDateSortKey(b.date_str, b.doc_id));
 
-      // 15. Defense Counsel Consolidation
+
+      // 14. Defense Counsel
       let defenseCounsel = 'Assistido pela Defensoria Pública';
-      if (defenseDocs.length > 0) {
-        const counselParts = [];
-        const seenLawyers = new Set();
-
-        defenseDocs.forEach(dInfo => {
-          const repList = dInfo.represented_defendants || [];
-          const repStr = (repList.length > 0 && defenseDocs.length > 1) ? ` (em defesa de ${repList.join(', ')})` : '';
-
-          if (dInfo.is_defensoria) {
-            const lStr = `Assistido pela Defensoria Pública${repStr}`;
-            if (!counselParts.includes(lStr)) counselParts.push(lStr);
-          } else {
-            const lName = dInfo.lawyer_name || 'Advogado';
-            const lOab = dInfo.lawyer_oab || '';
-            const oabSuff = lOab ? ` - ${lOab}` : '';
-            const lStr = `Dr. ${lName}${oabSuff}${repStr}`;
-            if (!seenLawyers.has(lName)) {
-              seenLawyers.add(lName);
-              counselParts.push(lStr);
-            }
-          }
-        });
-
-        if (counselParts.length > 0) {
-          const hasDef = counselParts.some(c => c.includes('Defensoria'));
-          const hasPriv = counselParts.some(c => c.includes('Dr.'));
-          if (hasDef && !hasPriv) defenseCounsel = counselParts.length === 1 ? counselParts[0] : 'Assistidos pela Defensoria Pública';
-          else if (hasPriv && !hasDef) defenseCounsel = `Representado por advogado particular, ${counselParts.join(', ')}`;
-          else defenseCounsel = counselParts.join('; ');
-        }
-      } else if (advsCapa.length > 0) {
+      if (advsCapa.length > 0) {
         const privateAdvs = advsCapa.filter(a => !/defensoria|defensor|procuradoria|estado|tribunal/.test(a.toLowerCase()));
         if (privateAdvs.length > 0) {
           const names = privateAdvs.map(a => `Dr. ${a.toLowerCase().replace(/(?:^|\s)\S/g, x => x.toUpperCase())}`);
@@ -2083,7 +1858,6 @@
       }
 
       let defNote = 'A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.';
-      if (defWitnesses.length > 0) defNote = null;
 
       // Strict ANPP Omissions
       if (actType === 'ANPP') {
@@ -2091,7 +1865,6 @@
         imputationText = '';
         chronologicalHistory.length = 0;
         prosWitnesses.length = 0;
-        defWitnesses.length = 0;
         defNote = '';
       }
 
@@ -2109,7 +1882,7 @@
         facts_summary: factsSummary,
         chronological_history: chronologicalHistory,
         prosecution_witnesses: prosWitnesses,
-        defense_witnesses: defWitnesses,
+        defense_witnesses: [],
         defense_witness_note: defNote,
         closure_text: 'Cordial e respeitosamente,'
       };

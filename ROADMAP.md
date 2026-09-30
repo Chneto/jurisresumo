@@ -4,7 +4,7 @@
 > **Sistema:** JURISRESUMO — Síntese Automatizada de Processos Criminais PJe para Audiências  
 > **Comarca / Tribunal:** Varas Criminais • Tribunal de Justiça do Estado do Rio Grande do Norte (TJRN)  
 > **Autor e Desenvolvedor:** FChNeto  
-> **Estado Atual:** Versão 3.0 (100% Validada • Resposta à Acusação Inominada • Deduplicação de Testemunhas Comuns • 207 Pytests)  
+> **Estado Atual:** Versão 2.9 (100% Validada • Qualificação Rígida Multilinha • Imputação Penal Ampla • Auditoria JEV • 199 Pytests)  
 
 ---
 
@@ -36,8 +36,7 @@ timeline
                     : v2.7 Qualificação & LGPD : Qualificação Completa + Filtro Anti-Órgãos + JEV Adaptativo
                     : v2.8 Fix Crítico JS : SyntaxError Corrigido (8 Arquivos) + Dropzone HTML + validateFile()
                     : v2.9 Qualif/Imputação Rígida : 9 Atributos + Multi-Artigos + Auditoria JEV + 199 Testes
-                    : v3.0 Resposta Inominada & Testemunhas : Detecção Textual Resposta à Acusação + Deduplicação Rol + 207 Testes
-    section Futuro : v3.1 PJe Direct & Busca : P&R Semântico nos Autos + Suporte Cível/Família
+    section Futuro : v3.0 PJe Direct & Busca : P&R Semântico nos Autos + Suporte Cível/Família
                    : v4.0 Audiência ao Vivo : Transcrição em Tempo Real + Termo de Audiência Automático
 ```
 
@@ -123,13 +122,6 @@ timeline
 - **Imperativo Rígido no Gemini Prompt:** Diretriz estrita vetando qualquer sumarização de qualificação ou tipos penais.
 - **199 Testes no Pytest com 100% de Aprovação:** Suíte ampliada com `test_rigid_qualif_imputation.py` e publicação sincronizada no GitHub (`commit a1d0571`).
 - **Checkpoint de Recovery:** `20260930_100323_v2_9-qualif-imputacao-rigida`.
-
-#### 📦 Versão 3.0 — Detecção de Resposta à Acusação Inominada & Deduplicação de Testemunhas Comuns ✅ CONCLUÍDO (30/09/26)
-- **Varredura Textual de Peças Inominadas:** Identificação e síntese de respostas à acusação protocoladas sob nomes genéricos no PJe ("Petição", "Manifestação", "Contestação", "Documento Diverso"), resgatando ID, data, patrono e pedidos defensivos.
-- **Deduplicação de Testemunhas Comuns:** Unificação inteligente de testemunhas arroladas por ambas as partes com rotulagem composta precisa (`arrolada por todos`, `arrolada pelo MP e pela Defensoria`, `arrolada pelo MP e pela Defesa de [Réu] - Dr. [Advogado]`).
-- **Paridade Python / JavaScript:** Lógica idêntica sincronizada nos motores Python e nos pacotes HTML portáteis (`index.html`).
-- **207 Testes Automatizados no Pytest:** Suíte expandida com `test_unnamed_defense_and_witness_merge.py` aprovada com 100% de sucesso.
-- **Publicação no GitHub:** Sincronização e commit `791296c` no repositório oficial.
 
 ---
 
