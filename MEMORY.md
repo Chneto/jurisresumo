@@ -2,7 +2,7 @@
 
 > **Documento Vivo de Memória e Conhecimento Técnico**  
 > **Finalidade:** Orientar desenvolvedores e subagentes em futuras modificações, manutenções, refatorações e auditorias da aplicação.  
-> **Última Atualização:** 29/09/26 (Versão 2.8 — Correção Crítica de SyntaxError JS + Restauração do Dropzone + Validação Client-Side de Upload)
+> **Última Atualização:** 30/09/26 (Versão 2.9 — Extração Rígida e Literal de Qualificação e Imputação Penal Ampla + Fallback no Inquérito Policial + Auditoria Determinística no JEV)
 > **Autor e Desenvolvedor:** FChNeto
 
 ---
@@ -727,4 +727,31 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
 - **ID:** `20260929_112752_js-syntax-fix-complete`
 - **Rótulo:** `js-syntax-fix-complete`
 - **Descrição:** Correção do SyntaxError crítico da versão JS, restauração da estrutura HTML do dropzone e implementação da validação client-side de upload (validateFile).
+
+---
+
+## 21. Versão 2.9 — Extração Rígida e Literal de Qualificação e Imputação Penal Ampla (30/09/26)
+
+### Ato 1: Diagnóstico de Truncamento de Qualificação e Imputação
+* **Diagnóstico:** Identificado que a extração de qualificação interrompia prematuramente nos caracteres `;` e `\n`, truncando filiação materna/paterna, RG, CPF e endereço domiciliar. Além disso, a imputação penal retornava apenas o primeiro artigo (`arts[0]`), omitindo qualificadoras, leis especiais e concursos de crimes (arts. 69, 70 e 71 CP).
+* **Solução:** Reestruturação completa dos extratores Python (`offline_engine.py`) e JavaScript (`index.html`) para capturar o bloco qualificatório integral multilinha e realizar varredura global de todos os tipos penais da denúncia.
+
+### Ato 2: Extração Qualificatória dos 9 Atributos & Fallback no Inquérito Policial
+* **Ação:** Implementação da extração estruturada dos 9 atributos qualificatórios essenciais (Nome, Nacionalidade, Estado Civil, Profissão, Data de Nascimento/Idade, Naturalidade, Filiação, RG com órgão/UF, CPF, Endereço e Telefone).
+* **Fallback no IP:** Caso a denúncia mencione apenas *"qualificado às fls. do IP"*, o sistema aciona fallback automático nos termos de qualificação e interrogatório do Inquérito Policial (IP/APF) resgatando filiação e documentos omitidos.
+
+### Ato 3: Varredura Exaustiva Multi-Artigos da Imputação Penal
+* **Ação:** Substituído o retorno de `arts[0]` por varredura regex global capturando artigos (`art.`), parágrafos (`§`), incisos, alíneas, leis especiais (Lei de Drogas 11.343/06, Estatuto do Desarmamento 10.826/03, ECA 8.069/90, Lei Maria da Penha 11.340/06, CTB) e concursos de crime (arts. 69, 70 e 71 do CP), consolidando a capitulação penal sem duplicatas.
+
+### Ato 4: Auditoria Determinística no JEV Decision Engine (`jev_decision_engine.py`)
+* **Ação:** Criação do método `audit_qualification_and_imputation(qualification_text, imputation_text, denuncia_text)`. O JEV valida se a qualificação possui filiação e documentos (RG/CPF) e se todos os tipos penais detectados na denúncia constam na imputação extraída, complementando automaticamente em caso de omissão.
+
+### Ato 5: Atualização do Prompt Gemini e Suíte de Testes
+* **Ação:**
+  - `gemini_engine.py`: Inserida diretriz rígida exigindo 100% de literalidade e proibindo expressamente a sumarização de dados qualificatórios e artigos penais.
+  - Criação de `versao_python/tests/test_rigid_qualif_imputation.py` cobrindo os 4 cenários de teste da nova funcionalidade.
+  - Execução da suíte completa de testes no Pytest: **199 testes aprovados com 100% de sucesso**.
+  - Checkpoint de recuperação salvo: `20260930_100323_v2_9-qualif-imputacao-rigida`.
+  - Sincronização e publicação no GitHub via commit `a1d0571`.
+
 

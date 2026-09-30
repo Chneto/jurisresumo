@@ -4,7 +4,7 @@
 > **Sistema:** JURISRESUMO — Síntese Automatizada de Processos Criminais PJe para Audiências  
 > **Comarca / Tribunal:** Varas Criminais • Tribunal de Justiça do Estado do Rio Grande do Norte (TJRN)  
 > **Autor e Desenvolvedor:** FChNeto  
-> **Estado Atual:** Versão 2.8 (100% Validada • SyntaxError JS Corrigido • Upload Dropzone Restaurado • Validação Client-Side Implementada)  
+> **Estado Atual:** Versão 2.9 (100% Validada • Qualificação Rígida Multilinha • Imputação Penal Ampla • Auditoria JEV • 199 Pytests)  
 
 ---
 
@@ -35,8 +35,8 @@ timeline
                     : v2.6 OCR/JEV/Leya : Recalibração OCR + Classificador JEV + Filtro Leya + Google Stitch
                     : v2.7 Qualificação & LGPD : Qualificação Completa + Filtro Anti-Órgãos + JEV Adaptativo
                     : v2.8 Fix Crítico JS : SyntaxError Corrigido (8 Arquivos) + Dropzone HTML + validateFile()
-    section Futuro : v2.9 Testes E2E JS : Testes E2E Upload + Nomeação DOCX + README JS
-                   : v3.0 PJe Direct & Busca : P&R Semântico nos Autos + Suporte Cível/Família
+                    : v2.9 Qualif/Imputação Rígida : 9 Atributos + Multi-Artigos + Auditoria JEV + 199 Testes
+    section Futuro : v3.0 PJe Direct & Busca : P&R Semântico nos Autos + Suporte Cível/Família
                    : v4.0 Audiência ao Vivo : Transcrição em Tempo Real + Termo de Audiência Automático
 ```
 
@@ -113,6 +113,15 @@ timeline
 - **Adição de `name='file'` e `<div id='upload-error'>`:** Conformidade HTML5 e receptor dedicado de mensagens de validação client-side.
 - **Implementação da Função `validateFile()`:** Guarda-chuva de validação integrado aos handlers `ondrop` e `onchange` com mensagem `'Formato de arquivo inválido. Por favor, envie apenas PDFs.'` e auto-ocultação em 5 segundos.
 - **Checkpoint de Recovery:** `20260929_112752_js-syntax-fix-complete`.
+
+#### 📦 Versão 2.9 — Extração Rígida e Literal de Qualificação e Imputação Penal Ampla ✅ CONCLUÍDO (30/09/26)
+- **Qualificação Multilinha Completa:** Fim dos cortes em `;` e `\n`, garantindo a captura padronizada dos 9 atributos (Nome, Nacionalidade, Estado Civil, Profissão, Data de Nascimento/Idade, Naturalidade, Filiação materna e paterna, RG com órgão/UF, CPF, Endereço Domiciliar e Telefone).
+- **Fallback Automático no Inquérito Policial:** Resgate automático de filiação e documentos a partir dos termos de interrogatório policial quando a denúncia for omissa.
+- **Imputação Penal Global Multi-Artigos:** Varredura exaustiva de todos os artigos (`art.`), parágrafos (`§`), incisos, leis especiais (Lei de Drogas, Estatuto do Desarmamento, ECA, Maria da Penha) e concursos de crime (arts. 69, 70 e 71 do CP).
+- **Auditoria Determinística no JEV Decision Engine (`jev_decision_engine.py`):** Método `audit_qualification_and_imputation()` que audita a integridade de dados e complementa omissões automaticamente.
+- **Imperativo Rígido no Gemini Prompt:** Diretriz estrita vetando qualquer sumarização de qualificação ou tipos penais.
+- **199 Testes no Pytest com 100% de Aprovação:** Suíte ampliada com `test_rigid_qualif_imputation.py` e publicação sincronizada no GitHub (`commit a1d0571`).
+- **Checkpoint de Recovery:** `20260930_100323_v2_9-qualif-imputacao-rigida`.
 
 ---
 
