@@ -353,3 +353,78 @@ class JEVDecisionEngine:
         # Unir palavras com hífen quebrado na quebra de linha (ex: de-\n signou -> designou)
         text = re.sub(r"(\w+)-\s*\n\s*(\w+)", r"\1\2", text)
         return re.sub(r"\s+", " ", text).strip()
+
+    def audit_qualification_and_imputation(
+        self,
+        qualification_text: str,
+        imputation_text: str,
+        denuncia_text: str,
+        ip_text: str = "",
+    ) -> Tuple[str, str]:
+        """Audita e complementa rigorosamente a qualificação dos réus e a imputação penal.
+
+        - Verifica se a qualificação traz documentos (RG/CPF) e filiação (filho/filha); se faltar, aciona fallback no IP/Denúncia.
+        - Verifica se todos os artigos de lei narrados na denúncia constam na imputação; se faltar algum, incorpora-os.
+        """
+        audited_qual = qualification_text or ""
+        audited_imp = imputation_text or ""
+
+        # 1. Audit qualification documents & filiação
+        has_filiacao = bool(re.search(r"\bfilh[oa]\s+de\b", audited_qual, re.I))
+        has_rg = bool(re.search(r"\bRG\b", audited_qual, re.I))
+        has_cpf = bool(re.search(r"\bCPF\b", audited_qual, re.I))
+
+        search_pool = f"{denuncia_text}\n{ip_text}"
+
+        if not (has_filiacao and has_rg and has_cpf) and search_pool.strip():
+            supplements = []
+            if not has_filiacao:
+                fil_m = re.search(r"(\bfilh[oa]\s+de\s+[A-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ\s]{5,60}?)(?=[,;\n.]|$)", search_pool, re.I)
+                if fil_m:
+                    supplements.append(fil_m.group(1).strip())
+            if not has_rg:
+                rg_m = re.search(r"(\bRG\s*(?:n[º°\.]?)?\s*[\d\.-]+(?:\s*[A-Z/]+)?)", search_pool, re.I)
+                if rg_m:
+                    supplements.append(rg_m.group(1).strip())
+            if not has_cpf:
+                cpf_m = re.search(r"(\bCPF\s*(?:n[º°\.]?)?\s*[\d\.-]+)", search_pool, re.I)
+                if cpf_m:
+                    supplements.append(cpf_m.group(1).strip())
+
+            if supplements:
+                supp_str = ", ".join(supplements)
+                if audited_qual and "qualificação nos autos" not in audited_qual:
+                    audited_qual += f" ({supp_str})"
+                elif not audited_qual:
+                    audited_qual = supp_str
+
+        # 2. Audit imputation articles
+        if denuncia_text:
+            art_matches = re.findall(
+                r"\bart(?:igo)?s?\b\.?\s*\d+[^\n,.;]*(?:§[^\n,.;]*)?(?:inciso[^\n,.;]*)?(?:do\s+CP|do\s+Código\s+Penal|da\s+Lei[^\n,.;]*)?",
+                denuncia_text,
+                re.IGNORECASE,
+            )
+            law_matches = re.findall(r"\bLei\s+(?:n[º°\.]?\s*)?[\d\./]+[^\n,.;]*", denuncia_text, re.IGNORECASE)
+            concurso_matches = re.findall(r"\bart[s]?\.?\s*(?:69|70|71)[^\n,.;]*(?:do\s+CP|do\s+Código\s+Penal)?", denuncia_text, re.IGNORECASE)
+
+            all_detected = []
+            for item in art_matches + law_matches + concurso_matches:
+                item_c = item.strip()
+                if item_c and item_c not in all_detected:
+                    all_detected.append(item_c)
+
+            missing_articles = []
+            for item in all_detected:
+                nums = re.findall(r"\d+", item)
+                if nums and not any(n in audited_imp for n in nums):
+                    missing_articles.append(item)
+
+            if missing_articles:
+                if audited_imp and audited_imp != "Artigo de lei a ser apurado":
+                    audited_imp += " c/c " + " c/c ".join(missing_articles)
+                else:
+                    audited_imp = f"Imputação penal ({', '.join(all_detected)})"
+
+        return audited_qual, audited_imp
+

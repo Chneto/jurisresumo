@@ -353,3 +353,101 @@ class JEVDecisionEngine:
         # Unir palavras com hífen quebrado na quebra de linha (ex: de-\n signou -> designou)
         text = re.sub(r"(\w+)-\s*\n\s*(\w+)", r"\1\2", text)
         return re.sub(r"\s+", " ", text).strip()
+
+    def audit_qualification_and_imputation(
+        self,
+        qualification_text: str,
+        imputation_text: str,
+        denuncia_text: str,
+        ip_text: str = "",
+    ) -> Tuple[str, str]:
+        """Audita e complementa rigorosamente a qualificação dos réus e a imputação penal.
+
+        - Verifica se a qualificação traz documentos (RG/CPF) e filiação (filho/filha); se faltar, aciona fallback no IP/Denúncia.
+        - Verifica se todos os artigos de lei narrados na denúncia constam na imputação; se faltar algum, incorpora-os.
+        """
+        audited_qual = qualification_text or ""
+        audited_imp = imputation_text or ""
+
+        # 1. Audit qualification documents & filiação
+        has_filiacao = bool(re.search(r"\bfilh[oa]\b|\bm[aã]e\b|\bpai\b|\bgenitor", audited_qual, re.I))
+        has_rg = bool(re.search(r"\bRG\b|\b\d{6,}\b", audited_qual, re.I))
+        has_cpf = bool(re.search(r"\bCPF\b|\b\d{3}\.\d{3}\.\d{3}-\d{2}\b", audited_qual, re.I))
+
+        search_pool = f"{denuncia_text}\n{ip_text}"
+
+        if not (has_filiacao and has_rg and has_cpf) and search_pool.strip():
+            supplements = []
+            if not has_filiacao:
+                fil_m = re.search(r"(\bfilh[oa]\s+de\s+[A-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ\s]{3,100}?)(?=[,;\n.]|$)", search_pool, re.I)
+                if fil_m:
+                    supplements.append(fil_m.group(1).strip())
+            if not has_rg:
+                rg_m = re.search(r"(\bRG\s*(?:n[º°\.]?)?\s*[\d\.-]+(?:\s*[A-Z/]+)?)", search_pool, re.I)
+                if rg_m:
+                    supplements.append(rg_m.group(1).strip())
+            if not has_cpf:
+                cpf_m = re.search(r"(\bCPF\s*(?:n[º°\.]?)?\s*[\d\.-]+)", search_pool, re.I)
+                if cpf_m:
+                    supplements.append(cpf_m.group(1).strip())
+
+            if supplements:
+                supp_str = ", ".join(supplements)
+                if audited_qual and "qualificação nos autos" not in audited_qual:
+                    audited_qual += f" ({supp_str})"
+                elif not audited_qual:
+                    audited_qual = supp_str
+
+        # 2. Audit imputation articles
+        if denuncia_text:
+            penal_rx = re.compile(
+                r"\bart(?:igo)?s?\b\.?\s*\d+(?:-[A-Z])?\b"
+                r"(?:\s*,\s*§\s*\d+[º°]?(?:-[A-Z])?|\s+§\s*\d+[º°]?(?:-[A-Z])?)*"
+                r"(?:\s*,\s*(?:inciso\s+)?[I|V|X|L|C|D|M]+\b|\s+(?:inciso\s+)?[I|V|X|L|C|D|M]+\b)*"
+                r"(?:\s*,\s*al[íi]nea\s+[a-z]|\s+al[íi]nea\s+[a-z])*"
+                r"(?:\s+(?:c/c|comb|combinado\s+com)\s+art(?:igo)?s?\b\.?\s*\d+[^,.;\n]*)*"
+                r"(?:\s+(?:do\s+CP|do\s+C[oó]digo\s+Penal|da\s+Lei[^\n,.;]*))?",
+                re.IGNORECASE,
+            )
+            art_matches = [a.strip(" ,.;") for a in penal_rx.findall(denuncia_text) if a.strip(" ,.;")]
+
+            law_rx = re.compile(
+                r"\b(?:Lei\s+(?:n[º°\.]?\s*)?[\d\./]+|ECA|Lei\s+Maria\s+da\s+Penha|Estatuto\s+do\s+Desarmamento|Lei\s+de\s+Drogas)"
+                r"(?:\s*\([^\)]+\))?(?:\s*,\s*art(?:igo)?\.?\s*\d+[^;.\n]*)?",
+                re.IGNORECASE,
+            )
+            law_matches = [l.strip(" ,.;") for l in law_rx.findall(denuncia_text) if l.strip(" ,.;")]
+
+            concurso_rx = re.compile(
+                r"\bart[s]?\.?\s*(?:69|70|71)[^\n,.;]*(?:do\s+CP|do\s+C[oó]digo\s+Penal)?",
+                re.IGNORECASE,
+            )
+            concurso_matches = [c.strip(" ,.;") for c in concurso_rx.findall(denuncia_text) if c.strip(" ,.;")]
+
+            all_detected = []
+            for item in art_matches + law_matches + concurso_matches:
+                if item and item not in all_detected:
+                    all_detected.append(item)
+
+            missing_articles = []
+            for item in all_detected:
+                nums = re.findall(r"\d+", item)
+                if nums:
+                    num_found = any(n in audited_imp for n in nums)
+                    has_paragraph_in_item = "§" in item
+                    has_paragraph_in_imp = "§" in audited_imp
+                    has_eca_in_item = "244" in item or "ECA" in item
+                    has_eca_in_imp = "244" in audited_imp or "ECA" in audited_imp
+
+                    if not num_found or (has_paragraph_in_item and not has_paragraph_in_imp) or (has_eca_in_item and not has_eca_in_imp):
+                        if item not in audited_imp:
+                            missing_articles.append(item)
+
+            if missing_articles:
+                if audited_imp and audited_imp != "Artigo de lei a ser apurado":
+                    audited_imp += " c/c " + " c/c ".join(missing_articles)
+                else:
+                    audited_imp = f"Imputação penal ({', '.join(all_detected)})"
+
+        return audited_qual, audited_imp
+

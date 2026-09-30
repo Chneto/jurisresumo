@@ -541,14 +541,17 @@
       <div class="dropzone-inline" id="dropzone">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--banana-500);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
         <span>Arraste o PDF integral dos autos aqui ou <strong>clique para selecionar</strong></span>
-        <input type="file" id="file-input" accept="application/pdf" style="display:none;">
+        <input type="file" id="file-input" name="file" accept="application/pdf" style="display:none;">
       </div>
+
+      <div id="upload-error" style="color:#e53e3e;margin-top:0.5rem;display:none;"></div>
 
       <div class="upload-loading" id="upload-loading">
         <div class="spinner"></div>
         <span id="loading-msg">Lendo e analisando os autos judiciais...</span>
       </div>
     </div>
+
 
     <!-- Content Split: Forms (Left) vs Preview (Right) -->
     <div class="content-split">
@@ -762,16 +765,33 @@
     const uploadLoading = document.getElementById('upload-loading');
     const loadingMsg = document.getElementById('loading-msg');
 
+    // Validate file type: only PDF allowed
+    function validateFile(file) {
+      const errEl = document.getElementById('upload-error');
+      if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+        if (errEl) { errEl.textContent = 'Formato de arquivo inválido. Por favor, envie apenas PDFs.'; errEl.style.display = 'block'; }
+        return false;
+      }
+      if (errEl) errEl.style.display = 'none';
+      return true;
+    }
+
     dropzone.onclick = () => fileInput.click();
     dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('dragover'); };
     dropzone.ondragleave = () => dropzone.classList.remove('dragover');
     dropzone.ondrop = (e) => {
       e.preventDefault();
       dropzone.classList.remove('dragover');
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) processPdfFile(e.dataTransfer.files[0]);
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        const f = e.dataTransfer.files[0];
+        if (validateFile(f)) processPdfFile(f);
+      }
     };
     fileInput.onchange = (e) => {
-      if (e.target.files && e.target.files[0]) processPdfFile(e.target.files[0]);
+      if (e.target.files && e.target.files[0]) {
+        const f = e.target.files[0];
+        if (validateFile(f)) processPdfFile(f);
+      }
     };
 
     // Text Cleaning Helper
@@ -875,34 +895,100 @@
       return idNum % 1000000;
     }
 
-    function extractSingleDefendantQualification(name, rawQual, denunciaText) {
+    function extractSingleDefendantQualification(name, rawQual, denunciaText, ipText) {
       const nameClean = (name || '').trim();
       if (!nameClean) return '';
       const firstName = nameClean.split(' ')[0];
+      const esc = nameClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+      const qualBlockRegex = new RegExp('(?:^|\\n|[;.]\\s*)\\b(' + esc + '[\\s\\S]{1,900}?)(?=(?:\\n\\s*(?:DOS FATOS|DA IMPUTAÇÃO|Vem perante|pela prática|ROL DE TESTEMUNHAS|[I|V|X]+\\)\\s*FATOS)|\\n\\n|$))', 'i');
+
+      let chunk = '';
       if (rawQual) {
-        const esc = nameClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const rx = new RegExp('(?:^|\\n|[;.]\\s*)\\b(' + esc + '[^\\n;]+(?:[;,]\\s*(?:brasileir[oa]|filh[oa]|cpf|rg|nascid|natural|residente|conhecido)[^\\n;]*)*)', 'i');
-        const m = rawQual.match(rx);
-        if (m) {
-          const chunk = m[1].replace(/^[;.\s]+|[;.\s]+$/g, '');
-          if (/cpf|rg|filho|filha|nascid|natural|residente/i.test(chunk)) return chunk;
+        const m = rawQual.match(qualBlockRegex);
+        if (m) chunk = m[1].trim();
+      }
+      if (!chunk && denunciaText) {
+        const m2 = denunciaText.match(qualBlockRegex);
+        if (m2) chunk = m2[1].trim();
+      }
+
+      if (ipText && (!chunk || !/cpf|rg|filho|filha|nascid|natural|residente/i.test(chunk) || /qualificado/i.test(chunk))) {
+        const ipRegex = new RegExp('(' + esc + '[\\s\\S]{1,700}?)(?=\\n\\n|$)', 'i');
+        const m3 = ipText.match(ipRegex);
+        if (m3 && /cpf|rg|filho|filha|nascid/i.test(m3[1])) {
+          if (chunk && !/qualificado/i.test(chunk)) {
+            if (!/filho|filha/i.test(chunk) && /filho|filha/i.test(m3[1])) {
+              chunk = chunk + ' (' + m3[1].trim() + ')';
+            }
+          } else {
+            chunk = m3[1].trim();
+          }
         }
       }
 
-      if (denunciaText) {
-        const esc = nameClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const rx2 = new RegExp('\\b(' + esc + '[^\\n;]+(?:filh[oa]|cpf|rg|nascid|natural|residente)[^\\n;]+(?:;\\s*|\\.\\s*|\\n\\s*))', 'i');
-        const m2 = denunciaText.match(rx2);
-        if (m2) return m2[1].replace(/^[;.\s]+|[;.\s]+$/g, '');
+      if (chunk) {
+        return chunk.replace(/^[;.\s]+|[;.\s]+$/g, '').replace(/[ \t]+/g, ' ');
       }
 
       if (rawQual && nameClean.length > 5 && rawQual.toLowerCase().includes(firstName.toLowerCase())) {
-        const clean = rawQual.replace(/^[;.\s]+|[;.\s]+$/g, '');
+        const clean = rawQual.replace(/^[;.\s]+|[;.\s]+$/g, '').replace(/[ \t]+/g, ' ');
         if (/cpf|rg|filho|nascid|brasileir/i.test(clean)) return clean;
       }
 
       return `${nameClean.toUpperCase()}, qualificação nos autos.`;
+    }
+
+    function extractImputationFromDenuncia(denunciaText) {
+      if (!denunciaText) return 'Artigo de lei a ser apurado';
+
+      let imputationText = '';
+      const impMatch = denunciaText.match(/(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)/i);
+      if (impMatch) {
+        imputationText = cleanPjeText(impMatch[1]).replace(/\s+/g, ' ').trim();
+      } else {
+        const crimeMatch = denunciaText.match(/(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+penas\s+d[ao]|incurso\s+n[ao]s?\s+penas\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+penas\s+d[ao])\s*([^\n.]+?(?:art(?:igo)?\.?\s*\d+[^\n.]+))/i);
+        if (crimeMatch) {
+          imputationText = cleanPjeText(crimeMatch[1]).replace(/\s+/g, ' ').trim();
+        }
+      }
+
+      const artMatches = [];
+      const artRx = /art(?:igo)?s?\b\.?\s*\d+[^\n,.;]*(?:§[^\n,.;]*)?(?:inciso[^\n,.;]*)?(?:do\s+CP|do\s+Código\s+Penal|da\s+Lei[^\n,.;]*)?/gi;
+      let m;
+      while ((m = artRx.exec(denunciaText)) !== null) {
+        if (m[0].trim()) artMatches.push(m[0].trim());
+      }
+      const lawRx = /Lei\s+(?:n[º°\.]?\s*)?[\d\./]+[^\n,.;]*/gi;
+      while ((m = lawRx.exec(denunciaText)) !== null) {
+        if (m[0].trim()) artMatches.push(m[0].trim());
+      }
+      const concursoRx = /art[s]?\.?\s*(?:69|70|71)[^\n,.;]*/gi;
+      while ((m = concursoRx.exec(denunciaText)) !== null) {
+        if (m[0].trim()) artMatches.push(m[0].trim());
+      }
+
+      if (imputationText) {
+        const missing = [];
+        for (let art of artMatches) {
+          const nums = art.match(/\d+/g);
+          if (nums && !nums.some(n => imputationText.includes(n))) {
+            missing.push(art);
+          }
+        }
+        if (missing.length > 0) {
+          const uniqueMissing = Array.from(new Set(missing));
+          imputationText += ' c/c ' + uniqueMissing.join(' c/c ');
+        }
+        return imputationText;
+      }
+
+      if (artMatches.length > 0) {
+        const unique = Array.from(new Set(artMatches));
+        return `Imputação penal (${unique.join(', ')})`;
+      }
+
+      return 'Artigo de lei a ser apurado';
     }
 
     function recordFeedbackLearned(action, text) {
@@ -1432,10 +1518,16 @@
         };
       });
 
+      let ipText = '';
+      const ipDocs = pjeCatalog.filter(d => /inquérito|inquerito|flagrante|interrogat|qualifica|boletim/i.test(`${d.doc_name} ${d.doc_type}`));
+      for (let ipD of ipDocs.slice(0, 3)) {
+        ipText += (ipD.text || '') + '\n';
+      }
+
       const defendantQuals = [];
       for (let name of defendantNames) {
         if (isStateOrgan(name)) continue;
-        const dQual = extractSingleDefendantQualification(name, qualText, denunciaText);
+        const dQual = extractSingleDefendantQualification(name, qualText, denunciaText, ipText);
         defendantQuals.push(dQual);
       }
       if (defendantQuals.length > 0) {
@@ -1445,19 +1537,7 @@
       }
 
       // 10. Imputation
-      let imputationText = 'Artigo de lei a ser apurado';
-      const impMatch = denunciaText.match(/(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)/i);
-      if (impMatch) {
-        imputationText = cleanPjeText(impMatch[1]).replace(/\s+/g, ' ').trim();
-      } else {
-        const crimeMatch = denunciaText.match(/(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+penas\s+d[ao]|incurso\s+n[ao]s?\s+penas\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+penas\s+d[ao])\s*([^\n.]+?(?:art(?:igo)?\.?\s*\d+[^\n.]+))/i);
-        if (crimeMatch) {
-          imputationText = cleanPjeText(crimeMatch[1]).replace(/\s+/g, ' ').trim();
-        } else {
-          const artMatch = denunciaText.match(/(art(?:igo)?\.?\s*\d+[^.\n;]+(?:Código Penal|CP|Lei[^.\n;]+)?)/i);
-          if (artMatch) imputationText = `Imputação penal (${artMatch[1].trim()})`;
-        }
-      }
+      let imputationText = extractImputationFromDenuncia(denunciaText);
 
       // 11. Facts Extraction & ANPP Structure
       let factsSummary = '';

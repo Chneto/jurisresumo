@@ -283,6 +283,11 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         # 8. Imputation
         imputation_text = self._extract_imputation(denuncia_text)
 
+        # Audit & complement qualification and imputation via JEV Decision Engine
+        qualification_text, imputation_text = JEVDecisionEngine.get_instance().audit_qualification_and_imputation(
+            qualification_text, imputation_text, denuncia_text
+        )
+
         # 9. Summary of Facts
         facts_summary, special_notes = self._extract_facts(
             denuncia_text, act_type, pje_catalog, doc
@@ -849,52 +854,85 @@ class OfflineExtractionEngine(BaseExtractionEngine):
     ) -> str:
         """Extracts complete qualification for a defendant (filiation, RG, CPF, birth date, address)."""
         name_clean = name.strip()
+        if not name_clean:
+            return ""
         first_name = name_clean.split()[0] if name_clean.split() else ""
+        esc_name = re.escape(name_clean)
 
-        # 1. Search in raw_qual for this defendant's chunk
+        # 1. Capture multiline qualification block without premature stopping at ; or \n or blank lines
+        qual_pattern = re.compile(
+            rf"(?:^|\n|[;.]\s*)\b({esc_name}[\s\S]{{1,1200}}?)"
+            rf"(?=(?:\n\s*(?:(?:[I|V|X]+\)?\s*)?(?:DOS\s+FATOS|DA\s+IMPUTA[CÇ][AÃ]O|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL\s+DE\s+TESTEMUNHAS|DA\s+QUALIFICA[CÇ][AÃ]O)|Vem\s+perante|pela\s+pr[aá]tica|oferecer\s+den[uú]ncia)|"
+            rf"\n\s*(?:\d+[\.\)]\s*)?[A-ZÁÉÍÓÚ]{{3,}}(?:\s+[A-ZÁÉÍÓÚ]{{2,}}){{1,4}},?\s*(?:brasileir|solteir|casad|divorciad|nascid|filh|portador|residente|rg\b|cpf\b|vulgo)|"
+            rf"$))",
+            re.IGNORECASE,
+        )
+
+        chunk = ""
         if raw_qual:
-            pattern = re.compile(
-                rf"(?:^|\n|[;.]\s*)\b({re.escape(name_clean)}[^\n;]+(?:[;,]\s*(?:brasileir[oa]|filh[oa]|cpf|rg|nascid|natural|residente|conhecido)[^\n;]*)*)",
-                re.IGNORECASE,
-            )
-            m = pattern.search(raw_qual)
+            m = qual_pattern.search(raw_qual)
             if m:
                 chunk = _clean_legal_text(m.group(1)).strip(" ;.\n")
-                if any(k in chunk.lower() for k in ["cpf", "rg", "filho", "filha", "nascid", "natural", "residente"]):
-                    return chunk
 
-        # 2. Search in denuncia_text directly
-        if denuncia_text:
-            pattern2 = re.compile(
-                rf"\b({re.escape(name_clean)}[^\n;]+(?:filh[oa]|cpf|rg|nascid|natural|residente)[^\n;]+(?:;\s*|\.\s*|\n\s*))",
-                re.IGNORECASE,
-            )
-            m2 = pattern2.search(denuncia_text)
+        if not chunk and denuncia_text:
+            m2 = qual_pattern.search(denuncia_text)
             if m2:
-                chunk2 = _clean_legal_text(m2.group(1)).strip(" ;.\n")
-                return chunk2
+                chunk = _clean_legal_text(m2.group(1)).strip(" ;.\n")
 
-        # 3. Search in Inquérito Policial / APF text
-        if ip_text and first_name:
+        # Check completeness of qualification: filiação, RG, CPF
+        has_filiacao = bool(re.search(r"\bfilh[oa]\b|\bm[aã]e\b|\bpai\b|\bgenitor", chunk, re.I))
+        has_rg = bool(re.search(r"\bRG\b|\b\d{6,}\b", chunk, re.I))
+        has_cpf = bool(re.search(r"\bCPF\b|\b\d{3}\.\d{3}\.\d{3}-\d{2}\b", chunk, re.I))
+        is_generic = "qualificad" in chunk.lower() or not chunk
+
+        # 2. Check if chunk lacks filiação, RG, or CPF, or is generic -> fallback / merge from IP/APF
+        if ip_text and (is_generic or not (has_filiacao and has_rg and has_cpf)):
             ip_pat = re.compile(
-                rf"({re.escape(name_clean)}[^\n]+?(?:filh[oa]\s+de|nascid[oa]\s+em|cpf|rg)[^\n]+)",
+                rf"({esc_name}[\s\S]{{1,1200}}?)(?=(?:\n\s*\n\s*\n|\n\s*(?:(?:[I|V|X]+\)?\s*)?(?:TERMO|DEPOIMENTO|DECLARA[CÇ][OÕ]ES|INTERROGAT[OÓ]RIO|DESPACHO|CERTID[AÃ]O|RELAT[OÓ]RIO))|\n\s*(?:\d+[\.\)]\s*)?[A-ZÁÉÍÓÚ]{{3,}}(?:\s+[A-ZÁÉÍÓÚ]{{2,}}){{1,4}},?\s*(?:brasileir|solteir|casad|divorciad|nascid|filh|portador|residente|rg\b|cpf\b)|$))",
                 re.IGNORECASE,
             )
             m3 = ip_pat.search(ip_text)
             if m3:
-                chunk3 = _clean_legal_text(m3.group(1)).strip(" ;.\n")
-                return chunk3
+                ip_chunk = _clean_legal_text(m3.group(1)).strip(" ;.\n")
+                if any(k in ip_chunk.lower() for k in ["cpf", "rg", "filho", "filha", "nascid", "natural", "brasileir", "residente"]):
+                    if is_generic or not chunk:
+                        chunk = ip_chunk
+                    else:
+                        supplements = []
+                        if not has_filiacao:
+                            fil_m = re.search(r"(\bfilh[oa]\s+de\s+[A-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ\s]{3,120}?)(?=[,;\n.]|$)", ip_chunk, re.I)
+                            if fil_m:
+                                supplements.append(fil_m.group(1).strip())
+                        if not has_rg:
+                            rg_m = re.search(r"(\bRG\s*(?:n[º°\.]?)?\s*[\d\.-]+(?:\s*[A-Z/]+)?)", ip_chunk, re.I)
+                            if rg_m:
+                                supplements.append(rg_m.group(1).strip())
+                        if not has_cpf:
+                            cpf_m = re.search(r"(\bCPF\s*(?:n[º°\.]?)?\s*[\d\.-]+)", ip_chunk, re.I)
+                            if cpf_m:
+                                supplements.append(cpf_m.group(1).strip())
 
-        # 4. If raw_qual has content and name is in raw_qual
+                        if supplements:
+                            chunk = f"{chunk.rstrip(' ,;.')}, {', '.join(supplements)}"
+
+        if chunk:
+            chunk = re.sub(r"[ \t]+", " ", chunk)
+            return chunk
+
         if raw_qual and len(name.split()) >= 2 and (name.lower() in raw_qual.lower() or first_name.lower() in raw_qual.lower()):
             cleaned_single = _clean_legal_text(raw_qual).strip(" ;.\n")
             if any(k in cleaned_single.lower() for k in ["cpf", "rg", "filho", "nascid", "brasileir"]):
-                return cleaned_single
+                return re.sub(r"[ \t]+", " ", cleaned_single)
 
         return f"{name_clean.upper()}, qualificação nos autos."
 
     def _extract_imputation(self, denuncia_text: str) -> str:
-        """Extracts penal imputation articles and full crime title."""
+        """Extracts penal imputation articles and full crime title, preserving all articles, paragraphs, incisos, special laws and crime concurrence."""
+        if not denuncia_text:
+            return "Artigo de lei a ser apurado"
+
+        base_imputation = ""
+
         # 1. Search for explicit section header (e.g. 'VI) Imputação legal' or 'DA IMPUTAÇÃO')
         m_sec = re.search(
             r"(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)",
@@ -906,24 +944,81 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             raw_imp = _clean_legal_text(raw_imp)
             raw_imp = re.sub(r"\s+", " ", raw_imp).strip()
             if len(raw_imp) > 10:
-                return raw_imp
+                base_imputation = raw_imp
 
         # 2. Search for standard closing phrase in Denúncia
-        m_crime = re.search(
-            r"(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+penas\s+d[ao]|incurso\s+n[ao]s?\s+penas\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+penas\s+d[ao])\s*([^\n.]+?(?:art(?:igo)?\.?\s*\d+[^\n.]+))",
-            denuncia_text,
+        if not base_imputation:
+            m_crime = re.search(
+                r"(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao])\s*([^\n.]+?(?:art(?:igo)?\.?\s*\d+[^\n.]+))",
+                denuncia_text,
+                re.IGNORECASE,
+            )
+            if m_crime:
+                raw_imp = m_crime.group(1).strip()
+                raw_imp = _clean_legal_text(raw_imp)
+                raw_imp = re.sub(r"\s+", " ", raw_imp).strip()
+                base_imputation = raw_imp
+
+        # 3. Global scan for ALL penal articles, paragraphs, incisos, special laws (ECA, Drogas, Armamento, Maria da Penha) and concurso (69, 70, 71)
+        all_articles: List[str] = []
+
+        # Penal articles with paragraphs (§), incisos, alíneas, e.g., "art. 157, § 2º, II, e § 2º-A, I, do CP"
+        penal_rx = re.compile(
+            r"\bart(?:igo)?s?\b\.?\s*\d+(?:-[A-Z])?\b"
+            r"(?:\s*,\s*§\s*\d+[º°]?(?:-[A-Z])?|\s+§\s*\d+[º°]?(?:-[A-Z])?)*"
+            r"(?:\s*,\s*(?:inciso\s+)?[I|V|X|L|C|D|M]+\b|\s+(?:inciso\s+)?[I|V|X|L|C|D|M]+\b)*"
+            r"(?:\s*,\s*al[íi]nea\s+[a-z]|\s+al[íi]nea\s+[a-z])*"
+            r"(?:\s+(?:c/c|comb|combinado\s+com)\s+art(?:igo)?s?\b\.?\s*\d+[^,.;\n]*)*"
+            r"(?:\s+(?:do\s+CP|do\s+C[oó]digo\s+Penal|da\s+Lei[^\n,.;]*))?",
             re.IGNORECASE,
         )
-        if m_crime:
-            raw_imp = m_crime.group(1).strip()
-            raw_imp = _clean_legal_text(raw_imp)
-            raw_imp = re.sub(r"\s+", " ", raw_imp).strip()
-            return raw_imp
+        for a in penal_rx.findall(denuncia_text):
+            a_clean = a.strip(" ,.;")
+            if a_clean and a_clean not in all_articles:
+                all_articles.append(a_clean)
 
-        # 3. Fallback penal article match
-        arts = re.findall(r"(art(?:igo)?\.?\s*\d+[^.\n;]+(?:Código Penal|CP|Lei[^.\n;]+)?)", denuncia_text, re.I)
-        if arts:
-            return f"Imputação penal ({arts[0].strip()})"
+        # Special laws (ECA, Drogas, Armamento, Maria da Penha, CTB)
+        law_rx = re.compile(
+            r"\b(?:Lei\s+(?:n[º°\.]?\s*)?[\d\./]+|ECA|Lei\s+Maria\s+da\s+Penha|Estatuto\s+do\s+Desarmamento|Lei\s+de\s+Drogas)"
+            r"(?:\s*\([^\)]+\))?(?:\s*,\s*art(?:igo)?\.?\s*\d+[^;.\n]*)?",
+            re.IGNORECASE,
+        )
+        for l in law_rx.findall(denuncia_text):
+            l_clean = l.strip(" ,.;")
+            if l_clean and l_clean not in all_articles:
+                all_articles.append(l_clean)
+
+        # Crime concurrence (arts. 69, 70, 71 do CP)
+        concurso_rx = re.compile(
+            r"\bart[s]?\.?\s*(?:69|70|71)[^\n,.;]*(?:do\s+CP|do\s+C[oó]digo\s+Penal)?",
+            re.IGNORECASE,
+        )
+        for c in concurso_rx.findall(denuncia_text):
+            c_clean = c.strip(" ,.;")
+            if c_clean and c_clean not in all_articles:
+                all_articles.append(c_clean)
+
+        if base_imputation:
+            final_imp = base_imputation
+            missing = []
+            for art in all_articles:
+                art_nums = re.findall(r"\d+", art)
+                if art_nums:
+                    num_found = any(n in final_imp for n in art_nums)
+                    has_paragraph_in_art = "§" in art
+                    has_paragraph_in_imp = "§" in final_imp
+                    has_eca_in_art = "244" in art or "ECA" in art
+                    has_eca_in_imp = "244" in final_imp or "ECA" in final_imp
+
+                    if not num_found or (has_paragraph_in_art and not has_paragraph_in_imp) or (has_eca_in_art and not has_eca_in_imp):
+                        if art not in final_imp:
+                            missing.append(art)
+            if missing:
+                final_imp += " c/c " + " c/c ".join(missing)
+            return final_imp
+
+        if all_articles:
+            return f"Imputação penal ({', '.join(all_articles)})"
 
         return "Artigo de lei a ser apurado"
 

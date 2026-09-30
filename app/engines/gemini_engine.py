@@ -34,10 +34,10 @@ Regras Estritas de Estruturação Jurídica:
    - defense_counsel: "Assistido pela Defensoria Pública - Dr. [Nome]" ou "Representado por advogado particular, Dr. [Nome] - OAB/[UF] [Num]".
 
 2. QUALIFICAÇÃO:
-   - Nome completo em caixa alta seguido de nacionalidade, estado civil, profissão, naturalidade, RG, CPF, idade à época dos fatos, nascimento, filiação, endereço domiciliar e telefone.
+   - Exija 100% de literalidade da denúncia/autos. Transcreva a qualificação completa do(s) réu(s) sem qualquer truncamento ou omissão de atributos: Nome em caixa alta, nacionalidade, estado civil, profissão, nascimento/idade, naturalidade, filiação materna e paterna, RG com órgão/UF, CPF, endereço domiciliar e telefone. Vedada expressamente qualquer sumarização ou corte de dados qualificatórios. Se a denúncia for omissa, busque os dados no Inquérito Policial.
 
 3. IMPUTAÇÃO:
-   - Tipificação penal com artigos de lei, qualificadoras e causas de aumento (ex.: "Lesão corporal em situação de relação doméstica (art. 129, §9º, do Código Penal)").
+   - Tipificação penal estritamente literal e completa abrangendo TODOS os artigos, parágrafos, incisos, alíneas, qualificadoras, causas de aumento, leis especiais (ECA, Drogas, Armamento, Maria da Penha, etc.) e concursos de crimes (arts. 69, 70 e 71 do CP) narrados na denúncia, sem simplificação ou truncamentos.
 
 4. RESUMO DOS FATOS:
    - Geralmente (~99% das vezes) o resumo dos fatos é o que consta na narrativa da denúncia oferecida pelo Ministério Público.

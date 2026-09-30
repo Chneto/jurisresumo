@@ -895,34 +895,129 @@
       return idNum % 1000000;
     }
 
-    function extractSingleDefendantQualification(name, rawQual, denunciaText) {
+    function extractSingleDefendantQualification(name, rawQual, denunciaText, ipText) {
       const nameClean = (name || '').trim();
       if (!nameClean) return '';
       const firstName = nameClean.split(' ')[0];
+      const esc = nameClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+      const qualBlockRegex = new RegExp('(?:^|\\n|[;.]\\s*)\\b(' + esc + '[\\s\\S]{1,1200}?)(?=(?:\\n\\s*(?:(?:[I|V|X]+\\)?\\s*)?(?:DOS\\s+FATOS|DA\\s+IMPUTA[CÇ][AÃ]O|DOS\\s+PEDIDOS|DO\\s+PEDIDO|ROL\\s+DE\\s+TESTEMUNHAS|DA\\s+QUALIFICA[CÇ][AÃ]O)|Vem\\s+perante|pela\\s+pr[aá]tica|oferecer\\s+den[uú]ncia)|\\n\\s*(?:\\d+[\\.\\)]\\s*)?[A-ZÁÉÍÓÚ]{3,}(?:\\s+[A-ZÁÉÍÓÚ]{2,}){1,4},?\\s*(?:brasileir|solteir|casad|divorciad|nascid|filh|portador|residente|rg\\b|cpf\\b|vulgo)|$))', 'i');
+
+      let chunk = '';
       if (rawQual) {
-        const esc = nameClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const rx = new RegExp('(?:^|\\n|[;.]\\s*)\\b(' + esc + '[^\\n;]+(?:[;,]\\s*(?:brasileir[oa]|filh[oa]|cpf|rg|nascid|natural|residente|conhecido)[^\\n;]*)*)', 'i');
-        const m = rawQual.match(rx);
-        if (m) {
-          const chunk = m[1].replace(/^[;.\s]+|[;.\s]+$/g, '');
-          if (/cpf|rg|filho|filha|nascid|natural|residente/i.test(chunk)) return chunk;
+        const m = rawQual.match(qualBlockRegex);
+        if (m) chunk = m[1].trim();
+      }
+      if (!chunk && denunciaText) {
+        const m2 = denunciaText.match(qualBlockRegex);
+        if (m2) chunk = m2[1].trim();
+      }
+
+      const hasFiliacao = /\bfilh[oa]\b|\bm[aã]e\b|\bpai\b|\bgenitor/i.test(chunk);
+      const hasRg = /\bRG\b|\b\d{6,}\b/i.test(chunk);
+      const hasCpf = /\bCPF\b|\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/i.test(chunk);
+      const isGeneric = !chunk || /qualificad/i.test(chunk);
+
+      if (ipText && (isGeneric || !(hasFiliacao && hasRg && hasCpf))) {
+        const ipRegex = new RegExp('(' + esc + '[\\s\\S]{1,900}?)(?=(?:\\n\\n|\\n\\s*(?:[A-ZÁÉÍÓÚ]{3,}|\\d+[\\.\\)]|\\n)|$))', 'i');
+        const m3 = ipText.match(ipRegex);
+        if (m3 && /cpf|rg|filho|filha|nascid|natural|brasileir/i.test(m3[1])) {
+          const ipChunk = m3[1].trim();
+          if (isGeneric || !chunk) {
+            chunk = ipChunk;
+          } else {
+            const supplements = [];
+            if (!hasFiliacao) {
+              const filM = ipChunk.match(/(\bfilh[oa]\s+de\s+[A-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ\s]{3,80}?)(?=[,;\n.]|$)/i);
+              if (filM) supplements.push(filM[1].trim());
+            }
+            if (!hasRg) {
+              const rgM = ipChunk.match(/(\bRG\s*(?:n[º°\.]?)?\s*[\d\.-]+(?:\s*[A-Z/]+)?)/i);
+              if (rgM) supplements.push(rgM[1].trim());
+            }
+            if (!hasCpf) {
+              const cpfM = ipChunk.match(/(\bCPF\s*(?:n[º°\.]?)?\s*[\d\.-]+)/i);
+              if (cpfM) supplements.push(cpfM[1].trim());
+            }
+            if (supplements.length > 0) {
+              chunk = `${chunk}, ${supplements.join(', ')}`;
+            }
+          }
         }
       }
 
-      if (denunciaText) {
-        const esc = nameClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const rx2 = new RegExp('\\b(' + esc + '[^\\n;]+(?:filh[oa]|cpf|rg|nascid|natural|residente)[^\\n;]+(?:;\\s*|\\.\\s*|\\n\\s*))', 'i');
-        const m2 = denunciaText.match(rx2);
-        if (m2) return m2[1].replace(/^[;.\s]+|[;.\s]+$/g, '');
+      if (chunk) {
+        return chunk.replace(/^[;.\s]+|[;.\s]+$/g, '').replace(/[ \t]+/g, ' ');
       }
 
       if (rawQual && nameClean.length > 5 && rawQual.toLowerCase().includes(firstName.toLowerCase())) {
-        const clean = rawQual.replace(/^[;.\s]+|[;.\s]+$/g, '');
+        const clean = rawQual.replace(/^[;.\s]+|[;.\s]+$/g, '').replace(/[ \t]+/g, ' ');
         if (/cpf|rg|filho|nascid|brasileir/i.test(clean)) return clean;
       }
 
       return `${nameClean.toUpperCase()}, qualificação nos autos.`;
+    }
+
+    function extractImputationFromDenuncia(denunciaText) {
+      if (!denunciaText) return 'Artigo de lei a ser apurado';
+
+      let imputationText = '';
+      const impMatch = denunciaText.match(/(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)/i);
+      if (impMatch) {
+        imputationText = cleanPjeText(impMatch[1]).replace(/\s+/g, ' ').trim();
+      } else {
+        const crimeMatch = denunciaText.match(/(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao])\s*([^\n;]+)/i);
+        if (crimeMatch) {
+          imputationText = cleanPjeText(crimeMatch[1]).replace(/\s+/g, ' ').trim();
+        }
+      }
+
+      const artMatches = [];
+      const artRx = /\bart(?:igo)?s?\b\.?\s*\d+(?:-[A-Z])?\b(?:\s*,\s*§\s*\d+[º°]?(?:-[A-Z])?|\s+§\s*\d+[º°]?(?:-[A-Z])?)*(?:\s*,\s*(?:inciso\s+)?[I|V|X|L|C|D|M]+\b|\s+(?:inciso\s+)?[I|V|X|L|C|D|M]+\b)*(?:\s*,\s*al[íi]nea\s+[a-z]|\s+al[íi]nea\s+[a-z])*(?:\s+(?:c\/c|comb|combinado\s+com)\s+art(?:igo)?s?\b\.?\s*\d+[^,.;\n]*)*(?:\s+(?:do\s+CP|do\s+C[oó]digo\s+Penal|da\s+Lei[^\n,.;]*))?/gi;
+      let m;
+      while ((m = artRx.exec(denunciaText)) !== null) {
+        const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
+        if (c && !artMatches.includes(c)) artMatches.push(c);
+      }
+      const lawRx = /\b(?:Lei\s+(?:n[º°\.]?\s*)?[\d\./]+|ECA|Lei\s+Maria\s+da\s+Penha|Estatuto\s+do\s+Desarmamento|Lei\s+de\s+Drogas)(?:\s*\([^\)]+\))?(?:\s*,\s*art(?:igo)?\.?\s*\d+[^;.\n]*)?/gi;
+      while ((m = lawRx.exec(denunciaText)) !== null) {
+        const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
+        if (c && !artMatches.includes(c)) artMatches.push(c);
+      }
+      const concursoRx = /\bart[s]?\.?\s*(?:69|70|71)[^\n,.;]*(?:do\s+CP|do\s+C[oó]digo\s+Penal)?/gi;
+      while ((m = concursoRx.exec(denunciaText)) !== null) {
+        const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
+        if (c && !artMatches.includes(c)) artMatches.push(c);
+      }
+
+      if (imputationText) {
+        const missing = [];
+        for (let art of artMatches) {
+          const nums = art.match(/\d+/g);
+          if (nums) {
+            const numFound = nums.some(n => imputationText.includes(n));
+            const hasParagraphInArt = art.includes('§');
+            const hasParagraphInImp = imputationText.includes('§');
+            const hasEcaInArt = art.includes('244') || art.includes('ECA');
+            const hasEcaInImp = imputationText.includes('244') || imputationText.includes('ECA');
+            if (!numFound || (hasParagraphInArt && !hasParagraphInImp) || (hasEcaInArt && !hasEcaInImp)) {
+              if (!imputationText.includes(art)) missing.push(art);
+            }
+          }
+        }
+        if (missing.length > 0) {
+          const uniqueMissing = Array.from(new Set(missing));
+          imputationText += ' c/c ' + uniqueMissing.join(' c/c ');
+        }
+        return imputationText;
+      }
+
+      if (artMatches.length > 0) {
+        const unique = Array.from(new Set(artMatches));
+        return `Imputação penal (${unique.join(', ')})`;
+      }
+
+      return 'Artigo de lei a ser apurado';
     }
 
     function recordFeedbackLearned(action, text) {
@@ -1452,10 +1547,16 @@
         };
       });
 
+      let ipText = '';
+      const ipDocs = pjeCatalog.filter(d => /inquérito|inquerito|flagrante|interrogat|qualifica|boletim/i.test(`${d.doc_name} ${d.doc_type}`));
+      for (let ipD of ipDocs.slice(0, 3)) {
+        ipText += (ipD.text || '') + '\n';
+      }
+
       const defendantQuals = [];
       for (let name of defendantNames) {
         if (isStateOrgan(name)) continue;
-        const dQual = extractSingleDefendantQualification(name, qualText, denunciaText);
+        const dQual = extractSingleDefendantQualification(name, qualText, denunciaText, ipText);
         defendantQuals.push(dQual);
       }
       if (defendantQuals.length > 0) {
@@ -1465,19 +1566,7 @@
       }
 
       // 10. Imputation
-      let imputationText = 'Artigo de lei a ser apurado';
-      const impMatch = denunciaText.match(/(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)/i);
-      if (impMatch) {
-        imputationText = cleanPjeText(impMatch[1]).replace(/\s+/g, ' ').trim();
-      } else {
-        const crimeMatch = denunciaText.match(/(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+penas\s+d[ao]|incurso\s+n[ao]s?\s+penas\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+penas\s+d[ao])\s*([^\n.]+?(?:art(?:igo)?\.?\s*\d+[^\n.]+))/i);
-        if (crimeMatch) {
-          imputationText = cleanPjeText(crimeMatch[1]).replace(/\s+/g, ' ').trim();
-        } else {
-          const artMatch = denunciaText.match(/(art(?:igo)?\.?\s*\d+[^.\n;]+(?:Código Penal|CP|Lei[^.\n;]+)?)/i);
-          if (artMatch) imputationText = `Imputação penal (${artMatch[1].trim()})`;
-        }
-      }
+      let imputationText = extractImputationFromDenuncia(denunciaText);
 
       // 11. Facts Extraction & ANPP Structure
       let factsSummary = '';
