@@ -323,13 +323,24 @@ def annotate_imputation_text(imputation_text: str) -> str:
 
     text = imputation_text.strip()
 
-    # Regex para capturar artigos penais com suas especificações
-    # Ex: "Art. 155, § 4º, I e IV", "artigo 157, § 2º, II", "art. 33, caput", "art. 244-B", "Art. 2º"
+    # Regex para capturar artigos penais com suas especificações completas (parágrafos, incisos, alíneas)
+    # Ex: "Art. 155, § 4º, I e IV", "artigo 157, § 2º, II e § 2º-A, I", "art. 33, caput", "art. 244-B", "Art. 2º"
+    law_tail_re = (
+        r"([,\s]+(?:(?:ambos|todos)\s+)?(?:"
+        r"do\s+CP|do\s+C[oó]digo\s+Penal|"
+        r"da\s+Lei\s+(?:n[º°\.]?\s*)?[\d\.]+(?:/\d+)?|"
+        r"do\s+ECA(?:\s*\([^)]*\))?|do\s+CTB(?:\s*\([^)]*\))?|"
+        r"do\s+Estatuto\s+d[oa]\s+[A-Za-zÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ]+(?:\s*\([^)]*\))?|"
+        r"da\s+Lei\s+Maria\s+da\s+Penha|"
+        r"da\s+Lei\s+de\s+[A-Za-zÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ]+"
+        r"))?"
+    )
+
     article_pattern = re.compile(
         r"(\b(?:art(?:igo)?s?\.?)\s*(\d+(?:-[A-Za-z])?)[º°]?"
-        r"(?:[\s,]+(?:caput|§\s*\d+[º°]?(?:-[A-Za-z])?|incisos?\s+[IVXLCDM]+|\b(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\b|\be\s+(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\b|al[íi]neas?\s+[a-z]))*)"
+        r"(?:[\s,]+(?:caput|§§?\s*\d+[º°]?(?:-[A-Za-z])?|incisos?\s+[IVXLCDM]+|\b(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\b|\be\s+(?:§§?\s*\d+[º°]?(?:-[A-Za-z])?|incisos?\s+[IVXLCDM]+|\b(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\b)|(?:a|ao)\s+(?:§§?\s*\d+[º°]?(?:-[A-Za-z])?|incisos?\s+[IVXLCDM]+|\b(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\b)|al[íi]neas?\s+[a-z]|letras?\s+[a-z]))*)"
         r"(\s*\[[^\]]+\])?"
-        r"([,\s]*(?:do\s+CP|do\s+C[oó]digo\s+Penal|da\s+Lei[^\n,;]*|do\s+ECA[^\n,;]*|do\s+CTB[^\n,;]*)?)",
+        + law_tail_re,
         re.IGNORECASE,
     )
 
@@ -346,14 +357,16 @@ def annotate_imputation_text(imputation_text: str) -> str:
         nomen_juris = get_crime_nomen_juris(art_num, local_context) or get_crime_nomen_juris(art_num, f"{local_context} {text}")
 
         if nomen_juris:
-            cleaned_tail = law_tail.rstrip()
-            if cleaned_tail.startswith(","):
-                space_after = " " if re.match(r"^,\s+", law_tail) else ""
-                rest = cleaned_tail.lstrip(", ")
-                tail_str = f", {rest}" if rest else "," + space_after
-                return f"{full_art_clause} [{nomen_juris}]{tail_str}"
-            elif cleaned_tail.strip():
-                return f"{full_art_clause} [{nomen_juris}] {cleaned_tail.strip()}"
+            if law_tail:
+                cleaned_tail = law_tail.rstrip()
+                if cleaned_tail.startswith(","):
+                    rest = cleaned_tail.lstrip(", ")
+                    tail_str = f", {rest}" if rest else ", "
+                    return f"{full_art_clause} [{nomen_juris}]{tail_str}"
+                elif cleaned_tail.strip():
+                    return f"{full_art_clause} [{nomen_juris}] {cleaned_tail.strip()}"
+                else:
+                    return f"{full_art_clause} [{nomen_juris}]"
             else:
                 return f"{full_art_clause} [{nomen_juris}]"
 
@@ -362,3 +375,4 @@ def annotate_imputation_text(imputation_text: str) -> str:
     annotated = article_pattern.sub(replacer, text)
     annotated = re.sub(r"[ \t]+", " ", annotated).strip()
     return annotated
+

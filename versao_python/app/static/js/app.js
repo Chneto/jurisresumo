@@ -581,7 +581,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (activeData.facts_summary) {
       html += '<div class="doc-section-header"><span class="hl-yellow">RESUMO DOS FATOS</span></div>';
       if (activeData.special_notes) {
-        html += `<div class="doc-obs">${activeData.special_notes}</div>`;
+        const linkedObs = activeData.special_notes.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
+        html += `<div class="doc-obs">${linkedObs}</div>`;
       }
       const paras = activeData.facts_summary.split('\n\n').filter((p) => p.trim());
       paras.forEach((p) => {

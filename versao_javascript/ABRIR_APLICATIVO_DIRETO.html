@@ -1080,21 +1080,39 @@
       if (!imputationText || !imputationText.trim()) return imputationText || '';
       let text = imputationText.trim();
 
-      const articlePattern = /(\b(?:art(?:igo)?s?\.?)\s*(\d+(?:-[A-Za-z])?)[º°]?(?:[\s,]+(?:caput|§\s*\d+[º°]?(?:-[A-Za-z])?|incisos?\s+[IVXLCDM]+|\b(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\b|\be\s+(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\b|al[íi]neas?\s+[a-z]))*)(\s*\[[^\]]+\])?([,\s]*(?:do\s+CP|do\s+C[oó]digo\s+Penal|da\s+Lei[^\n,;]*|do\s+ECA[^\n,;]*|do\s+CTB[^\n,;]*)?)/gi;
+      const lawTailRe = "([,\\s]+(?:(?:ambos|todos)\\s+)?(?:" +
+        "do\\s+CP|do\\s+C[oó]digo\\s+Penal|" +
+        "da\\s+Lei\\s+(?:n[º°\\.]?\\s*)?[\\d\\.]+(?:/\\d+)?|" +
+        "do\\s+ECA(?:\\s*\\([^)]*\\))?|do\\s+CTB(?:\\s*\\([^)]*\\))?|" +
+        "do\\s+Estatuto\\s+d[oa]\\s+[A-Za-zÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ]+(?:\\s*\\([^)]*\\))?|" +
+        "da\\s+Lei\\s+Maria\\s+da\\s+Penha|" +
+        "da\\s+Lei\\s+de\\s+[A-Za-zÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ]+" +
+        "))?";
+
+      const articlePattern = new RegExp(
+        "(\\b(?:art(?:igo)?s?\\.?)\\s*(\\d+(?:-[A-Za-z])?)[º°]?" +
+        "(?:[\\s,]+(?:caput|§§?\\s*\\d+[º°]?(?:-[A-Za-z])?|incisos?\\s+[IVXLCDM]+|\\b(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\\b|\\be\\s+(?:§§?\\s*\\d+[º°]?(?:-[A-Za-z])?|incisos?\\s+[IVXLCDM]+|\\b(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\\b)|(?:a|ao)\\s+(?:§§?\\s*\\d+[º°]?(?:-[A-Za-z])?|incisos?\\s+[IVXLCDM]+|\\b(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\\b)|al[íi]neas?\\s+[a-z]|letras?\\s+[a-z]))*)" +
+        "(\\s*\\[[^\\]]+\\])?" +
+        lawTailRe,
+        "gi"
+      );
 
       const res = text.replace(articlePattern, (match, fullClause, artNum, existingBracket, lawTail) => {
-        if (existingBracket) return `${fullClause}${existingBracket}${lawTail}`;
+        if (existingBracket) return `${fullClause}${existingBracket}${lawTail || ''}`;
         const localContext = `${fullClause} ${lawTail || ''}`.trim();
         const nomen = getCrimeNomenJuris(artNum, localContext) || getCrimeNomenJuris(artNum, `${localContext} ${text}`);
         if (nomen) {
-          const cleanedTail = (lawTail || '').replace(/\s+$/, '');
-          if (cleanedTail.startsWith(',')) {
-            const spaceAfter = /^,\s+/.test(lawTail) ? ' ' : '';
-            const rest = cleanedTail.replace(/^,\s*/, '');
-            const tailStr = rest ? `, ${rest}` : (',' + spaceAfter);
-            return `${fullClause} [${nomen}]${tailStr}`;
-          } else if (cleanedTail.trim()) {
-            return `${fullClause} [${nomen}] ${cleanedTail.trim()}`;
+          if (lawTail) {
+            const cleanedTail = lawTail.replace(/\s+$/, '');
+            if (cleanedTail.startsWith(',')) {
+              const rest = cleanedTail.replace(/^,\s*/, '');
+              const tailStr = rest ? `, ${rest}` : ', ';
+              return `${fullClause} [${nomen}]${tailStr}`;
+            } else if (cleanedTail.trim()) {
+              return `${fullClause} [${nomen}] ${cleanedTail.trim()}`;
+            } else {
+              return `${fullClause} [${nomen}]`;
+            }
           } else {
             return `${fullClause} [${nomen}]`;
           }
@@ -1102,6 +1120,15 @@
         return match;
       });
       return res.replace(/[ \t]+/g, ' ').trim();
+    }
+
+    function isProceduralOrConstJs(itemStr, ctx) {
+      const comb = `${itemStr} ${ctx}`.toLowerCase();
+      if (/\b(?:da\s+cf(?:[ /]88)?|da\s+constitui[cç][aã]o|do\s+cpp|do\s+c[oó]digo\s+de\s+processo\s+penal|processual\s+penal|processo\s+penal)\b/i.test(comb)) return true;
+      if (/\bart(?:igo)?s?\b\.?\s*(?:41|396(?:-[a-z])?|399|400|383|384)\b/i.test(itemStr)) {
+        if (!/\b(?:do\s+cp|do\s+c[oó]digo\s+penal)\b/i.test(comb)) return true;
+      }
+      return false;
     }
 
     function extractImputationFromDenuncia(denunciaText) {
@@ -1123,17 +1150,17 @@
       let m;
       while ((m = artRx.exec(denunciaText)) !== null) {
         const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
-        if (c && !artMatches.includes(c)) artMatches.push(c);
+        if (c && !artMatches.includes(c) && !isProceduralOrConstJs(c, denunciaText)) artMatches.push(c);
       }
       const lawRx = /\b(?:Lei\s+(?:n[º°\.]?\s*)?[\d\./]+|ECA|Lei\s+Maria\s+da\s+Penha|Estatuto\s+do\s+Desarmamento|Lei\s+de\s+Drogas)(?:\s*\([^\)]+\))?(?:\s*,\s*art(?:igo)?\.?\s*\d+[^;.\n]*)?/gi;
       while ((m = lawRx.exec(denunciaText)) !== null) {
         const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
-        if (c && !artMatches.includes(c)) artMatches.push(c);
+        if (c && !artMatches.includes(c) && !isProceduralOrConstJs(c, denunciaText)) artMatches.push(c);
       }
       const concursoRx = /\bart[s]?\.?\s*(?:69|70|71)[^\n,.;]*(?:do\s+CP|do\s+C[oó]digo\s+Penal)?/gi;
       while ((m = concursoRx.exec(denunciaText)) !== null) {
         const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
-        if (c && !artMatches.includes(c)) artMatches.push(c);
+        if (c && !artMatches.includes(c) && !isProceduralOrConstJs(c, denunciaText)) artMatches.push(c);
       }
 
       if (imputationText) {
@@ -1511,13 +1538,24 @@
         }
         return 'Denúncia oferecida pelo Ministério Público';
       }
-      if (nL.includes('decisão') || nL.includes('decisao')) {
-        if (ANPP_REVOCATION_REGEX.test(txtL)) {
+
+      // Revogação de ANPP ou PSCP em qualquer ato judicial decisório (Decisão, Despacho, Termo, Ata)
+      const hasAnppRev = ANPP_REVOCATION_REGEX.test(txtL);
+      const hasPscpRev = PSCP_REVOCATION_REGEX.test(txtL) || (txtL.includes('revoga') && (txtL.includes('suspensão') || txtL.includes('sursis')));
+
+      if (/decis|despacho|termo|ata|ato ordinat/i.test(nL)) {
+        if (hasAnppRev && hasPscpRev) {
+          return 'Decisão revogando o Acordo de Não Persecução Penal (ANPP) e a Suspensão Condicional do Processo (PSCP)';
+        }
+        if (hasAnppRev) {
           return 'Decisão revogando o Acordo de Não Persecução Penal (ANPP)';
         }
-        if (PSCP_REVOCATION_REGEX.test(txtL) || (txtL.includes('revoga') && (txtL.includes('suspensão') || txtL.includes('sursis')))) {
+        if (hasPscpRev) {
           return 'Decisão revogando a Suspensão Condicional do Processo (PSCP)';
         }
+      }
+
+      if (nL.includes('decisão') || nL.includes('decisao')) {
         if (txtL.includes('recebo a denúncia') || txtL.includes('recebida a denúncia') || txtL.includes('recebimento da denúncia')) {
           if (txtL.includes('pauta') || txtL.includes('designo')) {
             return 'Decisão recebendo a denúncia e designando audiência';
@@ -1533,12 +1571,6 @@
         return 'Decisão interlocutória';
       }
       if (nL.includes('despacho')) {
-        if (ANPP_REVOCATION_REGEX.test(txtL)) {
-          return 'Decisão revogando o Acordo de Não Persecução Penal (ANPP)';
-        }
-        if (PSCP_REVOCATION_REGEX.test(txtL)) {
-          return 'Decisão revogando a Suspensão Condicional do Processo (PSCP)';
-        }
         if (txtL.includes('pauta') || txtL.includes('designo') || txtL.includes('instrução')) {
           return 'Despacho incluindo o feito em pauta de audiência de instrução e julgamento';
         }
@@ -2755,7 +2787,8 @@
       if (activeData.facts_summary) {
         html += '<div class="doc-section-header"><span class="hl-yellow">RESUMO DOS FATOS</span></div>';
         if (activeData.special_notes) {
-          html += `<div class="doc-obs">${activeData.special_notes}</div>`;
+          const linkedObs = activeData.special_notes.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
+          html += `<div class="doc-obs">${linkedObs}</div>`;
         }
         activeData.facts_summary.split('\n\n').filter(p=>p.trim()).forEach(p => {
           const linkedP = p.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
@@ -2980,7 +3013,7 @@
         if (activeData.facts_summary) {
           bodyXml += pXml(runXml("RESUMO DOS FATOS", { bold: true, highlight: "yellow" }));
           if (activeData.special_notes) {
-            bodyXml += pXml(runXml(activeData.special_notes, { italic: true }), { firstLine: 720 });
+            bodyXml += pXml(runsWithIdLinks(activeData.special_notes, { italic: true }), { firstLine: 720 });
           }
           const fParas = activeData.facts_summary.split('\n\n').filter(p=>p.trim());
           fParas.forEach(p => {

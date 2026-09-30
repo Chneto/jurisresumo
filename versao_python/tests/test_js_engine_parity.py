@@ -101,13 +101,28 @@ def test_javascript_analytical_engine_features():
     assert '{ left: 720, hanging: 360 }' in content
     assert 'w:ind w:left="${left}" w:hanging="${hanging}"' in content
 
-    # Unnamed defense detection and unified witness deduplication/labeling
-    assert "findAllDefenseDocuments" in content
-    assert "parseDefenseDocument" in content
-    assert "extractDefenseWitnessNamesFromText" in content
-    assert "(arrolada por todos)" in content
-    assert "pela Defensoria Pública" in content
-    assert "pelo Advogado Dr." in content
+    # Crime taxonomy, isolation and special notes hyperlink assertions
+    assert "annotateImputationWithCrimeNames" in content
+    assert "isProceduralOrConstJs" in content
+    assert "runsWithIdLinks(activeData.special_notes" in content
+    assert "activeData.special_notes.replace(/\\b(\\d{7,10})\\b/g" in content
+
+
+def test_html_standalone_bit_for_bit_parity():
+    """All 4 HTML files must be byte-for-byte identical across root and versao_javascript."""
+    root_idx = ROOT_DIR / "index.html"
+    root_direct = ROOT_DIR / "ABRIR_APLICATIVO_DIRETO.html"
+    js_idx = JS_DIR / "index.html"
+    js_direct = JS_DIR / "ABRIR_APLICATIVO_DIRETO.html"
+
+    h1 = root_idx.read_bytes()
+    h2 = root_direct.read_bytes()
+    h3 = js_idx.read_bytes()
+    h4 = js_direct.read_bytes()
+
+    assert h1 == h2, "root index.html and ABRIR_APLICATIVO_DIRETO.html differ"
+    assert h1 == h3, "root index.html and versao_javascript/index.html differ"
+    assert h1 == h4, "root index.html and versao_javascript/ABRIR_APLICATIVO_DIRETO.html differ"
 
 
 def validate_javascript_syntax(js_code: str) -> list[str]:

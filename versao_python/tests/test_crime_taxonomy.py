@@ -11,6 +11,7 @@ from app.core.crime_taxonomy import (
     get_crime_nomen_juris,
     annotate_imputation_text,
 )
+from app.core.jev_decision_engine import is_procedural_or_constitutional
 
 
 def test_taxonomy_theft_furto():
@@ -117,4 +118,27 @@ def test_taxonomy_no_false_positive_roman_do_cp():
     assert "[furto qualificado]" in res
     assert "do CP" in res
     assert not res.endswith(" o CP")
+
+
+def test_taxonomy_chaining_and_concurso():
+    """Tests paragraph chaining with 'e' and multi-crime conjunctions."""
+    t1 = "Art. 155 e art. 180 do CP"
+    assert annotate_imputation_text(t1) == "Art. 155 [furto] e art. 180 [receptação] do CP"
+
+    t2 = "Art. 157, § 2º, II e § 2º-A, I c/c Art. 14, II e Art. 29 do CP"
+    assert annotate_imputation_text(t2) == "Art. 157, § 2º, II e § 2º-A, I [roubo majorado] c/c Art. 14, II [tentativa] e Art. 29 [concurso de pessoas] do CP"
+
+    t3 = "Art. 33 c/c Art. 35 da Lei 11.343/06"
+    assert annotate_imputation_text(t3) == "Art. 33 [tráfico de drogas] c/c Art. 35 [associação para o tráfico] da Lei 11.343/06"
+
+
+def test_procedural_and_constitutional_rejection():
+    """Tests that procedural and constitutional articles are recognized as non-penal."""
+    assert is_procedural_or_constitutional("art. 129, I da CF", "com fulcro no art. 129, I da CF/88") is True
+    assert is_procedural_or_constitutional("art. 41 do CPP", "na forma do art. 41 do Código de Processo Penal") is True
+    assert is_procedural_or_constitutional("art. 396 do CPP", "citação nos termos do art. 396 do CPP") is True
+    assert is_procedural_or_constitutional("art. 399 do CPP", "recebida a denúncia na forma do art. 399 do CPP") is True
+    assert is_procedural_or_constitutional("art. 129 do CP", "imputado art. 129 do Código Penal") is False
+    assert is_procedural_or_constitutional("art. 155 do CP", "imputado art. 155 do CP") is False
+
 

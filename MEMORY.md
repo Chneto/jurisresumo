@@ -2,7 +2,7 @@
 
 > **Documento Vivo de Memória e Conhecimento Técnico**  
 > **Finalidade:** Orientar desenvolvedores e subagentes em futuras modificações, manutenções, refatorações e auditorias da aplicação.  
-> **Última Atualização:** 30/09/26 (Versão 2.9 — Extração Rígida e Literal de Qualificação e Imputação Penal Ampla + Fallback no Inquérito Policial + Auditoria Determinística no JEV)
+> **Última Atualização:** 30/09/26 (Versão 3.2 — Taxonomia Penal com Colchetes + Revogação de ANPP/PSCP como AIJ + Isolamento Estrito da Denúncia + 228 Pytests)
 > **Autor e Desenvolvedor:** FChNeto
 
 ---
@@ -754,4 +754,76 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
   - Checkpoint de recuperação salvo: `20260930_100323_v2_9-qualif-imputacao-rigida`.
   - Sincronização e publicação no GitHub via commit `a1d0571`.
 
+---
+
+## 22. Versão 3.1 — Respostas à Acusação Inominadas com Paridade Total Python/JS, Deduplicação de Testemunhas e Nova Branch de Release (30/09/26)
+
+### Ato 1: Diagnóstico e Correção de Lacunas de Paridade no Motor JavaScript
+* **Diagnóstico:** Identificado que a busca profunda de petições inominadas e a rotulagem composta de testemunhas existiam apenas no backend Python, sem os métodos equivalentes na versão portátil HTML/JS. Além disso, foram corrigidos bugs sutis de duplicação de prefixos em patronos particulares (`Dr. Dr.`) e pequenos desvios gramaticais.
+* **Solução:** Transposição de 100% da lógica para JavaScript (`extractDefenseWitnessNamesFromText`, `parseDefenseDocument`, `findAllDefenseDocuments` e reestruturação do `analyzePjeRecords`) em todas as distribuições HTML (`index.html`, `versao_javascript/index.html`, `ABRIR_APLICATIVO_DIRETO.html`).
+
+### Ato 2: Varredura de Petições Inominadas da Defesa
+* **Ação:** Quando a defesa protocola a peça sob títulos genéricos no PJe (*"Petição"*, *"Manifestação"*, *"Contestação"*, *"Documento Diverso"*), o motor varre o corpo do texto identificando o teor do art. 396/396-A do CPP, pedidos de absolvição sumária, preliminares e rol de testemunhas, registrando no Histórico Processual: data, ID, patrono (Defensoria ou Advogado com OAB), réu defendido e síntese dos pedidos.
+
+### Ato 3: Deduplicação e Rotulagem Composta do Rol de Testemunhas
+* **Ação:** Testemunhas arroladas concomitantemente pela acusação e pela defesa são consolidadas em uma única entrada numerada, informando entre parênteses quem a arrolou:
+  - `(arrolada pelo Ministério Público e pela Defensoria Pública)`
+  - `(arrolada pelo Ministério Público e pelo Advogado Dr. [Nome], em defesa de [Nome do Réu])`
+  - `(arrolada por todos)` (caso acusação e todas as defesas tenham arrolado a mesma testemunha).
+
+### Ato 4: Cobertura de 211 Testes Automatizados no Pytest
+* **Ação:** Suíte de testes ampliada com `tests/test_unnamed_defense_and_witness_merge.py` e asserções estritas de paridade física e sintática em `tests/test_js_engine_parity.py`.
+* **Resultado:** **211 testes executados: 169 aprovados com 100% de sucesso e 42 skipped com segurança em ambiente sanitizado LGPD**.
+
+### Ato 5: Nova Branch de Versionamento no GitHub (`release/v3.1`)
+* **Ação:** Criada a branch dedicada `release/v3.1` no repositório oficial do GitHub ([https://github.com/Chneto/jurisresumo/tree/release/v3.1](https://github.com/Chneto/jurisresumo/tree/release/v3.1)), garantindo rastreabilidade e rollback imediato caso necessário.
+* **Checkpoint de Recovery:** `20260930_162330_v3_1_js_parity_and_grammar_refined`.
+
+---
+
+## 23. Versão 3.2 — Taxonomia Penal com Colchetes, Revogação de ANPP/PSCP como AIJ e Isolamento Estrito de Peças no Motor JS (30/09/26)
+
+### Ato 1: Taxonomia Penal Canônica com Nomen Juris entre Colchetes
+* **Necessidade:** O Magistrado necessita que toda e qualquer menção a artigos de lei venha acompanhada do *nomen juris* exato entre colchetes logo após o dispositivo, facilitando a rápida cognição durante a audiência.
+* **Implementação:**
+  - Criado o módulo [`crime_taxonomy.py`](app/core/crime_taxonomy.py) (e réplica em `versao_python/app/core/crime_taxonomy.py`) com mapeamento exato de mais de 25 tipos penais do CP e legislação extravagante (Lei de Drogas 11.343/06, Estatuto do Desarmamento 10.826/03, ECA 8.069/90, CTB 9.503/97, Maria da Penha 11.340/06, Organização Criminosa 12.850/13, Lavagem 9.613/98).
+  - Exemplos gerados: `Art. 155, § 4º, I e IV [furto qualificado], do CP`, `Art. 157, § 2º, II [roubo majorado]`, `Art. 33, caput [tráfico de drogas] da Lei 11.343/06`, `Art. 14, II [tentativa]`, `Art. 244-B [corrupção de menores] do ECA`.
+  - Tratamento idêntico espelhado no motor JavaScript autônomo (`CRIME_TAXONOMY` e `annotateImputationWithCrimeNames()`).
+  - Suporte a ordinais (`Art. 2º`, `Art. 1º`), concatenações múltiplas com `c/c`, preservação estrita de espaçamento de vírgulas e garantia de idempotência sem duplicar colchetes existentes.
+
+### Ato 2: Revogação de ANPP ou PSCP com Forçamento Obrigatório de AIJ (Retomada da Marcha Penal)
+* **Regra Processual Penal:** Se houver nos autos decisão que revogue ou rescinda o Acordo de Não Persecução Penal (ANPP) ou a Suspensão Condicional do Processo (PSCP - art. 89 da Lei 9.099/95), o processo **OBRIGATORIAMENTE** deve ser classificado como **AIJ** (audiência de instrução e julgamento), retomando-se a marcha penal regular.
+* **Implementação:**
+  - Adicionadas expressões regulares estritas de detecção de revogação/rescisão/descumprimento (`ANPP_REVOCATION_REGEX` e `PSCP_REVOCATION_REGEX`).
+  - No `JEVDecisionEngine` (`ClassificationHierarchyCPP`), no `offline_engine.py` e em `index.html`: o Check 0 confere prioridade absoluta à revogação, sobrepondo-se a qualquer menção secundária a ANPP ou Sursis.
+  - Registro obrigatório no Histórico Processual: `DD/MM/AA: Decisão revogando o Acordo de Não Persecução Penal (ANPP) (ID [número])` ou `(PSCP)`.
+  - Injeção automática no Resumo dos Fatos de nota especial (`special_notes`): `Obs.: Audiência de Instrução e Julgamento designada após decisão que revogou o Acordo de Não Persecução Penal (ANPP) (ID [número]), com a retomada do curso regular da ação penal.`
+  - Renderização da nota em itálico na visualização web e no documento OpenXML DOCX.
+
+### Ato 3: Correção de Scripts Estáticos Locais no Python
+* **Problema:** A aplicação web Python retornava erro 404 ao tentar carregar `http://localhost:49265/vendor/pdf.worker.min.js`.
+* **Solução:** Copiados os arquivos de biblioteca vendor (`pdf.min.js`, `pdf.worker.min.js`, `jszip.min.js`) para `app/static/vendor/` e `versao_python/app/static/vendor/`, garantindo 100% de autonomia offline sem requisições externas ou falhas de carregamento.
+
+### Ato 4: Correção e Blindagem do Motor JavaScript Autônomo
+* **Causa Raiz de Dados Incorretos no JS:**
+  1. A captura do carimbo de rodapé marginal (`Num. ID - Pág. P`) pegava o primeiro ID citado no corpo da página em vez do rodapé inferior. Corrigido com `matchAll()` selecionando o último carimbo.
+  2. Documentos listados no TOC que não possuíam carimbo em suas páginas (ou de 1 página) ficavam com `start_page: 0`, gerando texto vazio. Implementada interpolação de intervalo de páginas baseada no documento anterior e seguinte do catálogo.
+  3. `denunciaText` caía em fallback direto para `fullText` quando o documento não era localizado com precisão, poluindo Fatos e Imputação com inquéritos, boletins e certidões. Implementado isolamento estrito da Denúncia com refluxo de hífens entre quebras de linha (*hyphenated line reflow*).
+
+### Ato 5: Expansão da Suíte de Testes para 228 Testes no Pytest
+* **Novas Suítes de Testes:**
+  - `tests/test_crime_taxonomy.py`: 12 testes unitários e de integração validando toda a matriz de crimes, legislação especial, c/c e idempotência.
+  - `tests/test_anpp_pscp_revocation.py`: 5 testes de integração validando hierarquia JEV, rotulagem no histórico, geração de `special_notes` e renderização no DOCX.
+* **Resultado:** **228 testes no Pytest: 186 aprovados com 100% de sucesso e 42 skipped (workloads/mocks sanitizados)**.
+* **Checkpoint de Recovery:** `20260930_172857_v3_2_taxonomia_e_revogacao_anpp`.
+
+### Ato 6: Refinamento de Regex Chained, Isolamento Constitucional/Processual, Hiperlinks PJe em special_notes e Suíte Expandida para 232 Testes (30/09/26)
+* **Correções e Refinamentos:**
+  1. **Regex de Taxonomia Chained e Law Tail:** Corrigido o `article_pattern` em Python e JavaScript para suportar encadeamento de parágrafos/incisos com conjunção 'e' (`e § 2º-A, I`) e captura de cauda não-gulosa, eliminando problemas de engolimento de espaços (ex.: `[furto]e` -> `[furto] e`) e posicionamento indevido de colchetes antes de qualificadoras compostas.
+  2. **Isolamento de Normas Constitucionais e Processuais:** Implementado `is_procedural_or_constitutional()` (Python) e `isProceduralOrConstJs()` (JavaScript), impedindo que artigos de competência ou rito (`art. 129, I da CF`, `art. 41 do CPP`, `art. 396 do CPP`) sejam interpretados erroneamente como imputações penais (ex.: `[lesão corporal]`).
+  3. **Revogação de ANPP/PSCP em Qualquer Ato Judicial:** Expandida a classificação de revogação de ANPP e PSCP para abranger despachos, termos e atas, garantindo a classificação de AIJ mesmo quando lavrada sob o rótulo formal de "Despacho".
+  4. **Hiperlinks PJe Clicáveis em special_notes:** Tanto no preview HTML ao vivo quanto no exportador OpenXML DOCX (Python `docx_generator.py` e JS DOCX builder), números de ID presentes em `special_notes` são automaticamente envolvidos em links PJe clicáveis em azul sublinhado com estilo itálico preservado.
+  5. **Paridade Física e Bit-for-Bit dos 4 Arquivos HTML:** Validada paridade exata com mesmo hash SHA-256 entre `index.html`, `ABRIR_APLICATIVO_DIRETO.html`, `versao_javascript/index.html` e `versao_javascript/ABRIR_APLICATIVO_DIRETO.html`.
+  6. **Expansão da Suíte Pytest para 232 Testes:** 190 aprovados com 100% de sucesso e 42 skipped (sanitização LGPD).
+* **Checkpoint de Recovery:** `20260930_175228_v3_2_taxonomia_e_revogacao_anpp_final`.
 

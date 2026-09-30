@@ -105,3 +105,19 @@ def test_special_notes_in_facts_and_docx():
         assert "99887766" in doc_xml
         assert "RESUMO DOS FATOS" in doc_xml
         assert "HISTÓRICO PROCESSUAL" in doc_xml
+        assert "<w:hyperlink" in doc_xml
+        rels_xml = z.read("word/_rels/document.xml.rels").decode("utf-8")
+        assert "idBin=99887766" in rels_xml
+
+
+def test_offline_engine_summarize_history_anpp_revocation_in_despacho():
+    """_summarize_history_act must detect ANPP revocation even if document is titled 'Despacho' or 'Termo'."""
+    engine = OfflineExtractionEngine()
+    doc = pymupdf.open()
+    page = doc.new_page()
+    page.insert_text((50, 50), "Diante do inadimplemento injustificado, revogo o acordo de não persecução penal e designo audiência.")
+    p_doc = PJeDocument(doc_id="789", date_str="12/03/2026", doc_name="Despacho", doc_type="Despacho", start_page=1, end_page=1)
+
+    desc = engine._summarize_history_act(p_doc, doc)
+    assert desc == "Decisão revogando o Acordo de Não Persecução Penal (ANPP)"
+

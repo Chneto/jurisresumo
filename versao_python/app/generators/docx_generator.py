@@ -106,6 +106,7 @@ def _add_hyperlink(
     color: str = "0000ff",
     underline: bool = True,
     bold: bool = False,
+    italic: bool = False,
     highlight: Optional[str] = None,
     font_name: str = "Verdana",
     font_size_pt: int = 12,
@@ -132,6 +133,8 @@ def _add_hyperlink(
         rPr.append(parse_xml(f'<w:u {nsdecls("w")} w:val="single"/>'))
     if bold:
         rPr.append(parse_xml(f'<w:b {nsdecls("w")}/>'))
+    if italic:
+        rPr.append(parse_xml(f'<w:i {nsdecls("w")}/>'))
     if highlight:
         hl_val = "yellow" if "yellow" in highlight.lower() else "green"
         rPr.append(parse_xml(f'<w:highlight {nsdecls("w")} w:val="{hl_val}"/>'))
@@ -147,6 +150,7 @@ def _append_text_with_id_links(
     p: docx.text.paragraph.Paragraph,
     text: str,
     bold: bool = False,
+    italic: bool = False,
     default_color: Optional[str] = None,
     highlight: Optional[str] = None,
 ):
@@ -159,17 +163,17 @@ def _append_text_with_id_links(
         # Text before the ID
         before_text = text[last_idx:start]
         if before_text:
-            _add_run(p, before_text, bold=bold, color=default_color, highlight=highlight)
+            _add_run(p, before_text, bold=bold, italic=italic, color=default_color, highlight=highlight)
 
         doc_id = match.group(1)
         url = PJE_DOC_URL_TEMPLATE.format(doc_id=doc_id)
-        _add_hyperlink(p, url=url, text=doc_id, bold=bold, color="0000ff", underline=True, highlight=highlight)
+        _add_hyperlink(p, url=url, text=doc_id, bold=bold, italic=italic, color="0000ff", underline=True, highlight=highlight)
         last_idx = end
 
     # Remaining text after the last ID
     remaining_text = text[last_idx:]
     if remaining_text:
-        _add_run(p, remaining_text, bold=bold, color=default_color, highlight=highlight)
+        _add_run(p, remaining_text, bold=bold, italic=italic, color=default_color, highlight=highlight)
 
 
 def generate_docx_summary(
@@ -321,7 +325,7 @@ def generate_docx_summary(
         # Special OBS block for ANPP / desmembramento in italic
         if data.special_notes:
             p_obs = _add_p(doc, first_line=720, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-            _add_run(p_obs, data.special_notes, italic=True)
+            _append_text_with_id_links(p_obs, data.special_notes, italic=True)
 
         facts_paragraphs = [f.strip() for f in data.facts_summary.split("\n\n") if f.strip()]
         if not facts_paragraphs:

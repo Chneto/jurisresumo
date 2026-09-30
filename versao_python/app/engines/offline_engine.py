@@ -24,7 +24,7 @@ from app.core.models import (
     Witness,
 )
 from app.core.crime_taxonomy import annotate_imputation_text
-from app.core.jev_decision_engine import JEVDecisionEngine
+from app.core.jev_decision_engine import JEVDecisionEngine, is_procedural_or_constitutional
 from app.core.ocr_engine import OCREngine
 from app.core.pje_indexer import index_pje_pdf, prune_documents
 from app.engines.base import BaseExtractionEngine
@@ -1004,7 +1004,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         )
         for a in penal_rx.findall(denuncia_text):
             a_clean = a.strip(" ,.;")
-            if a_clean and a_clean not in all_articles:
+            if a_clean and a_clean not in all_articles and not is_procedural_or_constitutional(a_clean, denuncia_text):
                 all_articles.append(a_clean)
 
         # Special laws (ECA, Drogas, Armamento, Maria da Penha, CTB)
@@ -1713,12 +1713,20 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                 return "Denúncia oferecida com proposta de Suspensão Condicional do Processo"
             return "Denúncia oferecida pelo Ministério Público"
 
-        # 2. Decisão
-        if "decisão" in name_l or "decisao" in name_l:
-            if ANPP_REVOCATION_REGEX.search(txt_l):
+        # 2. Revogação de ANPP ou PSCP em qualquer ato judicial decisório (Decisão, Despacho, Termo, Ata)
+        has_anpp_rev = bool(ANPP_REVOCATION_REGEX.search(txt_l))
+        has_pscp_rev = bool(PSCP_REVOCATION_REGEX.search(txt_l) or ("revoga" in txt_l and ("suspensão" in txt_l or "sursis" in txt_l)))
+
+        if any(k in name_l for k in ["decis", "despacho", "termo", "ata", "ato ordinat"]):
+            if has_anpp_rev and has_pscp_rev:
+                return "Decisão revogando o Acordo de Não Persecução Penal (ANPP) e a Suspensão Condicional do Processo (PSCP)"
+            if has_anpp_rev:
                 return "Decisão revogando o Acordo de Não Persecução Penal (ANPP)"
-            if PSCP_REVOCATION_REGEX.search(txt_l) or ("revoga" in txt_l and ("suspensão" in txt_l or "sursis" in txt_l)):
+            if has_pscp_rev:
                 return "Decisão revogando a Suspensão Condicional do Processo (PSCP)"
+
+        # 3. Decisão
+        if "decisão" in name_l or "decisao" in name_l:
             if "recebo a denúncia" in txt_l or "recebida a denúncia" in txt_l or "recebimento da denúncia" in txt_l:
                 if "pauta" in txt_l or "designo" in txt_l:
                     return "Decisão recebendo a denúncia e designando audiência"
@@ -1729,7 +1737,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                 return "Decisão designando audiência de instrução e julgamento"
             return "Decisão interlocutória"
 
-        # 3. Despacho
+        # 4. Despacho
         if "despacho" in name_l:
             if "pauta" in txt_l or "designo" in txt_l or "instrução" in txt_l:
                 return "Despacho incluindo o feito em pauta de audiência de instrução e julgamento"

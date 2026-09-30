@@ -144,6 +144,34 @@ PSCP_REVOCATION_REGEX = re.compile(
 )
 
 
+# Postal delivery receipts (AR dos Correios) and telephone carrier data / ERBs
+POSTAL_AND_TELCO_NOISE_REGEX = re.compile(
+    r"(?:"
+    r"aviso\s+de\s+recebimento\s*-\s*ar\b|"
+    r"rastreamento\s+de\s+objetos|"
+    r"correios\s+empresa\s+brasileira|"
+    r"dados\s+cadastrais\s+de\s+telefonia|"
+    r"chamadas\s+originadas|chamadas\s+recebidas|"
+    r"estação\s+rádio\s+base\b|\berb\b|"
+    r"bilhetagem\s+telefônica|"
+    r"relatório\s+de\s+dados\s+telemáticos|"
+    r"extrato\s+de\s+chamadas"
+    r")",
+    re.IGNORECASE,
+)
+
+
+def is_procedural_or_constitutional(match_text: str, context_text: str = "") -> bool:
+    """Verifica se o artigo citado se refere a normas constitucionais (CF) ou processuais (CPP)."""
+    comb = f"{match_text} {context_text}".lower()
+    if re.search(r"\b(?:da\s+cf(?:/88)?|da\s+constitui[cç][aã]o|do\s+cpp|do\s+c[oó]digo\s+de\s+processo\s+penal|processual\s+penal|processo\s+penal)\b", comb):
+        return True
+    if re.search(r"\bart(?:igo)?s?\b\.?\s*(?:41|396(?:-[a-z])?|399|400|383|384)\b", match_text, re.I):
+        if not re.search(r"\b(?:do\s+cp|do\s+c[oó]digo\s+penal)\b", comb):
+            return True
+    return False
+
+
 class NoiseAndNullGate:
     """Mecanismo Multi-Critérios de Filtragem e Rejeição de Nulos e Ruídos (System One)."""
 
@@ -152,14 +180,16 @@ class NoiseAndNullGate:
         """Avalia de forma probabilística e determinística a relevância de um bloco de texto.
 
         Returns:
-            Dict com flags is_null, chance_noise, chance_essential, passed e rationale.
+            Dict com flags is_null, chance_null, chance_noise, chance_essential, passed, metrics e rationale.
         """
         if not text or not text.strip():
             return {
                 "is_null": True,
+                "chance_null": 1.0,
                 "chance_noise": 1.0,
                 "chance_essential": 0.0,
                 "passed": False,
+                "metrics": {"null_check": 1.0, "ocr_density": 0.0, "banking": 0.0, "admin": 0.0, "telco": 0.0},
                 "rationale": "Bloco de texto vazio, nulo ou composto exclusivamente por espaços.",
             }
 
@@ -168,44 +198,64 @@ class NoiseAndNullGate:
         alphanumeric_count = sum(c.isalnum() for c in cleaned)
         alpha_ratio = alphanumeric_count / max(1, total_len)
 
+        combined_meta = metadata.lower()
+
         # 1. Quase sem caracteres alfanuméricos (ruído de digitalização)
         if alphanumeric_count < 3 or (alpha_ratio < 0.30 and total_len > 10):
             return {
                 "is_null": False,
+                "chance_null": 0.0,
                 "chance_noise": 0.95,
                 "chance_essential": 0.05,
                 "passed": False,
+                "metrics": {"null_check": 0.0, "ocr_density": alpha_ratio, "banking": 0.0, "admin": 0.0, "telco": 0.0},
                 "rationale": "Densidade alfanumérica extremamente baixa (artefatos de OCR).",
             }
-
-        combined_meta = metadata.lower()
 
         # 2. Ruído bancário / financeiro
         if BANKING_NOISE_REGEX.search(cleaned) or BANKING_NOISE_REGEX.search(combined_meta):
             return {
                 "is_null": False,
+                "chance_null": 0.0,
                 "chance_noise": 0.95,
                 "chance_essential": 0.05,
                 "passed": False,
+                "metrics": {"null_check": 0.0, "ocr_density": alpha_ratio, "banking": 1.0, "admin": 0.0, "telco": 0.0},
                 "rationale": "Comprovante bancário, guia de custas ou extrato financeiro irrelevante.",
             }
 
-        # 3. Certidão administrativa estéril
+        # 3. Ruído de dados de telefonia / ERB / Correios AR
+        if POSTAL_AND_TELCO_NOISE_REGEX.search(cleaned) or POSTAL_AND_TELCO_NOISE_REGEX.search(combined_meta):
+            return {
+                "is_null": False,
+                "chance_null": 0.0,
+                "chance_noise": 0.90,
+                "chance_essential": 0.10,
+                "passed": False,
+                "metrics": {"null_check": 0.0, "ocr_density": alpha_ratio, "banking": 0.0, "admin": 0.0, "telco": 1.0},
+                "rationale": "Dados cadastrais/ERB de telefonia ou comprovante de entrega postal sem teor acusatório.",
+            }
+
+        # 4. Certidão administrativa estéril
         if ADMIN_NOISE_REGEX.search(cleaned) and not DENUNCIA_POSITIVE_REGEX.search(cleaned):
             return {
                 "is_null": False,
+                "chance_null": 0.0,
                 "chance_noise": 0.85,
                 "chance_essential": 0.15,
                 "passed": False,
+                "metrics": {"null_check": 0.0, "ocr_density": alpha_ratio, "banking": 0.0, "admin": 1.0, "telco": 0.0},
                 "rationale": "Certidão puramente administrativa de trâmite sem teor fático.",
             }
 
-        # 4. Texto aprovado pelo Gate
+        # 5. Texto aprovado pelo Gate
         return {
             "is_null": False,
+            "chance_null": 0.0,
             "chance_noise": 0.10,
             "chance_essential": 0.90,
             "passed": True,
+            "metrics": {"null_check": 0.0, "ocr_density": alpha_ratio, "banking": 0.0, "admin": 0.0, "telco": 0.0},
             "rationale": "Conteúdo substancial processual aprovado pelo Gate de Validação.",
         }
 
@@ -558,7 +608,7 @@ class JEVDecisionEngine:
                 elif not audited_qual:
                     audited_qual = supp_str
 
-        # 2. Audit imputation articles
+        # 2. Audit imputation articles (excluding procedural/constitutional citations like CF and CPP)
         if denuncia_text:
             art_matches = re.findall(
                 r"\bart(?:igo)?s?\b\.?\s*\d+[^\n,.;]*(?:§[^\n,.;]*)?(?:inciso[^\n,.;]*)?(?:do\s+CP|do\s+Código\s+Penal|da\s+Lei[^\n,.;]*)?",
@@ -571,7 +621,7 @@ class JEVDecisionEngine:
             all_detected = []
             for item in art_matches + law_matches + concurso_matches:
                 item_c = item.strip()
-                if item_c and item_c not in all_detected:
+                if item_c and item_c not in all_detected and not is_procedural_or_constitutional(item_c, denuncia_text):
                     all_detected.append(item_c)
 
             missing_articles = []
