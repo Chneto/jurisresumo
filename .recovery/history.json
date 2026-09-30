@@ -232,5 +232,14 @@
     "file_count": 106,
     "archive": "20260930_105136_v3_0_1_unnamed_defense_and_witness_merge_reviewed.zip",
     "size_kb": 928.38
+  },
+  {
+    "id": "20260930_112658_v3_0_2-syntaxerror-extra-brace-fix",
+    "label": "v3_0_2-syntaxerror-extra-brace-fix",
+    "description": "Correcao da chave excedente na linha 2117 em todos os 12 arquivos HTML e inclusao do teste de validacao sintatica e balanceamento de chaves",
+    "created_at": "2026-09-30T11:26:58.327121",
+    "file_count": 105,
+    "archive": "20260930_112658_v3_0_2-syntaxerror-extra-brace-fix.zip",
+    "size_kb": 927.67
   }
 ]
