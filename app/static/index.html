@@ -3,1276 +3,498 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JURISRESUMO | Resumo de Processos para Audiência (PJe)</title>
+  <title>JURISRESUMO | Versão Nativa Portátil (Sem Instalação)</title>
   <meta name="author" content="FChNeto">
-    <!-- Eel bridge (loaded automatically when running under Eel desktop app) -->
-  <script type="text/javascript" src="/eel.js"></script>
-  <style>
-/* ==============================================================================
-   JURISRESUMO - Google Stitch & Nano Banana Design System
-   Desenvolvido por FChNeto
-   ============================================================================== */
 
-:root {
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-doc: 'Verdana', sans-serif;
-
-  /* Nano Banana Palette */
-  --banana-300: #fef08a;
-  --banana-400: #fde047;
-  --banana-500: #facc15;
-  --banana-600: #eab308;
-  --banana-glow: rgba(250, 204, 21, 0.25);
-
-  /* Google Stitch Deep Surface Palette */
-  --bg-canvas: #090d16;
-  --bg-surface: #111827;
-  --bg-surface-elevated: #1a2234;
-  --bg-surface-hover: #222d42;
-
-  --border-subtle: #273349;
-  --border-focus: #facc15;
-
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-
-  --color-ai: #38bdf8;
-  --color-ai-glow: rgba(56, 189, 248, 0.25);
-  --color-offline: #34d399;
-  --color-offline-glow: rgba(52, 211, 153, 0.25);
-  --color-danger: #f87171;
-
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px var(--banana-glow);
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html, body {
-  height: 100vh;
-  overflow: hidden;
-}
-
-body.stitch-theme {
-  font-family: var(--font-sans);
-  background-color: var(--bg-canvas);
-  color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header */
-.app-header {
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  background-color: var(--bg-surface);
-  border-bottom: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-  z-index: 50;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.brand-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.brand-logo strong {
-  color: var(--banana-500);
-}
-
-.banana-accent {
-  color: var(--banana-400);
-  font-size: 1.25rem;
-  filter: drop-shadow(0 0 6px var(--banana-glow));
-}
-
-.badge {
-  padding: 0.2rem 0.55rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  border-radius: var(--radius-full);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.badge-nano {
-  background: rgba(250, 204, 21, 0.15);
-  color: var(--banana-400);
-  border: 1px solid rgba(250, 204, 21, 0.3);
-}
-
-.badge-stitch {
-  background: rgba(56, 189, 248, 0.15);
-  color: var(--color-ai);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-}
-
-.engine-status-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-subtle);
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.engine-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--color-offline);
-  box-shadow: 0 0 6px var(--color-offline-glow);
-}
-
-.engine-dot.ai-dot {
-  background-color: var(--color-ai);
-  box-shadow: 0 0 6px var(--color-ai-glow);
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-/* Hamburger Button */
-.btn-hamburger {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.2s ease;
-}
-
-.btn-hamburger:hover {
-  background: var(--bg-surface-hover);
-  border-color: var(--banana-500);
-}
-
-.hamburger-line {
-  width: 20px;
-  height: 2px;
-  background-color: var(--text-primary);
-  border-radius: 2px;
-  transition: all 0.2s ease;
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 1.1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: var(--radius-md);
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--banana-400), var(--banana-600));
-  color: #0f172a;
-  box-shadow: var(--shadow-glow);
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.08);
-}
-
-.btn-primary:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.btn-secondary {
-  background-color: var(--bg-surface-elevated);
-  color: var(--text-primary);
-  border: 1px solid var(--border-subtle);
-}
-
-.btn-secondary:hover {
-  background-color: var(--bg-surface-hover);
-  border-color: var(--text-muted);
-}
-
-.btn-outline {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-}
-
-.btn-outline:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
-}
-
-.btn-sm {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.8rem;
-}
-
-.btn-xs {
-  padding: 0.25rem 0.55rem;
-  font-size: 0.75rem;
-}
-
-.btn-block {
-  width: 100%;
-  justify-content: center;
-}
-
-.btn-file-label {
-  cursor: pointer;
-}
-
-/* Main Viewport (Fixed Height, Dual Independent Scroll) */
-.main-viewport {
-  flex: 1;
-  height: calc(100vh - 92px); /* 100vh - 60px header - 32px footer */
-  display: flex;
-  flex-direction: column;
-  padding: 0.75rem 1.5rem;
-  gap: 0.75rem;
-  overflow: hidden;
-}
-
-/* Ingestion Section (Full Width Dropzone) */
-.ingestion-section {
-  flex-shrink: 0;
-}
-
-.upload-dropzone {
-  border: 2px dashed var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-surface);
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.upload-dropzone:hover, .upload-dropzone.dragover {
-  border-color: var(--banana-500);
-  background-color: rgba(250, 204, 21, 0.04);
-  box-shadow: var(--shadow-glow);
-}
-
-.file-input-hidden {
-  display: none;
-}
-
-.dropzone-content {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-}
-
-.dropzone-icon {
-  color: var(--banana-400);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem;
-  background: rgba(250, 204, 21, 0.1);
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
-}
-
-.dropzone-text h3 {
-  font-size: 0.98rem;
-  font-weight: 600;
-}
-
-.dropzone-text p {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-top: 0.15rem;
-}
-
-.upload-browse {
-  color: var(--banana-400);
-  text-decoration: underline;
-  font-weight: 600;
-}
-
-/* Google Stitch Progress & Smart Badge */
-.stitch-dot-pulse {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-offline);
-  box-shadow: 0 0 8px var(--color-offline-glow);
-  margin-right: 5px;
-  animation: stitchPulse 2s infinite ease-in-out;
-}
-
-@keyframes stitchPulse {
-  0%, 100% { opacity: 0.6; transform: scale(0.9); }
-  50% { opacity: 1; transform: scale(1.25); box-shadow: 0 0 12px var(--color-offline); }
-}
-
-.upload-loading-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(9, 13, 22, 0.92);
-  backdrop-filter: blur(8px);
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 20;
-}
-
-.upload-loading-overlay.active {
-  display: flex;
-}
-
-.stitch-progress-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  background: rgba(17, 24, 39, 0.95);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem 2rem;
-  max-width: 520px;
-  width: 90%;
-  box-shadow: var(--shadow-lg), 0 0 25px rgba(56, 189, 248, 0.12);
-  text-align: center;
-}
-
-.stitch-progress-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.65rem;
-  width: 100%;
-}
-
-.stitch-progress-bar-track {
-  width: 100%;
-  height: 8px;
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  position: relative;
-}
-
-.stitch-progress-bar-fill {
-  height: 100%;
-  width: 25%;
-  background: linear-gradient(90deg, #38bdf8 0%, #facc15 100%);
-  border-radius: var(--radius-full);
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
-}
-
-.stitch-progress-phases {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  gap: 0.35rem;
-  margin-top: 0.2rem;
-}
-
-.phase-chip {
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--radius-full);
-  background: var(--bg-canvas);
-  color: var(--text-muted);
-  border: 1px solid var(--border-subtle);
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.phase-chip.active {
-  background: rgba(56, 189, 248, 0.15);
-  color: var(--color-ai);
-  border-color: var(--color-ai);
-  box-shadow: 0 0 8px var(--color-ai-glow);
-}
-
-.phase-chip.completed {
-  background: rgba(52, 211, 153, 0.15);
-  color: var(--color-offline);
-  border-color: var(--color-offline);
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(250, 204, 21, 0.2);
-  border-top-color: var(--banana-400);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-message {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-}
-
-.loading-sub {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-}
-
-/* Dual Workspace (Dual Scroll) */
-.dual-workspace {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 1.08fr 0.92fr;
-  gap: 1.25rem;
-  overflow: hidden;
-}
-
-/* Left Column: Form Editor (Independent Scroll) */
-.editor-pane {
-  height: 100%;
-  overflow-y: auto;
-  padding-right: 0.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.editor-pane-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-
-.step-indicator {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.step-number {
-  font-size: 1.1rem;
-}
-
-.step-indicator h2 {
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.subtitle {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-}
-
-.editor-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 1.1rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.form-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.card-title h3 {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.card-header-flex {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.form-tip {
-  font-size: 0.76rem;
-  color: var(--text-muted);
-}
-
-.form-tip code {
-  background: var(--bg-canvas);
-  color: var(--banana-400);
-  padding: 0.15rem 0.35rem;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-}
-
-.form-row-grid {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.grid-2 { grid-template-columns: 1fr 1fr; }
-.grid-3 { grid-template-columns: 1.2fr 1fr 1fr; }
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.form-group label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.form-control {
-  background-color: var(--bg-canvas);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  padding: 0.55rem 0.75rem;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--banana-500);
-  box-shadow: 0 0 0 2px var(--banana-glow);
-}
-
-.form-control.mono {
-  font-family: var(--font-mono);
-}
-
-textarea.form-control {
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.checkbox-group {
-  justify-content: center;
-  padding-top: 1rem;
-}
-
-.custom-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.82rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-/* Items Containers */
-.items-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.item-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr auto;
-  gap: 0.5rem;
-  align-items: center;
-  background-color: var(--bg-canvas);
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-}
-
-.history-item-row {
-  display: grid;
-  grid-template-columns: 100px 1fr 100px auto;
-  gap: 0.5rem;
-  align-items: center;
-  background-color: var(--bg-canvas);
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-}
-
-.btn-remove-item {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.3rem;
-  border-radius: 4px;
-  transition: all 0.15s;
-}
-
-.btn-remove-item:hover {
-  color: var(--color-danger);
-  background: rgba(248, 113, 113, 0.1);
-}
-
-.char-count {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-
-.sub-section-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 0.4rem;
-}
-
-.mt-2 { margin-top: 0.5rem; }
-.mt-3 { margin-top: 0.75rem; }
-
-/* Right Column: Fixed Live Preview (Independent Scroll) */
-.preview-pane {
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.preview-pane-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-
-.preview-title {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-/* Desk Scroller (The Gray Mat Behind Paper) */
-.desk-scroller {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  background-color: #0d121d;
-  padding: 2rem 1.5rem 4rem 1.5rem;
-  border-radius: var(--radius-lg);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-/* Pure White A4 Paper Sheet (No Blue Spill, Real Margins) */
-.word-paper-sheet {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  width: 100%;
-  max-width: 794px; /* Standard A4 at 96 DPI */
-  min-height: 29.7cm; /* Padrão A4 mínimo */
-  height: auto !important;
-  flex-shrink: 0;
-  padding: 20mm; /* Strict 2.0 cm margins on all edges */
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
-  font-family: var(--font-doc);
-  font-size: 12pt;
-  line-height: 1.89; /* 454/240 lines */
-  text-align: justify;
-  box-sizing: border-box;
-  margin: 0 auto 3rem auto;
-  position: relative;
-  overflow: visible;
-}
-
-.paper-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 400px;
-  color: #94a3b8;
-  text-align: center;
-  gap: 0.5rem;
-}
-
-.placeholder-icon {
-  font-size: 3rem;
-  opacity: 0.5;
-}
-
-.paper-placeholder h4 {
-  color: #475569;
-  font-size: 1.1rem;
-}
-
-.paper-placeholder p {
-  font-size: 0.85rem;
-  max-width: 320px;
-}
-
-.paper-body {
-  display: none;
-}
-
-.paper-body.active {
-  display: block;
-}
-
-/* Document Structure Inside Paper */
-.doc-title {
-  text-decoration: underline;
-  margin-bottom: 0;
-}
-
-.doc-link a {
-  color: #0000ff !important;
-  text-decoration: underline;
-  word-break: break-all;
-}
-
-.doc-resumo-call {
-  text-decoration: underline;
-  margin-top: 1.2rem;
-}
-
-.hl-yellow {
-  background-color: #ffff00 !important;
-  color: #000000 !important;
-  font-weight: bold;
-  display: inline-block;
-  padding: 0 3px;
-  line-height: 1.4;
-}
-
-.hl-green {
-  background-color: #00ff00 !important;
-  color: #000000 !important;
-  font-weight: bold;
-  display: inline-block;
-  padding: 0 3px;
-  line-height: 1.4;
-}
-
-.doc-promotor, .doc-reus, .doc-defesa {
-  font-weight: bold;
-  margin-bottom: 0.2rem;
-}
-
-.doc-callout {
-  margin-top: 0.6rem;
-  margin-bottom: 0.6rem;
-}
-
-.doc-section-header {
-  margin-top: 1.4rem;
-  margin-bottom: 0.3rem;
-  text-transform: uppercase;
-}
-
-.doc-narrative-p {
-  text-indent: 1.27cm;
-  margin-bottom: 0.8rem;
-  text-align: justify;
-}
-
-.doc-obs {
-  font-style: italic;
-  text-indent: 1.27cm;
-  margin-bottom: 0.8rem;
-  text-align: justify;
-}
-
-.doc-name-bold {
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.doc-art-bold {
-  font-weight: bold;
-}
-
-.doc-history-p {
-  margin-bottom: 14.15pt; /* after=283 */
-  word-break: break-word;
-  text-align: justify;
-}
-
-.doc-history-p a, .doc-witness-p a {
-  color: #0000ff !important;
-  text-decoration: underline;
-}
-
-.doc-witness-p {
-  margin-bottom: 14.15pt;
-  text-align: justify;
-}
-
-.doc-closure {
-  text-indent: 1.27cm;
-  margin-top: 1.5rem;
-  margin-bottom: 0.8rem;
-}
-
-/* Hamburger Drawer */
-.drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
-  display: none;
-  z-index: 1000;
-}
-
-.drawer-backdrop.active {
-  display: block;
-}
-
-.hamburger-drawer {
-  position: fixed;
-  top: 0;
-  right: -420px;
-  width: 400px;
-  max-width: 90vw;
-  height: 100vh;
-  background: var(--bg-surface);
-  border-left: 1px solid var(--border-subtle);
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7);
-  display: flex;
-  flex-direction: column;
-  z-index: 1001;
-  transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hamburger-drawer.active {
-  right: 0;
-}
-
-.drawer-header {
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.25rem;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.drawer-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.drawer-title h3 {
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.btn-close-drawer {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.6rem;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.btn-close-drawer:hover {
-  color: var(--text-primary);
-}
-
-.drawer-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.drawer-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.drawer-section-title {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.engine-card-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.engine-radio-card {
-  display: flex;
-  gap: 0.75rem;
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.engine-radio-card:hover {
-  border-color: var(--text-muted);
-}
-
-.engine-radio-card input[type="radio"] {
-  margin-top: 0.2rem;
-  accent-color: var(--banana-500);
-}
-
-.radio-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.radio-card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.88rem;
-}
-
-.radio-card-body p {
-  font-size: 0.76rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-.engine-radio-card.active {
-  border-color: var(--banana-500);
-  background: rgba(250, 204, 21, 0.04);
-}
-
-.form-hint {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 0.2rem;
-}
-
-.drawer-actions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-}
-
-.drawer-footer-credit {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-}
-
-.drawer-footer-credit strong {
-  color: var(--banana-400);
-}
-
-.drawer-footer-credit small {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-}
-
-/* App Footer with Immutable Author Signature */
-.app-footer {
-  height: 32px;
-  background-color: var(--bg-surface);
-  border-top: 1px solid var(--border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.footer-content {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.footer-content strong {
-  color: var(--banana-400);
-}
-
-.footer-dot {
-  color: var(--border-subtle);
-}
-
-/* Modal */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.modal-backdrop.active {
-  display: flex;
-}
-
-.modal-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 520px;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-lg);
-}
-
-.modal-large {
-  max-width: 680px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  flex-shrink: 0;
-}
-
-.modal-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modal-title h3 {
-  font-size: 1.05rem;
-}
-
-.btn-close {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.5rem;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.modal-body {
-  overflow-y: auto;
-  flex: 1;
-}
-
-.about-body h4 {
-  font-size: 0.92rem;
-  color: var(--banana-400);
-  margin-top: 1rem;
-  margin-bottom: 0.35rem;
-}
-
-.about-body h4:first-of-type {
-  margin-top: 0;
-}
-
-.about-body p, .about-body li {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-.about-body ul {
-  padding-left: 1.25rem;
-  margin-top: 0.35rem;
-}
-
-.about-body li {
-  margin-bottom: 0.35rem;
-}
-
-.about-body code {
-  background: var(--bg-canvas);
-  color: var(--banana-300);
-  padding: 0.1rem 0.3rem;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-  flex-shrink: 0;
-}
-
-/* Toast */
-.toast-container {
-  position: fixed;
-  bottom: 2.5rem;
-  right: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  z-index: 3000;
-}
-
-.toast {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background-color: var(--bg-surface-elevated);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  padding: 0.75rem 1.15rem;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  font-size: 0.85rem;
-  animation: slideIn 0.2s ease;
-}
-
-.toast.success {
-  border-left: 4px solid var(--banana-500);
-}
-
-.toast.error {
-  border-left: 4px solid var(--color-danger);
-}
-
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
-}
-
-  </style>
+  <!-- Local Vendor Libraries (100% Offline, Zero Installation, Instant Loading) -->
+  <script src="vendor/pdf.min.js"></script>
+  <script src="vendor/jszip.min.js"></script>
+  <script>
+    // Resilient Fallback to CDN only if opened without the local vendor/ folder
+    if (typeof pdfjsLib === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"><\/script>');
+    }
+    if (typeof JSZip === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>');
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Verdana&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-doc: 'Verdana', sans-serif;
+
+      --banana-400: #fde047;
+      --banana-500: #facc15;
+      --banana-600: #eab308;
+      --banana-glow: rgba(250, 204, 21, 0.25);
+
+      --bg-canvas: #090d16;
+      --bg-surface: #111827;
+      --bg-surface-elevated: #1a2234;
+      --bg-surface-hover: #222d42;
+      --border-subtle: #273349;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --color-ai: #38bdf8;
+      --color-offline: #34d399;
+      --color-danger: #f87171;
+
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100vh; overflow: hidden; }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    .brand-logo strong { color: var(--banana-500); }
+    .banana-accent { color: var(--banana-400); font-size: 1.25rem; }
+
+    .badge {
+      padding: 0.2rem 0.55rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+    }
+    .badge-standalone {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--color-offline);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+    .badge-stitch {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--color-ai);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 0.75rem; }
+    .header-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--banana-400), var(--banana-600));
+      color: #0f172a;
+      box-shadow: 0 0 15px var(--banana-glow);
+    }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-secondary { background: var(--bg-surface-elevated); color: var(--text-primary); border: 1px solid var(--border-subtle); }
+    .btn-secondary:hover { background: var(--bg-surface-hover); }
+
+    .btn-outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-subtle); }
+    .btn-outline:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
+
+    .btn-xs { padding: 0.25rem 0.55rem; font-size: 0.75rem; }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+    .btn-block { width: 100%; justify-content: center; }
+
+    .btn-hamburger {
+      width: 40px; height: 40px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+      background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+    .btn-hamburger:hover { border-color: var(--banana-500); }
+    .hamburger-line { width: 20px; height: 2px; background: var(--text-primary); border-radius: 2px; }
+
+    /* Viewport & Grid */
+    .main-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .top-action-bar {
+      padding: 0.75rem 1.5rem;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+
+    .dropzone-inline {
+      flex: 1;
+      border: 2px dashed var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(26, 34, 52, 0.4);
+    }
+    .dropzone-inline:hover, .dropzone-inline.dragover {
+      border-color: var(--banana-500);
+      background: rgba(250, 204, 21, 0.05);
+    }
+    .dropzone-inline span { font-size: 0.85rem; color: var(--text-secondary); }
+    .dropzone-inline strong { color: var(--banana-400); }
+
+    .content-split {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 48% 52%;
+      overflow: hidden;
+    }
+
+    .form-pane {
+      overflow-y: auto;
+      padding: 1.25rem;
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.1rem;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--banana-400);
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-control {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.55rem 0.75rem;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: var(--banana-500); }
+    .form-control.mono { font-family: var(--font-mono); }
+    textarea.form-control { resize: vertical; line-height: 1.45; }
+
+    .form-row-grid { display: grid; gap: 0.75rem; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .items-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .item-row {
+      display: grid;
+      grid-template-columns: 1.8fr 1.6fr 1fr 32px;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .history-item-row {
+      display: grid;
+      grid-template-columns: 85px 1fr 100px 32px;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .btn-remove-item {
+      height: 32px; width: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+      color: var(--color-danger); cursor: pointer;
+    }
+    .btn-remove-item:hover { background: rgba(248, 113, 113, 0.1); }
+
+    /* Preview Pane (Right Column) */
+    .preview-pane {
+      background: #0d121d;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .preview-pane-header {
+      padding: 0.75rem 1.25rem;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .preview-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .desk-scroller {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem 1.5rem 4rem 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background: #0d121d;
+    }
+
+    /* Word Paper Sheet Simulator - Expande dinamicamente para conter 100% do texto em folha branca pura */
+    .word-paper-sheet {
+      width: 100%;
+      max-width: 680px;
+      min-height: 29.7cm; /* Padrão A4 mínimo */
+      height: auto !important;
+      flex-shrink: 0;
+      background: #ffffff !important;
+      color: #000000;
+      font-family: var(--font-doc);
+      font-size: 12pt;
+      line-height: 1.5;
+      padding: 2.0cm; /* Margens estritas de 2,0 cm */
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border-radius: 3px;
+      margin: 0 auto 3rem auto;
+      box-sizing: border-box;
+      text-align: justify;
+      overflow: visible;
+    }
+
+    .paper-body {
+      width: 100%;
+      height: auto;
+      background: transparent;
+    }
+
+    .paper-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 400px;
+      color: #94a3b8;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    /* Strict Legal Highlighting Styles */
+    .hl-yellow {
+      background-color: #ffff00;
+      color: #000000;
+      font-weight: bold;
+      padding: 0 2px;
+    }
+    .hl-green {
+      background-color: #00ff00;
+      color: #000000;
+      font-weight: bold;
+      padding: 0 2px;
+    }
+
+    .doc-title { text-decoration: underline; margin-bottom: 0.35rem; }
+    .doc-link { color: #0000ff; text-decoration: underline; margin-bottom: 0.85rem; }
+    .doc-resumo-call { text-decoration: underline; margin-bottom: 0.85rem; }
+    .doc-callout { margin-bottom: 0.85rem; }
+    .doc-promotor { margin-bottom: 0.85rem; }
+    .doc-reus { margin-bottom: 0.4rem; }
+    .doc-reus-item { padding-left: 1.27cm; text-indent: -0.63cm; margin-bottom: 0.25rem; }
+    .doc-defesa { margin-bottom: 0.85rem; }
+    .doc-section-header { margin-top: 0.9rem; margin-bottom: 0.4rem; }
+    .doc-narrative-p { text-indent: 1.27cm; margin-bottom: 0.5rem; text-align: justify; }
+    .doc-history-p { margin-bottom: 0.35rem; }
+    .doc-witness-p { margin-bottom: 0.35rem; }
+    .doc-obs { font-style: italic; text-indent: 1.27cm; margin-bottom: 0.5rem; }
+    .doc-closure { text-indent: 1.27cm; margin-top: 1rem; margin-bottom: 0.5rem; }
+
+    /* Footer */
+    .app-footer {
+      height: 32px;
+      background-color: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .app-footer strong { color: var(--banana-400); }
+
+    /* Hamburger Drawer */
+    .drawer-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .drawer-backdrop.active { opacity: 1; pointer-events: auto; }
+
+    .drawer {
+      position: fixed; top: 0; right: -380px; width: 360px; height: 100vh;
+      background: var(--bg-surface); border-left: 1px solid var(--border-subtle);
+      z-index: 100; transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column; padding: 1.5rem; gap: 1.5rem;
+    }
+    .drawer.active { right: 0; }
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; }
+    .drawer-title { font-size: 1.1rem; font-weight: 700; color: var(--banana-400); }
+
+    /* Modal About */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 110; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+    .modal-card {
+      background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+      padding: 1.75rem; width: 90%; max-width: 520px; display: flex; flex-direction: column; gap: 1.25rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+    .modal-body { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.55; }
+    .modal-body h4 { color: var(--text-primary); margin: 0.6rem 0 0.2rem; font-size: 0.95rem; }
+
+    /* Toast */
+    .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast {
+      padding: 0.75rem 1.1rem; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 500;
+      color: #fff; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideUp 0.3s ease;
+    }
+    .toast.success { border-color: var(--color-offline); }
+    .toast.error { border-color: var(--color-danger); }
+
+    /* Loading overlay for PDF */
+    .upload-loading {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--banana-400);
+      font-family: var(--font-mono);
+    }
+    .upload-loading.active { display: flex; }
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid var(--border-subtle);
+      border-top-color: var(--banana-400); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Google Stitch Pulse Indicator */
+    .stitch-dot-pulse {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--color-offline);
+      box-shadow: 0 0 8px var(--color-offline-glow);
+      margin-right: 5px;
+      animation: stitchPulse 2s infinite ease-in-out;
+    }
+    @keyframes stitchPulse {
+      0%, 100% { opacity: 0.6; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.25); box-shadow: 0 0 12px var(--color-offline); }
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
 </head>
-<body class="stitch-theme">
-  <!-- Top Navigation Header -->
-  <header class="app-header">
+<body>
+
+  <!-- App Header -->
+  <header>
     <div class="header-left">
       <div class="brand-logo">
-        <span class="banana-accent">⚡</span>
-        <span class="brand-text">JURIS<strong>RESUMO</strong></span>
+        <span class="banana-accent">🍌</span>
+        <span>JURIS<strong>RESUMO</strong></span>
       </div>
-      <span class="badge badge-nano">Nano Banana Edition</span>
-      <span class="badge badge-stitch">Google Stitch UI</span>
-      <span class="badge badge-stitch" id="badge-ocr-jev" title="Motor OCR com Pré-processamento e Filtro de Ruídos JEV Ativos"><span class="stitch-dot-pulse"></span> OCR Calibrado • JEV Ativo (0% Ruído)</span>
-      <div class="engine-status-pill" id="engine-status-pill" title="Motor de Processamento Ativo">
-        <span class="engine-dot" id="header-engine-dot"></span>
-        <span id="header-engine-label">Modo 100% Offline (Local Seguro)</span>
-      </div>
+      <span class="badge badge-standalone">Versão Nativa JS (Portátil)</span>
+      <span class="badge badge-stitch">TJRN • Autos Integrais</span>
+      <span class="badge badge-stitch" id="badge-ocr-jev" title="Classificador System One e Filtragem JEV/Leya Ativos"><span class="stitch-dot-pulse"></span> OCR Calibrado • JEV Ativo (0% Ruído)</span>
     </div>
 
     <div class="header-right">
-      <button type="button" class="btn btn-primary" id="btn-export-docx" disabled>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>Baixar Resumo (.docx)</span>
+      <button class="btn btn-primary" id="btn-export-docx" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Baixar Word (.docx)</span>
       </button>
 
-      <!-- Hamburger Menu Button -->
-      <button type="button" class="btn-hamburger" id="btn-hamburger" aria-label="Abrir Menu de Configurações" title="Menu de Configurações">
+      <button class="btn-hamburger" id="btn-hamburger" title="Menu e Configurações">
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
@@ -1280,363 +502,2226 @@ textarea.form-control {
     </div>
   </header>
 
-  <!-- Hamburger Drawer / Dropdown Menu -->
+  <!-- Hamburger Drawer -->
   <div class="drawer-backdrop" id="drawer-backdrop"></div>
-  <aside class="hamburger-drawer" id="hamburger-drawer">
+  <div class="drawer" id="hamburger-drawer">
     <div class="drawer-header">
-      <div class="drawer-title">
-        <span class="banana-accent">⚡</span>
-        <h3>Configurações & Painel</h3>
-      </div>
-      <button type="button" class="btn-close-drawer" id="btn-close-drawer">&times;</button>
+      <h3 class="drawer-title">Opções & Configurações</h3>
+      <button type="button" class="btn btn-outline btn-xs" id="btn-close-drawer">&times;</button>
     </div>
 
-    <div class="drawer-content">
-      <!-- Section: Engine Selection -->
-      <div class="drawer-section">
-        <h4 class="drawer-section-title">Motor de Extração e Inteligência</h4>
-        <div class="engine-card-selector">
-          <label class="engine-radio-card" id="card-mode-offline">
-            <input type="radio" name="drawer_engine_mode" value="offline" checked>
-            <div class="radio-card-body">
-              <div class="radio-card-header">
-                <span class="engine-dot offline-dot"></span>
-                <strong>Modo 100% Offline (Local Seguro)</strong>
-              </div>
-              <p>Processamento local ultra-rápido, sem conexão externa. Utiliza carimbos do PJe, OCR local e expressões regulares jurídicas.</p>
-            </div>
-          </label>
-
-          <label class="engine-radio-card" id="card-mode-gemini">
-            <input type="radio" name="drawer_engine_mode" value="gemini">
-            <div class="radio-card-body">
-              <div class="radio-card-header">
-                <span class="engine-dot ai-dot"></span>
-                <strong>Modo IA Google Gemini</strong>
-              </div>
-              <p>Análise aprofundada com raciocínio jurídico, síntese refinada de denúncias longas e correlação de peças complexas.</p>
-            </div>
-          </label>
-        </div>
+    <div class="card" style="margin-top: 0.5rem;">
+      <div class="card-title"><span>⚙️</span> Modo Híbrido IA (Opcional)</div>
+      <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.6rem;">
+        O motor padrão é 100% offline e local no navegador. Caso deseje acionar o refinamento de fatos com o Google Gemini, insira sua chave:
+      </p>
+      <div class="form-group">
+        <label>Chave Gemini API</label>
+        <input type="password" id="input-api-key" class="form-control mono" placeholder="AIzaSy...">
       </div>
-
-      <!-- Section: Gemini API Key Config -->
-      <div class="drawer-section" id="section-gemini-key">
-        <h4 class="drawer-section-title">Chave da API Google Gemini</h4>
-        <div class="form-group">
-          <input type="password" id="input-drawer-gemini-key" class="form-control" placeholder="Insira sua chave (AIzaSy...)">
-          <button type="button" class="btn btn-sm btn-secondary mt-2" id="btn-save-drawer-key">Salvar Chave no Navegador</button>
-          <span class="form-hint">Salvo estritamente no armazenamento local do seu navegador.</span>
-        </div>
-      </div>
-
-      <!-- Section: Backup & Tools -->
-      <div class="drawer-section">
-        <h4 class="drawer-section-title">Ferramentas e Rascunhos</h4>
-        <div class="drawer-actions-grid">
-          <button type="button" class="btn btn-outline btn-sm" id="btn-save-draft">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Salvar Rascunho (JSON)
-          </button>
-          <label class="btn btn-outline btn-sm btn-file-label">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Carregar Rascunho
-            <input type="file" id="input-load-draft" accept=".json" style="display:none;">
-          </label>
-          <button type="button" class="btn btn-outline btn-sm" id="btn-clear-form">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Limpar Formulário
-          </button>
-        </div>
-      </div>
-
-      <!-- Section: About & Documentation -->
-      <div class="drawer-section">
-        <h4 class="drawer-section-title">Documentação & Autoria</h4>
-        <button type="button" class="btn btn-secondary btn-block" id="btn-open-about">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          Sobre a Ferramenta & Manual de Uso
-        </button>
-      </div>
-
-      <!-- Drawer Footer Credit -->
-      <div class="drawer-footer-credit">
-        <span>Desenvolvido por <strong>FChNeto</strong></span>
-        <small>TJRN • Varas Criminais • PJe</small>
-      </div>
+      <button type="button" class="btn btn-secondary btn-sm btn-block" id="btn-save-key" style="margin-top:0.4rem;">Salvar Chave Local</button>
     </div>
-  </aside>
 
-  <!-- Main Viewport (Fixed Height, Dual Independent Scroll) -->
+    <div class="card">
+      <div class="card-title"><span>ℹ️</span> Informações do Sistema</div>
+      <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+        <strong>JURISRESUMO v2.4 (Nativo JS Analítico)</strong><br>
+        Motor: JavaScript OpenXML + PDF.js nativo.<br>
+        Autor: <strong>FChNeto</strong>.<br>
+        Execução: 100% Local no Navegador do Usuário.
+      </p>
+      <button type="button" class="btn btn-outline btn-sm btn-block" id="btn-open-about" style="margin-top: 0.75rem;">Sobre a Ferramenta</button>
+    </div>
+  </div>
+
+  <!-- Main Viewport -->
   <main class="main-viewport">
-    <!-- Ingestion Section (Full Width Drag & Drop) -->
-    <section class="ingestion-section">
-      <div class="upload-dropzone" id="dropzone">
-        <input type="file" id="file-input" accept=".pdf" class="file-input-hidden">
-        <div class="dropzone-content">
-          <div class="dropzone-icon">
-            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-          </div>
-          <div class="dropzone-text">
-            <h3>Arraste e solte os autos completos do PJe em PDF aqui</h3>
-            <p>ou <span class="upload-browse">clique para selecionar do seu computador</span> — suporta arquivos de qualquer tamanho com texto ou páginas escaneadas</p>
-          </div>
-        </div>
-        <div class="upload-loading-overlay" id="upload-loading">
-          <div class="stitch-progress-card">
-            <div class="spinner"></div>
-            <div class="stitch-progress-info">
-              <p class="loading-message" id="stitch-progress-step">Processando autos e indexando peças judiciais...</p>
-              <div class="stitch-progress-bar-track">
-                <div class="stitch-progress-bar-fill" id="stitch-progress-fill"></div>
-              </div>
-              <div class="stitch-progress-phases">
-                <span class="phase-chip active" id="phase-chip-1">1. Indexação PJe</span>
-                <span class="phase-chip" id="phase-chip-2">2. Calibração OCR</span>
-                <span class="phase-chip" id="phase-chip-3">3. Triagem JEV</span>
-                <span class="phase-chip" id="phase-chip-4">4. Preview A4</span>
-              </div>
-              <span class="loading-sub" id="stitch-progress-sub">Otimizando contraste, classificando peças e descartando ruídos marginais</span>
-            </div>
-          </div>
-        </div>
+    <!-- Action Bar / Drag & Drop -->
+    <div class="top-action-bar">
+      <div class="dropzone-inline" id="dropzone">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--banana-500);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        <span>Arraste o PDF integral dos autos aqui ou <strong>clique para selecionar</strong></span>
+        <input type="file" id="file-input" name="file" accept="application/pdf" style="display:none;">
       </div>
-    </section>
 
-    <!-- Dual-Column Workspace: Left = Editor, Right = Fixed Live Preview -->
-    <div class="dual-workspace">
-      <!-- Left Column: Form Editor (Independent Scroll) -->
-      <div class="editor-pane" id="editor-pane">
-        <div class="editor-pane-header">
-          <div class="step-indicator">
-            <span class="step-number">✍️</span>
-            <div>
-              <h2>Painel de Revisão e Adaptação</h2>
-              <p class="subtitle">Todos os campos são livremente editáveis antes do download final.</p>
-            </div>
-          </div>
-          <button type="button" class="btn btn-xs btn-outline" id="btn-revert">Restaurar Valores Extraídos</button>
+      <div id="upload-error" style="color:#e53e3e;margin-top:0.5rem;display:none;"></div>
+
+      <div class="upload-loading" id="upload-loading">
+        <div class="spinner"></div>
+        <span id="loading-msg">Lendo e analisando os autos judiciais...</span>
+      </div>
+    </div>
+
+
+    <!-- Content Split: Forms (Left) vs Preview (Right) -->
+    <div class="content-split">
+      <!-- Form Pane (Left Column) -->
+      <div class="form-pane">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="font-size:1.1rem;font-weight:700;color:var(--banana-400);">Dados Analisados dos Autos</h2>
+          <span class="badge badge-stitch">Edição em Tempo Real</span>
         </div>
 
-        <form id="hearing-form" class="editor-form">
+        <form id="hearing-form" style="display:flex;flex-direction:column;gap:0.85rem;">
           <!-- Card 1: Cabeçalho -->
-          <div class="card form-card">
-            <div class="card-title">
-              <span class="card-icon">📌</span>
-              <h3>1. Cabeçalho da Audiência</h3>
-            </div>
+          <div class="card">
+            <div class="card-title"><span>📌</span><h3>1. Cabeçalho da Audiência</h3></div>
             <div class="form-row-grid grid-3">
               <div class="form-group">
-                <label for="case_number">Número do Processo (CNJ)</label>
-                <input type="text" id="case_number" name="case_number" class="form-control mono" placeholder="0000000-00.0000.8.20.0000">
+                <label>Número do Processo (CNJ)</label>
+                <input type="text" id="case_number" class="form-control mono">
               </div>
               <div class="form-group">
-                <label for="act_type">Tipo de Audiência / Ato</label>
-                <select id="act_type" name="act_type" class="form-control">
+                <label>Tipo de Audiência</label>
+                <select id="act_type" class="form-control">
                   <option value="AIJ">AIJ (Instrução e Julgamento)</option>
-                  <option value="ANPP">ANPP (Acordo de Não Persecução Penal)</option>
-                  <option value="PAnP">PAnP (Produção Antecipada de Provas - art. 366)</option>
+                  <option value="ANPP">ANPP (Acordo Não Persecução)</option>
+                  <option value="PAnP">PAnP (Produção Antecipada art. 366)</option>
                   <option value="Custódia">Audiência de Custódia</option>
-                  <option value="Sursis">Audiência de Suspensão Condicional</option>
+                  <option value="Sursis">Audiência de Suspensão</option>
                 </select>
               </div>
               <div class="form-group">
-                <label for="hearing_datetime">Data e Hora da Audiência</label>
-                <input type="text" id="hearing_datetime" name="hearing_datetime" class="form-control" placeholder="DD.MM.AA às HHhMMmin">
+                <label>Data e Hora</label>
+                <input type="text" id="hearing_datetime" class="form-control">
               </div>
             </div>
 
             <div class="form-row-grid grid-2">
               <div class="form-group">
-                <label for="hearing_link">Link da Videoconferência (Teams / Meet)</label>
-                <input type="url" id="hearing_link" name="hearing_link" class="form-control" placeholder="https://teams.microsoft.com/meet/...">
+                <label>Link da Videoconferência (Teams / Meet)</label>
+                <input type="text" id="hearing_link" class="form-control">
               </div>
-              <div class="form-group checkbox-group">
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="is_in_person" name="is_in_person">
-                  <span class="checkmark"></span>
-                  Audiência Presencial (Sem link virtual)
+              <div class="form-group" style="justify-content:center;padding-top:1.1rem;">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                  <input type="checkbox" id="is_in_person"> Audiência Presencial
                 </label>
               </div>
             </div>
 
             <div class="form-row-grid grid-2">
               <div class="form-group">
-                <label for="prosecutor">Promotor(a) de Justiça</label>
-                <input type="text" id="prosecutor" name="prosecutor" class="form-control" placeholder="Dr. Nome do Promotor (Promotoria)">
+                <label>Promotor(a) de Justiça</label>
+                <input type="text" id="prosecutor" class="form-control">
               </div>
               <div class="form-group">
-                <label for="defense_counsel">Defesa Técnica (Defensoria Pública ou Advogado)</label>
-                <input type="text" id="defense_counsel" name="defense_counsel" class="form-control" placeholder="Assistido pela Defensoria Pública - Dr. ...">
+                <label>Defesa Técnica</label>
+                <input type="text" id="defense_counsel" class="form-control">
               </div>
             </div>
           </div>
 
           <!-- Card 2: Réus -->
-          <div class="card form-card">
+          <div class="card">
             <div class="card-header-flex">
-              <div class="card-title">
-                <span class="card-icon">👤</span>
-                <h3>2. Réus do Processo</h3>
-              </div>
+              <div class="card-title"><span>👤</span><h3>2. Réus do Processo</h3></div>
               <button type="button" class="btn btn-xs btn-outline" id="btn-add-defendant">+ Adicionar Réu</button>
             </div>
             <div id="defendants-container" class="items-container"></div>
           </div>
 
           <!-- Card 3: Qualificação -->
-          <div class="card form-card">
-            <div class="card-title">
-              <span class="card-icon">📝</span>
-              <h3>3. Qualificação Completa</h3>
-            </div>
-            <p class="form-tip">Nome em caixa alta e dados pessoais extraídos da denúncia/inquérito policial.</p>
-            <div class="form-group">
-              <textarea id="qualification_text" name="qualification_text" rows="4" class="form-control" placeholder="NOME DO RÉU, nacionalidade, estado civil, profissão, RG, CPF, endereço..."></textarea>
-            </div>
+          <div class="card" id="card-qual">
+            <div class="card-title"><span>📝</span><h3>3. Qualificação Completa</h3></div>
+            <textarea id="qualification_text" rows="3" class="form-control"></textarea>
           </div>
 
           <!-- Card 4: Imputação -->
-          <div class="card form-card">
-            <div class="card-title">
-              <span class="card-icon">⚖️</span>
-              <h3>4. Imputação Penal</h3>
-            </div>
-            <p class="form-tip">Tipificação penal e artigos atribuídos pelo Ministério Público.</p>
-            <div class="form-group">
-              <textarea id="imputation_text" name="imputation_text" rows="3" class="form-control" placeholder="Lesão corporal (art. 129, §9º, do Código Penal)..."></textarea>
-            </div>
+          <div class="card" id="card-imp">
+            <div class="card-title"><span>⚖️</span><h3>4. Imputação Penal</h3></div>
+            <textarea id="imputation_text" rows="2" class="form-control"></textarea>
           </div>
 
           <!-- Card 5: Resumo dos Fatos -->
-          <div class="card form-card">
+          <div class="card">
             <div class="card-header-flex">
-              <div class="card-title">
-                <span class="card-icon">📖</span>
-                <h3>5. Resumo dos Fatos da Denúncia</h3>
-              </div>
-              <span class="char-count" id="facts-char-count">0 caracteres</span>
+              <div class="card-title"><span>📖</span><h3>5. Resumo dos Fatos da Denúncia</h3></div>
+              <span id="facts-char-count" style="font-size:0.75rem;color:var(--text-muted);font-family:var(--font-mono);">0 caracteres</span>
             </div>
-            <p class="form-tip">99% das vezes correspondendo aos fatos da denúncia; resumido se muito longo.</p>
-            <div class="form-group">
-              <textarea id="facts_summary" name="facts_summary" rows="8" class="form-control" placeholder="Consta nos referidos autos do inquérito policial que, no dia..."></textarea>
-            </div>
+            <textarea id="facts_summary" rows="7" class="form-control"></textarea>
           </div>
 
           <!-- Card 6: Histórico Processual -->
-          <div class="card form-card">
+          <div class="card" id="card-hist">
             <div class="card-header-flex">
-              <div class="card-title">
-                <span class="card-icon">📅</span>
-                <h3>6. Histórico Processual Cronológico</h3>
-              </div>
+              <div class="card-title"><span>📅</span><h3>6. Histórico Processual Cronológico</h3></div>
               <button type="button" class="btn btn-xs btn-outline" id="btn-add-history">+ Adicionar Ato</button>
             </div>
-            <p class="form-tip">Padrão rigoroso: <code>DD/MM/AA: [Descrição do Ato] (ID [número])</code>.</p>
             <div id="history-container" class="items-container"></div>
           </div>
 
           <!-- Card 7: Testemunhas -->
-          <div class="card form-card">
+          <div class="card" id="card-wits">
             <div class="card-header-flex">
-              <div class="card-title">
-                <span class="card-icon">👥</span>
-                <h3>7. Rol de Testemunhas</h3>
-              </div>
+              <div class="card-title"><span>👥</span><h3>7. Rol de Testemunhas</h3></div>
               <button type="button" class="btn btn-xs btn-outline" id="btn-add-witness">+ Adicionar Testemunha</button>
             </div>
-            <div class="witnesses-section">
-              <h4 class="sub-section-title">Testemunhas de Acusação:</h4>
-              <div id="pros-witnesses-container" class="items-container"></div>
-
-              <div class="form-group mt-3">
-                <label for="defense_witness_note">Observação sobre Testemunhas de Defesa</label>
-                <input type="text" id="defense_witness_note" name="defense_witness_note" class="form-control" placeholder="A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.">
-              </div>
+            <div id="pros-witnesses-container" class="items-container"></div>
+            <div class="form-group" style="margin-top:0.6rem;">
+              <label>Observação de Testemunhas da Defesa</label>
+              <input type="text" id="defense_witness_note" class="form-control">
             </div>
           </div>
         </form>
       </div>
 
-      <!-- Right Column: Fixed Live Preview (Independent Scroll) -->
-      <div class="preview-pane" id="preview-pane">
+      <!-- Preview Pane (Right Column) -->
+      <div class="preview-pane">
         <div class="preview-pane-header">
           <div class="preview-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-            <span>Minuta em Tempo Real (Padrão Oficial DOCX)</span>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Minuta da Audiência (Formatação Real Word)</span>
           </div>
           <span class="badge badge-stitch">A4 • Verdana 12pt • Margens 2,0 cm</span>
         </div>
 
-        <!-- Scrollable Desk Container -->
-        <div class="desk-scroller" id="desk-scroller">
+        <div class="desk-scroller">
           <div class="word-paper-sheet" id="word-paper-sheet">
             <div class="paper-placeholder" id="paper-placeholder">
-              <div class="placeholder-icon">📄</div>
+              <div style="font-size:2.5rem;opacity:0.4;">📄</div>
               <h4>Nenhum processo carregado</h4>
-              <p>Arraste um PDF dos autos do PJe acima para gerar instantaneamente a minuta da audiência.</p>
+              <p>Arraste um PDF do PJe acima para gerar a minuta instantaneamente.</p>
             </div>
-            <div class="paper-body" id="paper-body">
-              <!-- Dynamically populated via JS -->
-            </div>
+            <div class="paper-body" id="paper-body"></div>
           </div>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- App Footer with Immutable Author Signature -->
   <footer class="app-footer">
-    <div class="footer-content">
-      <span>Desenvolvido por <strong>FChNeto</strong></span>
-      <span class="footer-dot">•</span>
-      <span>JURISRESUMO — Sistema de Apoio a Audiências Criminais</span>
-      <span class="footer-dot">•</span>
-      <span>Tribunal de Justiça do Rio Grande do Norte (TJRN)</span>
-    </div>
+    <span>Desenvolvido por <strong>FChNeto</strong></span>
+    <span style="margin:0 0.5rem;">•</span>
+    <span>JURISRESUMO — Sistema de Apoio a Audiências Criminais (TJRN)</span>
   </footer>
 
-  <!-- Modal: About & Comprehensive Manual -->
-  <div class="modal-backdrop" id="modal-about-backdrop">
-    <div class="modal-card modal-large">
-      <div class="modal-header">
-        <div class="modal-title">
-          <span class="banana-accent">📖</span>
-          <h3>Sobre o JURISRESUMO & Manual de Funcionamento</h3>
-        </div>
-        <button type="button" class="btn-close" id="btn-close-about">&times;</button>
+  <!-- Modal About -->
+  <div class="modal-backdrop" id="modal-about">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="font-size:1.1rem;color:var(--banana-400);">📖 Sobre o JURISRESUMO</h3>
+        <button type="button" style="background:transparent;border:none;color:var(--text-muted);font-size:1.6rem;cursor:pointer;" id="btn-close-about-x">&times;</button>
       </div>
-      <div class="modal-body about-body">
+      <div class="modal-body">
         <h4>1. Para que serve a ferramenta?</h4>
-        <p>O <strong>JURISRESUMO</strong> foi projetado para atuar como o braço direito do Magistrado e de seus assessores na preparação e condução de audiências judiciais criminais (AIJ, ANPP, PAnP e Custódia). A ferramenta lê os autos integrais em PDF extraídos do sistema PJe e gera uma minuta sintética, padronizada e completa em formato Word (<code>.docx</code>), que guia o juiz durante o ato informando todos os réus, defensores, imputação penal, narrativa fática, histórico processual com IDs e rol de testemunhas.</p>
+        <p>O <strong>JURISRESUMO</strong> auxilia magistrados e assessores na condução de audiências criminais (AIJ, ANPP, PAnP). Sintetiza os autos integrais em PDF extraídos do PJe em uma minuta padronizada em Word (<code>.docx</code>).</p>
 
-        <h4>2. Como ela foi construída?</h4>
-        <p>A aplicação foi desenvolvida através de engenharia reversa minuciosa de modelos reais de resumos confeccionados pelo magistrado no TJRN. Foram mapeados:</p>
-        <ul>
-          <li><strong>Especificações OpenXML / Word Mined:</strong> Papel A4 com dimensões exatas de 21,0 cm x 29,7 cm, margens estritas de 2,00 cm em todas as bordas, família tipográfica Verdana 12pt, entrelinha ampla de ~1,89 linhas (<code>line="454"</code>), recuo de primeira linha de 1,27 cm (<code>firstLine="720"</code>) e espaçamento de 0,5 cm após itens do histórico e rol de testemunhas.</li>
-          <li><strong>Mapeamento de Carimbos do PJe:</strong> Leitura automática da Capa de Processo (Página 1) para identificação inequívoca de réus, defensores, promotor e vítimas, associada aos carimbos marginais de rodapé <code>Num. &lt;ID&gt; - Pág. &lt;P&gt;</code> para isolar cada peça jurídica.</li>
-          <li><strong>Hiperlinks Nativos:</strong> Todos os números de ID citados no documento gerado são transformados automaticamente em links azuis clicáveis que abrem a peça original no PJe.</li>
-        </ul>
+        <h4>2. Como funciona esta versão nativa?</h4>
+        <p>Esta versão portátil roda diretamente no seu navegador com análise aprofundada dos autos via catálogo de documentos (TOC), carimbos marginais PJe, deliberações judiciais e narrativa oficial da denúncia ministerial. Não necessita de instalação de Python, banco de dados ou terminal.</p>
 
-        <h4>3. Funcionalidades & Motores</h4>
-        <ul>
-          <li><strong>Modo 100% Offline (Local Seguro):</strong> Opera sem qualquer dependência de internet. Executa OCR local (Tesseract / RapidOCR) para peças escaneadas e extrai dados com segurança e privacidade absolutas.</li>
-          <li><strong>Modo IA Google Gemini:</strong> Permite síntese refinada de denúncias complexas e volumosas com raciocínio jurídico avançado, preservando fielmente autoria e materialidade.</li>
-          <li><strong>Edição Bidirecional em Tempo Real:</strong> Qualquer edição feita no formulário reflete instantaneamente na folha A4 exibida no painel direito.</li>
-        </ul>
-
-        <h4>4. Autoria & Direitos</h4>
-        <p class="mt-2">Aplicativo concebido e desenvolvido por <strong>FChNeto</strong> para aprimorar a eficiência, celeridade e precisão dos atos judiciais criminais.</p>
+        <h4>3. Autoria</h4>
+        <p>Desenvolvido por <strong>FChNeto</strong>.</p>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="btn-close-about-btn">Entendido</button>
+      <div style="text-align:right;">
+        <button type="button" class="btn btn-primary" id="btn-close-about-ok">Entendido</button>
       </div>
     </div>
   </div>
 
-  <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <script src="js/app.js"></script>
+  <!-- Standalone Script -->
+  <script>
+    const PJE_DOC_URL = "https://pje1g.tjrn.jus.br/pje/Processo/ConsultaProcesso/Detalhe/documentoHTML.seam?idBin=";
+    let activeData = null;
+    let geminiApiKey = localStorage.getItem('juris_standalone_key') || '';
+
+    // Initialize PDF.js worker with local path and fallback safety
+    function initPdfWorker() {
+      if (!window.pdfjsLib) return;
+      try {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
+      } catch (e) {
+        console.warn('Worker configuration note:', e);
+      }
+    }
+    initPdfWorker();
+
+    document.getElementById('input-api-key').value = geminiApiKey;
+    document.getElementById('btn-save-key').addEventListener('click', () => {
+      geminiApiKey = document.getElementById('input-api-key').value.trim();
+      localStorage.setItem('juris_standalone_key', geminiApiKey);
+      showToast('Chave salva com sucesso.', 'success');
+    });
+
+    // Drawer Toggles
+    const drawer = document.getElementById('hamburger-drawer');
+    const drawerBackdrop = document.getElementById('drawer-backdrop');
+    document.getElementById('btn-hamburger').onclick = () => { drawer.classList.add('active'); drawerBackdrop.classList.add('active'); };
+    const closeDrawer = () => { drawer.classList.remove('active'); drawerBackdrop.classList.remove('active'); };
+    document.getElementById('btn-close-drawer').onclick = closeDrawer;
+    drawerBackdrop.onclick = closeDrawer;
+
+    // About Modal
+    const modalAbout = document.getElementById('modal-about');
+    document.getElementById('btn-open-about').onclick = () => { closeDrawer(); modalAbout.classList.add('active'); };
+    const closeAbout = () => modalAbout.classList.remove('active');
+    document.getElementById('btn-close-about-x').onclick = closeAbout;
+    document.getElementById('btn-close-about-ok').onclick = closeAbout;
+
+    // Drag & Drop
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const uploadLoading = document.getElementById('upload-loading');
+    const loadingMsg = document.getElementById('loading-msg');
+
+    // Validate file type: only PDF allowed
+    function validateFile(file) {
+      const errEl = document.getElementById('upload-error');
+      if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+        if (errEl) { errEl.textContent = 'Formato de arquivo inválido. Por favor, envie apenas PDFs.'; errEl.style.display = 'block'; }
+        return false;
+      }
+      if (errEl) errEl.style.display = 'none';
+      return true;
+    }
+
+    dropzone.onclick = () => fileInput.click();
+    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('dragover'); };
+    dropzone.ondragleave = () => dropzone.classList.remove('dragover');
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        const f = e.dataTransfer.files[0];
+        if (validateFile(f)) processPdfFile(f);
+      }
+    };
+    fileInput.onchange = (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const f = e.target.files[0];
+        if (validateFile(f)) processPdfFile(f);
+      }
+    };
+
+    // Text Cleaning Helper
+    function cleanPjeText(text) {
+      if (!text) return '';
+      return text.split('\n')
+        .filter(line => {
+          const l = line.trim();
+          if (/Num\.\s*\d+\s*-\s*P[aáAÁ]g\./i.test(l)) return false;
+          if (/P[aá]g\.\s*Total\s*-\s*\d+/i.test(l)) return false;
+          if (/P[aá]g\.\s*\d+\s*de\s*\d+/i.test(l)) return false;
+          if (/Assinado\s+eletronicamente\s+por/i.test(l)) return false;
+          if (/https?:\/\/pje\S+/i.test(l) || /https?:\/\/consultapublica\S+/i.test(l)) return false;
+          if (/Documento\s+n[ºo]\s*\d+\s+do\s+procedimento/i.test(l)) return false;
+          if (/Valida[cç][aã]o\s+em\s+/i.test(l)) return false;
+          if (/N[úu]mero\s+do\s+documento:\s*\d+/i.test(l)) return false;
+          if (/^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO/i.test(l)) return false;
+          if (/PROMOTORIA\s+DE\s+JUSTI[CÇ]A/i.test(l)) return false;
+          if (/Defesa\s+dos\s+Direitos/i.test(l)) return false;
+          if (/^\s*Rua\s+(?:Promotor|Milit[aã]o|Doutor|Serid[oó]|Alameda)/i.test(l)) return false;
+          if (/^Telefone\(s\):/i.test(l) || /^E-mail:/i.test(l) || /^www\./i.test(l)) return false;
+          if (/^\s*_{5,}\s*$/.test(l)) return false;
+          return true;
+        })
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    // Portuguese written date parser
+    function parsePtDateTime(str) {
+      if (!str) return null;
+      const months = {
+        'janeiro': '01', 'fevereiro': '02', 'marco': '03', 'março': '03',
+        'abril': '04', 'maio': '05', 'junho': '06', 'julho': '07',
+        'agosto': '08', 'setembro': '09', 'outubro': '10', 'novembro': '11', 'dezembro': '12'
+      };
+
+      const writtenM = str.match(/(?:(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+(?:designada\s+)?(?:em|para)?)\s+)?(\d{1,2})\s+de\s+(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)(?:\s+de)?\s+(\d{2,4})(?:[^\n\d]{1,25}(?:às|as)\s*(\d{1,2})(?::|h)?(\d{2})?(?:min)?)?/i);
+      if (writtenM) {
+        const d = writtenM[1].padStart(2, '0');
+        const mKey = writtenM[2].toLowerCase().replace('ç', 'c');
+        const m = months[mKey] || '01';
+        let y = writtenM[3];
+        if (y.length === 4) y = y.slice(2);
+        let time = '';
+        if (writtenM[4]) {
+          const h = writtenM[4].padStart(2, '0');
+          const min = writtenM[5] ? writtenM[5].padStart(2, '0') : '00';
+          time = ` às ${h}h${min}min`;
+        }
+        return `${d}.${m}.${y}${time}`;
+      }
+
+      const numM = str.match(/(?:(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+(?:designada\s+)?(?:em|para)?)\s+)?(\d{1,2})[./](\d{1,2})[./](\d{2,4})(?:[^\n\d]{1,25}(?:às|as)\s*(\d{1,2})(?::|h)?(\d{2})?(?:min)?)?/i);
+      if (numM) {
+        const d = numM[1].padStart(2, '0');
+        const m = numM[2].padStart(2, '0');
+        let y = numM[3];
+        if (y.length === 4) y = y.slice(2);
+        let time = '';
+        if (numM[4]) {
+          const h = numM[4].padStart(2, '0');
+          const min = numM[5] ? numM[5].padStart(2, '0') : '00';
+          time = ` às ${h}h${min}min`;
+        }
+        return `${d}.${m}.${y}${time}`;
+      }
+
+      return null;
+    }
+
+    const STATE_ORGANS_BLACKLIST_REGEX = /^(?:delegacia|estado(?:\s+d[oae]s?)?|defensoria|minist[eé]rio\s+p[uú]blico|pol[ií]cia|secretaria|comando|tribunal|juizado|vara\s+criminal|procuradoria|instituto|banco|central\s+de\s+flagrantes|dp\s+de|dpc\b|plant[aã]o\s+da\s+pol[ií]cia|departamento|munic[ií]pio|uni[aã]o)\b/i;
+
+    function isStateOrgan(name) {
+      return STATE_ORGANS_BLACKLIST_REGEX.test((name || '').trim());
+    }
+
+    function formatShortDate(dtStr) {
+      if (!dtStr) return '';
+      const m = dtStr.trim().match(/(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);
+      if (m) {
+        const d = String(parseInt(m[1], 10)).padStart(2, '0');
+        const mo = String(parseInt(m[2], 10)).padStart(2, '0');
+        const yr = m[3].slice(-2);
+        return `${d}/${mo}/${yr}`;
+      }
+      return dtStr.trim();
+    }
+
+    function parseDateSortKey(dtStr, docId) {
+      const m = (dtStr || '').match(/(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);
+      const idNum = parseInt(docId || '0', 10) || 0;
+      if (m) {
+        let yr = parseInt(m[3], 10);
+        if (yr < 100) yr = yr < 70 ? 2000 + yr : 1900 + yr;
+        const mo = parseInt(m[2], 10);
+        const d = parseInt(m[1], 10);
+        return yr * 10000000000 + mo * 100000000 + d * 1000000 + (idNum % 1000000);
+      }
+      return idNum % 1000000;
+    }
+
+    function extractSingleDefendantQualification(name, rawQual, denunciaText, ipText) {
+      const nameClean = (name || '').trim();
+      if (!nameClean) return '';
+      const firstName = nameClean.split(' ')[0];
+      const esc = nameClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      const qualBlockRegex = new RegExp('(?:^|\\n|[;.]\\s*)\\b(' + esc + '[\\s\\S]{1,1200}?)(?=(?:\\n\\s*(?:(?:[I|V|X]+\\)?\\s*)?(?:DOS\\s+FATOS|DA\\s+IMPUTA[CÇ][AÃ]O|DOS\\s+PEDIDOS|DO\\s+PEDIDO|ROL\\s+DE\\s+TESTEMUNHAS|DA\\s+QUALIFICA[CÇ][AÃ]O)|Vem\\s+perante|pela\\s+pr[aá]tica|oferecer\\s+den[uú]ncia)|\\n\\s*(?:\\d+[\\.\\)]\\s*)?[A-ZÁÉÍÓÚ]{3,}(?:\\s+[A-ZÁÉÍÓÚ]{2,}){1,4},?\\s*(?:brasileir|solteir|casad|divorciad|nascid|filh|portador|residente|rg\\b|cpf\\b|vulgo)|$))', 'i');
+
+      let chunk = '';
+      if (rawQual) {
+        const m = rawQual.match(qualBlockRegex);
+        if (m) chunk = m[1].trim();
+      }
+      if (!chunk && denunciaText) {
+        const m2 = denunciaText.match(qualBlockRegex);
+        if (m2) chunk = m2[1].trim();
+      }
+
+      const hasFiliacao = /\bfilh[oa]\b|\bm[aã]e\b|\bpai\b|\bgenitor/i.test(chunk);
+      const hasRg = /\bRG\b|\b\d{6,}\b/i.test(chunk);
+      const hasCpf = /\bCPF\b|\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/i.test(chunk);
+      const isGeneric = !chunk || /qualificad/i.test(chunk);
+
+      if (ipText && (isGeneric || !(hasFiliacao && hasRg && hasCpf))) {
+        const ipRegex = new RegExp('(' + esc + '[\\s\\S]{1,900}?)(?=(?:\\n\\n|\\n\\s*(?:[A-ZÁÉÍÓÚ]{3,}|\\d+[\\.\\)]|\\n)|$))', 'i');
+        const m3 = ipText.match(ipRegex);
+        if (m3 && /cpf|rg|filho|filha|nascid|natural|brasileir/i.test(m3[1])) {
+          const ipChunk = m3[1].trim();
+          if (isGeneric || !chunk) {
+            chunk = ipChunk;
+          } else {
+            const supplements = [];
+            if (!hasFiliacao) {
+              const filM = ipChunk.match(/(\bfilh[oa]\s+de\s+[A-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ\s]{3,80}?)(?=[,;\n.]|$)/i);
+              if (filM) supplements.push(filM[1].trim());
+            }
+            if (!hasRg) {
+              const rgM = ipChunk.match(/(\bRG\s*(?:n[º°\.]?)?\s*[\d\.-]+(?:\s*[A-Z/]+)?)/i);
+              if (rgM) supplements.push(rgM[1].trim());
+            }
+            if (!hasCpf) {
+              const cpfM = ipChunk.match(/(\bCPF\s*(?:n[º°\.]?)?\s*[\d\.-]+)/i);
+              if (cpfM) supplements.push(cpfM[1].trim());
+            }
+            if (supplements.length > 0) {
+              chunk = `${chunk}, ${supplements.join(', ')}`;
+            }
+          }
+        }
+      }
+
+      if (chunk) {
+        return chunk.replace(/^[;.\s]+|[;.\s]+$/g, '').replace(/[ \t]+/g, ' ');
+      }
+
+      if (rawQual && nameClean.length > 5 && rawQual.toLowerCase().includes(firstName.toLowerCase())) {
+        const clean = rawQual.replace(/^[;.\s]+|[;.\s]+$/g, '').replace(/[ \t]+/g, ' ');
+        if (/cpf|rg|filho|nascid|brasileir/i.test(clean)) return clean;
+      }
+
+      return `${nameClean.toUpperCase()}, qualificação nos autos.`;
+    }
+
+    function extractImputationFromDenuncia(denunciaText) {
+      if (!denunciaText) return 'Artigo de lei a ser apurado';
+
+      let imputationText = '';
+      const impMatch = denunciaText.match(/(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)/i);
+      if (impMatch) {
+        imputationText = cleanPjeText(impMatch[1]).replace(/\s+/g, ' ').trim();
+      } else {
+        const crimeMatch = denunciaText.match(/(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao])\s*([^\n;]+)/i);
+        if (crimeMatch) {
+          imputationText = cleanPjeText(crimeMatch[1]).replace(/\s+/g, ' ').trim();
+        }
+      }
+
+      const artMatches = [];
+      const artRx = /\bart(?:igo)?s?\b\.?\s*\d+(?:-[A-Z])?\b(?:\s*,\s*§\s*\d+[º°]?(?:-[A-Z])?|\s+§\s*\d+[º°]?(?:-[A-Z])?)*(?:\s*,\s*(?:inciso\s+)?[I|V|X|L|C|D|M]+\b|\s+(?:inciso\s+)?[I|V|X|L|C|D|M]+\b)*(?:\s*,\s*al[íi]nea\s+[a-z]|\s+al[íi]nea\s+[a-z])*(?:\s+(?:c\/c|comb|combinado\s+com)\s+art(?:igo)?s?\b\.?\s*\d+[^,.;\n]*)*(?:\s+(?:do\s+CP|do\s+C[oó]digo\s+Penal|da\s+Lei[^\n,.;]*))?/gi;
+      let m;
+      while ((m = artRx.exec(denunciaText)) !== null) {
+        const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
+        if (c && !artMatches.includes(c)) artMatches.push(c);
+      }
+      const lawRx = /\b(?:Lei\s+(?:n[º°\.]?\s*)?[\d\./]+|ECA|Lei\s+Maria\s+da\s+Penha|Estatuto\s+do\s+Desarmamento|Lei\s+de\s+Drogas)(?:\s*\([^\)]+\))?(?:\s*,\s*art(?:igo)?\.?\s*\d+[^;.\n]*)?/gi;
+      while ((m = lawRx.exec(denunciaText)) !== null) {
+        const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
+        if (c && !artMatches.includes(c)) artMatches.push(c);
+      }
+      const concursoRx = /\bart[s]?\.?\s*(?:69|70|71)[^\n,.;]*(?:do\s+CP|do\s+C[oó]digo\s+Penal)?/gi;
+      while ((m = concursoRx.exec(denunciaText)) !== null) {
+        const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
+        if (c && !artMatches.includes(c)) artMatches.push(c);
+      }
+
+      if (imputationText) {
+        const missing = [];
+        for (let art of artMatches) {
+          const nums = art.match(/\d+/g);
+          if (nums) {
+            const numFound = nums.some(n => imputationText.includes(n));
+            const hasParagraphInArt = art.includes('§');
+            const hasParagraphInImp = imputationText.includes('§');
+            const hasEcaInArt = art.includes('244') || art.includes('ECA');
+            const hasEcaInImp = imputationText.includes('244') || imputationText.includes('ECA');
+            if (!numFound || (hasParagraphInArt && !hasParagraphInImp) || (hasEcaInArt && !hasEcaInImp)) {
+              if (!imputationText.includes(art)) missing.push(art);
+            }
+          }
+        }
+        if (missing.length > 0) {
+          const uniqueMissing = Array.from(new Set(missing));
+          imputationText += ' c/c ' + uniqueMissing.join(' c/c ');
+        }
+        return imputationText;
+      }
+
+      if (artMatches.length > 0) {
+        const unique = Array.from(new Set(artMatches));
+        return `Imputação penal (${unique.join(', ')})`;
+      }
+
+      return 'Artigo de lei a ser apurado';
+    }
+
+    function recordFeedbackLearned(action, text) {
+      if (!text) return;
+      try {
+        const stored = JSON.parse(localStorage.getItem('jurisresumo_feedback_rules') || '{"penalized":{},"boosted":{}}');
+        const words = text.toLowerCase().replace(/[^\w\s-]/g, ' ').split(/\s+/).filter(w => w.length > 3);
+        for (let w of words) {
+          if (action === 'removal') {
+            stored.penalized[w] = (stored.penalized[w] || 0) + 0.15;
+          } else if (action === 'addition') {
+            stored.boosted[w] = (stored.boosted[w] || 0) + 0.15;
+          }
+        }
+        localStorage.setItem('jurisresumo_feedback_rules', JSON.stringify(stored));
+      } catch (e) {}
+    }
+
+    // Client-Side PDF Extraction & Comprehensive Deep Legal Analysis
+    async function processPdfFile(file) {
+      uploadLoading.classList.add('active');
+      loadingMsg.innerText = 'Lendo e indexando páginas do PDF...';
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pages = [];
+        const stampRegex = /Num\.\s*(\d{7,10})\s*-\s*P[aáAÁ]g\.\s*(\d+)/i;
+
+        if (window.pdfjsLib) {
+          initPdfWorker();
+          let pdf = null;
+          try {
+            pdf = await pdfjsLib.getDocument({ data: arrayBuffer, stopAtErrors: false }).promise;
+          } catch (workerErr) {
+            console.warn('Worker load note, attempting direct execution:', workerErr);
+            try { pdfjsLib.GlobalWorkerOptions.workerSrc = ''; } catch (_) {}
+            pdf = await pdfjsLib.getDocument({ data: arrayBuffer, stopAtErrors: false }).promise;
+          }
+          const numPages = pdf.numPages;
+
+          const batchSize = 10;
+          for (let b = 1; b <= numPages; b += batchSize) {
+            const end = Math.min(b + batchSize - 1, numPages);
+            loadingMsg.innerText = `Processando páginas ${b} a ${end} de ${numPages} (${Math.round((end / numPages) * 100)}%)...`;
+            const batchPromises = [];
+            for (let i = b; i <= end; i++) {
+              batchPromises.push(
+                pdf.getPage(i).then(page =>
+                  page.getTextContent().then(textContent => {
+                    // Reconstruct text lines with preserved vertical layout
+                    const items = textContent.items || [];
+                    const lines = [];
+                    let currentY = null;
+                    let currentLine = [];
+                    for (let it of items) {
+                      const y = it.transform ? Math.round(it.transform[5]) : 0;
+                      if (currentY === null) {
+                        currentY = y;
+                        currentLine.push(it.str);
+                      } else if (Math.abs(y - currentY) > 3) {
+                        lines.push(currentLine.join(' '));
+                        currentY = y;
+                        currentLine = [it.str];
+                      } else {
+                        currentLine.push(it.str);
+                      }
+                    }
+                    if (currentLine.length > 0) lines.push(currentLine.join(' '));
+                    const pageText = lines.join('\n');
+                    const mStamp = pageText.match(stampRegex);
+                    return {
+                      pageNum: i,
+                      text: pageText,
+                      stampDocId: mStamp ? mStamp[1] : null,
+                      stampSubpage: mStamp ? parseInt(mStamp[2]) : null
+                    };
+                  })
+                )
+              );
+            }
+            const batchResults = await Promise.all(batchPromises);
+            batchResults.sort((a, b) => a.pageNum - b.pageNum);
+            batchResults.forEach(r => pages.push(r));
+          }
+        } else {
+          // Binary fallback
+          const dec = new TextDecoder('latin1');
+          const raw = dec.decode(arrayBuffer);
+          const rawPages = raw.split(/\f|\n{4,}/);
+          rawPages.forEach((pTxt, idx) => {
+            const mStamp = pTxt.match(stampRegex);
+            pages.push({
+              pageNum: idx + 1,
+              text: pTxt,
+              stampDocId: mStamp ? mStamp[1] : null,
+              stampSubpage: mStamp ? parseInt(mStamp[2]) : null
+            });
+          });
+        }
+
+        loadingMsg.innerText = 'Estruturando catálogo de peças e analisando mérito...';
+        const extracted = analyzePjeRecords(pages, file.name);
+        loadDataIntoUI(extracted);
+        showToast(`Processo com ${pages.length} páginas analisado com sucesso!`, 'success');
+      } catch (err) {
+        showToast('Erro ao ler PDF no navegador: ' + err.message, 'error');
+        console.error(err);
+      } finally {
+        uploadLoading.classList.remove('active');
+        fileInput.value = '';
+      }
+    }
+
+    // Legal Substantive Act Summarizer
+    function summarizeHistoryAct(docName, docType, text) {
+      const nL = (docName || '').toLowerCase();
+      const tL = (docType || '').toLowerCase();
+      const txtL = (text || '').toLowerCase();
+
+      if (nL.includes('denúncia') || nL.includes('denuncia')) {
+        if (txtL.includes('não foi proposto anpp') || txtL.includes('deixo de propor anpp')) {
+          return 'Denúncia. Consta cota afirmando que não foi proposto ANPP em face dos denunciados';
+        } else if (txtL.includes('suspensão condicional') || txtL.includes('sursis')) {
+          return 'Denúncia oferecida com proposta de Suspensão Condicional do Processo';
+        }
+        return 'Denúncia oferecida pelo Ministério Público';
+      }
+      if (nL.includes('decisão') || nL.includes('decisao')) {
+        if (txtL.includes('recebo a denúncia') || txtL.includes('recebida a denúncia') || txtL.includes('recebimento da denúncia')) {
+          if (txtL.includes('pauta') || txtL.includes('designo')) {
+            return 'Decisão recebendo a denúncia e designando audiência';
+          }
+          return 'Decisão recebendo a denúncia';
+        }
+        if (txtL.includes('revoga') && (txtL.includes('suspensão') || txtL.includes('sursis'))) {
+          return 'Decisão revogando a Suspensão Condicional do Processo e designando AIJ';
+        }
+        if (txtL.includes('produção antecipada') || txtL.includes('art. 366')) {
+          return 'Decisão suspendendo o processo (art. 366 CPP) e designando produção antecipada de provas';
+        }
+        if (txtL.includes('pauta') || txtL.includes('designo') || txtL.includes('instrução')) {
+          return 'Decisão designando audiência de instrução e julgamento';
+        }
+        return 'Decisão interlocutória';
+      }
+      if (nL.includes('despacho')) {
+        if (txtL.includes('pauta') || txtL.includes('designo') || txtL.includes('instrução')) {
+          return 'Despacho incluindo o feito em pauta de audiência de instrução e julgamento';
+        }
+        if (txtL.includes('reaprazo') || txtL.includes('redesigno')) {
+          return 'Despacho redesignando a audiência';
+        }
+        if (txtL.includes('homologação de anpp') || txtL.includes('homologar')) {
+          return 'Despacho designando audiência de homologação de ANPP';
+        }
+        return 'Despacho judicial';
+      }
+      if (nL.includes('resposta') || nL.includes('defesa prévia') || nL.includes('defesa previa')) {
+        return 'Resposta à acusação pugnando pela absolvição sumária do acusado';
+      }
+      if (nL.includes('edital')) {
+        return 'Citação por edital do acusado';
+      }
+      if (nL.includes('mandado') && nL.includes('citação')) {
+        return 'Mandado de citação';
+      }
+      if (nL.includes('mandado') && nL.includes('intimação')) {
+        return 'Mandado de intimação de audiência';
+      }
+      if (nL.includes('intimação de audiência') || tL.includes('intimação de audiência')) {
+        return 'Intimação de audiência expedida';
+      }
+      if (nL.includes('ata da audiência') || nL.includes('termo de audiência') || nL.includes('ata de audiência')) {
+        if (txtL.includes('custódia')) return 'Audiência de Custódia realizada';
+        if (txtL.includes('suspensão') || txtL.includes('sursis')) return 'Audiência de Suspensão Condicional do Processo realizada';
+        if (txtL.includes('instrução')) return 'Ata de audiência de instrução realizada';
+        return 'Ata da audiência';
+      }
+      return docName.replace(/^\d+\s*-\s*/, '').trim();
+    }
+
+    // Core Analytical Engine for PJe
+    function analyzePjeRecords(pages, filename) {
+      const fullText = pages.map(p => p.text).join('\n');
+      const fnUpper = (filename || '').toUpperCase();
+
+      // 1. Case Number
+      const cnjMatch = fullText.match(/\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b/) || filename.match(/\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b/);
+      const caseNumber = cnjMatch ? cnjMatch[1] : '0000000-00.0000.8.20.0000';
+
+      // 2. Capa Parties from Page 1
+      const reusCapa = [];
+      const vitimasCapa = [];
+      const testemunhasCapa = [];
+      const advsCapa = [];
+      let promCapa = '';
+
+      if (pages.length > 0) {
+        const page1Lines = pages[0].text.split('\n');
+        let prevLine = '';
+        page1Lines.forEach(l => {
+          const lTrim = l.trim();
+          const lu = lTrim.toUpperCase();
+          if (/\((?:REU|RÉU|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA])\)/i.test(lu)) {
+            let name = lTrim.replace(/\((?:R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA])\)/ig, '').trim();
+            if (!name && prevLine) name = prevLine;
+            name = name.replace(/^[A-Z]+:\s*/, '').trim();
+            if (name.length > 3 && !isStateOrgan(name) && !reusCapa.includes(name)) reusCapa.push(name);
+          } else if (/\(V[IÍ]TIMA\)/i.test(lu)) {
+            let name = lTrim.replace(/\(V[IÍ]TIMA\)/ig, '').trim();
+            if (!name && prevLine) name = prevLine;
+            name = name.replace(/^[A-Z]+:\s*/, '').trim();
+            if (name.length > 3 && !vitimasCapa.includes(name)) vitimasCapa.push(name);
+          } else if (/\(TESTEMUNHA\)/i.test(lu)) {
+            let name = lTrim.replace(/\(TESTEMUNHA\)/ig, '').trim();
+            if (!name && prevLine) name = prevLine;
+            name = name.replace(/^[A-Z]+:\s*/, '').trim();
+            if (name.length > 3 && !testemunhasCapa.includes(name)) testemunhasCapa.push(name);
+          } else if (/\(ADVOGADO\w*\)|\(DEFENSOR\w*\)/i.test(lu)) {
+            let name = lTrim.replace(/\(ADVOGADO\w*\)|\(DEFENSOR\w*\)/ig, '').trim();
+            if (!name && prevLine) name = prevLine;
+            name = name.replace(/^[A-Z]+:\s*/, '').trim();
+            if (name.length > 3 && !advsCapa.includes(name)) advsCapa.push(name);
+          } else if (/\(AUTOR\)/i.test(lu) && (/PROMOTORIA/i.test(lu) || /MINISTÉRIO/i.test(lu))) {
+            const promM = lTrim.match(/(\d+ª?\s+Promotoria[^\n)]+)/i);
+            promCapa = 'Dr. Promotor de Justiça' + (promM ? ` (${promM[1].trim()})` : '');
+          }
+          prevLine = lTrim;
+        });
+      }
+
+      // 3. Catalog & TOC Parsing
+      const pageStamps = {};
+      pages.forEach(p => {
+        if (p.stampDocId) {
+          if (!pageStamps[p.stampDocId]) pageStamps[p.stampDocId] = [];
+          pageStamps[p.stampDocId].push(p.pageNum);
+        }
+      });
+
+      // Find TOC pages (pages without footer stamp at start)
+      const tocPages = [];
+      for (let p of pages) {
+        if (p.stampDocId === null) tocPages.push(p);
+        else break;
+      }
+      if (tocPages.length === 0 && pages.length > 0) tocPages.push(pages[0]);
+
+      const idDateRe = /^(\d{7,10})\s+(\d{2}\/\d{2}\/\d{4})/;
+      const tocEntries = [];
+      const seenIds = new Set();
+
+      tocPages.forEach(tp => {
+        const lines = tp.text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        let idx = 0;
+        while (idx < lines.length) {
+          const l = lines[idx];
+          const m = l.match(idDateRe);
+          if (m) {
+            const dId = m[1];
+            const dDate = m[2];
+            idx++;
+            let timeStr = '';
+            if (idx < lines.length && /^\d{2}:\d{2}$/.test(lines[idx])) {
+              timeStr = lines[idx];
+              idx++;
+            }
+            const docName = idx < lines.length ? lines[idx] : '';
+            idx++;
+            let docType = '';
+            if (idx < lines.length && !idDateRe.test(lines[idx])) {
+              docType = lines[idx];
+              idx++;
+            }
+            if (!seenIds.has(dId)) {
+              seenIds.add(dId);
+              tocEntries.push({
+                doc_id: dId,
+                date_str: `${dDate} ${timeStr}`.trim(),
+                doc_name: docName,
+                doc_type: docType
+              });
+            }
+          } else {
+            idx++;
+          }
+        }
+      });
+
+      // Assemble full document catalog with correlated page text
+      const pjeCatalog = [];
+      tocEntries.forEach(entry => {
+        const dId = entry.doc_id;
+        const mp = pageStamps[dId] || [];
+        let sp = 0, ep = 0, txtP = '';
+        if (mp.length > 0) {
+          sp = Math.min(...mp);
+          ep = Math.max(...mp);
+          txtP = pages.filter(p => p.pageNum >= sp && p.pageNum <= ep).map(p => p.text).join('\n');
+        } else {
+          // Search doc_id across pages
+          const found = pages.find(p => p.text.includes(dId));
+          if (found) txtP = found.text;
+        }
+        pjeCatalog.push({
+          doc_id: dId,
+          date_str: entry.date_str,
+          doc_name: entry.doc_name,
+          doc_type: entry.doc_type,
+          start_page: sp,
+          end_page: ep,
+          text: txtP
+        });
+      });
+
+      // 4. Locate Key Documents
+      let denunciaDoc = null;
+      for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+        const d = pjeCatalog[i];
+        const nl = d.doc_name.toLowerCase();
+        const tl = d.doc_type.toLowerCase();
+        if (/cota|recebimento|aditamento|certidão|bnmp|seeu|antecedentes/.test(nl)) continue;
+        if (nl.includes('requerimento') && !nl.includes('denún') && !nl.includes('denun')) continue;
+        if (nl.startsWith('denún') || nl.startsWith('denun') || tl.startsWith('denún') || tl.startsWith('denun') || nl.includes('queixa')) {
+          denunciaDoc = d;
+          break;
+        }
+      }
+      if (!denunciaDoc) {
+        for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+          const comb = `${pjeCatalog[i].doc_name} ${pjeCatalog[i].doc_type}`.toLowerCase();
+          if ((comb.includes('denún') || comb.includes('denun') || comb.includes('queixa')) && !comb.includes('cota')) {
+            denunciaDoc = pjeCatalog[i];
+            break;
+          }
+        }
+      }
+      if (!denunciaDoc) {
+        denunciaDoc = pjeCatalog.find(d => `${d.doc_name} ${d.doc_type}`.toLowerCase().includes('petição inicial'));
+      }
+
+      let respostaDoc = null;
+      for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+        const comb = `${pjeCatalog[i].doc_name} ${pjeCatalog[i].doc_type}`.toLowerCase();
+        if ((comb.includes('resposta') && comb.includes('acusação')) || comb.includes('defesa prévia') || comb.includes('defesa previa')) {
+          respostaDoc = pjeCatalog[i];
+          break;
+        }
+      }
+
+      const mandadosDocs = pjeCatalog.filter(d => {
+        const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+        return /mandado|intimação|certidão|ofício|diligência|ato positivo|ato negativo|comprovante/.test(comb);
+      });
+
+      const hearingDesigRegex = /(?:(?:design[ao]|apraz[ao]|reapraz[ao]|redesign[ao]|remarc[ao]|inclua-se|incluo)\s+.*?\b(?:audi[eê]ncia|pauta)|pauta\s+(?:para|de)\s+(?:audi[eê]ncia|aij)|audi[eê]ncia\s+.*?\b(?:designad[ao]|aprazad[ao]|reaprazad[ao]|redesignad[ao]|remarcad[ao]|marcad[ao]|agendad[ao]|para\s+o\s+dia|no\s+dia)|designo\s+o\s+dia\s+\d+|audi[eê]ncia\s+de\s+(?:instru[cç][aã]o|homologa[cç][aã]o|produ[cç][aã]o|cust[oó]dia)|termo\s+de\s+audi[eê]ncia\s+de\s+instru[cç][aã]o|ata\s+d[ae]\s+audi[eê]ncia)/i;
+
+      let decisaoAudienciaDoc = null;
+      let hearingText = '';
+      for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+        const d = pjeCatalog[i];
+        const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+        if (/extrato|dados telef|comprovante|foto|laudo|inquérito|boletim/.test(comb)) continue;
+        if (/decis|despacho|ato ordinat|audiência|audiencia|termo|ata/.test(comb)) {
+          if (hearingDesigRegex.test(d.text)) {
+            decisaoAudienciaDoc = d;
+            hearingText = d.text;
+            break;
+          }
+        }
+      }
+
+      const denunciaText = denunciaDoc ? denunciaDoc.text : fullText;
+      const respostaText = respostaDoc ? respostaDoc.text : '';
+
+      // 5. Legal Hierarchy Act Type Classification
+      let hasReceivedDenuncia = false;
+      let hasAijMention = false;
+      let hasAnppRejection = false;
+      const anppNegationRegex = /(?:n[aã]o\s+(?:foi|h[aá]|sendo|cabe|cab[ií]vel|seja)\s+propost[ao]\s+anpp|n[aã]o\s+(?:foi|h[aá]|sendo|cabe|cab[ií]vel|seja)\s+propost[ao]\s+(?:acordo\s+de\s+)?n[aã]o\s+persecu[cç][aã]o|deix[ao](?:-se)?\s+de\s+propor\s+(?:o\s+)?(?:anpp|acordo)|incab[ií]vel\s+(?:o\s+)?(?:anpp|acordo)|invi[aá]vel\s+(?:o\s+)?(?:anpp|acordo)|ausentes\s+(?:os\s+)?requisitos\s+(?:do\s+)?(?:anpp|acordo)|n[aã]o\s+(?:possui|preenche)\s+(?:os\s+)?requisitos|recusou\s+(?:o\s+)?(?:anpp|acordo)|anpp\s+infrut[ií]fero|n[aã]o\s+aceitou\s+(?:a\s+proposta|o\s+anpp)|afastada\s+a\s+possibilidade\s+de\s+anpp|deixa-se\s+de\s+propor\s+acordo|cota.*anpp)/i;
+
+      pjeCatalog.forEach(d => {
+        const txt = d.text.toLowerCase();
+        if (/recebo a denúncia|recebida a denúncia|recebimento da denúncia|art\.?\s*396|art\.?\s*399|absolvição sumária/.test(txt)) hasReceivedDenuncia = true;
+        if (/instrução e julgamento|audiência de instrução|oitiva d[ae]s? testemunhas?|inquirir as testemunhas|interrogatório do réu/.test(txt)) hasAijMention = true;
+        if (anppNegationRegex.test(txt)) hasAnppRejection = true;
+      });
+
+      let actType = 'AIJ';
+      const hComb = `${decisaoAudienciaDoc ? decisaoAudienciaDoc.doc_name : ''} ${hearingText}`.toLowerCase();
+
+      if (/\b(produ[cç][aã]o\s+antecipada|panp|art\.?\s*366)\b/i.test(hComb) || fnUpper.includes('PANP')) {
+        actType = 'PAnP';
+      } else if (/homologa[cç][aã]o\s+d[eo]\s+(?:acordo|anpp)|audi[eê]ncia\s+(?:de\s+anpp|para\s+fins\s+do\s+art\.?\s*28-a|para\s+homologa[cç][aã]o)/i.test(hComb) && !anppNegationRegex.test(hComb) && !hasAnppRejection) {
+        actType = 'ANPP';
+      } else if (/\b(instru[cç][aã]o(?:\s+e\s+julgamento)?|aij|oitiva\s+d[ae]s?\s+testemunhas?|inquirir\s+testemunhas?|interrogat[oó]rio)\b/i.test(hComb)) {
+        actType = 'AIJ';
+      } else if (/audi[eê]ncia\s+de\s+cust[oó]dia/i.test(hComb) && !denunciaDoc) {
+        actType = 'Custódia';
+      } else if (hasReceivedDenuncia && hasAijMention) {
+        actType = 'AIJ';
+      } else if (/audi[eê]ncia\s+de\s+suspens[aã]o|sursis\s+processual/i.test(hComb)) {
+        actType = 'Sursis';
+      } else if (fnUpper.includes('ANPP') && !hasAnppRejection) {
+        actType = 'ANPP';
+      } else if (fnUpper.includes('AIJ')) {
+        actType = 'AIJ';
+      } else {
+        actType = 'AIJ';
+      }
+
+      // 6. Videoconference Link
+      let hearingLink = '';
+      const teamsRegex = /(https:\/\/teams\.microsoft\.com\/meet\/[^\s"'>)]+|https:\/\/teams\.live\.com\/meet\/[^\s"'>)]+)/i;
+      const meetRegex = /(https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3})/i;
+
+      if (hearingText) {
+        const tm = hearingText.match(teamsRegex);
+        const mm = hearingText.match(meetRegex);
+        if (tm) hearingLink = tm[1].replace(/[.,>)]+$/, '');
+        else if (mm) hearingLink = mm[1].replace(/[.,>)]+$/, '');
+      }
+      if (!hearingLink) {
+        for (let i = mandadosDocs.length - 1; i >= 0; i--) {
+          const tm = mandadosDocs[i].text.match(teamsRegex);
+          const mm = mandadosDocs[i].text.match(meetRegex);
+          if (tm) { hearingLink = tm[1].replace(/[.,>)]+$/, ''); break; }
+          if (mm) { hearingLink = mm[1].replace(/[.,>)]+$/, ''); break; }
+        }
+      }
+      if (!hearingLink) {
+        for (let i = pages.length - 1; i >= 0; i--) {
+          const tm = pages[i].text.match(teamsRegex);
+          const mm = pages[i].text.match(meetRegex);
+          if (tm) { hearingLink = tm[1].replace(/[.,>)]+$/, ''); break; }
+          if (mm) { hearingLink = mm[1].replace(/[.,>)]+$/, ''); break; }
+        }
+      }
+
+      // 7. Date and Time
+      let hearingDateTime = parsePtDateTime(filename);
+      if (!hearingDateTime && hearingText) {
+        hearingDateTime = parsePtDateTime(hearingText);
+      }
+      if (!hearingDateTime) {
+        for (let i = pages.length - 1; i >= 0; i--) {
+          if (/designo|pauta|audi[eê]ncia|aprazad/i.test(pages[i].text)) {
+            const dt = parsePtDateTime(pages[i].text);
+            if (dt) { hearingDateTime = dt; break; }
+          }
+        }
+      }
+      if (!hearingDateTime) hearingDateTime = 'Data a definir';
+
+      // 8. Prosecutor
+      let prosecutor = promCapa || 'Dr. Promotor de Justiça';
+      const sigMatches = [...denunciaText.matchAll(/Assinado\s+eletronicamente\s+por:\s*([A-ZÁÉÍÓÚÂÊÔÃÕ\s]+?)\s*-\s*\d{2}\/\d{2}\/\d{4}/gi)];
+      for (let sm of sigMatches) {
+        const sName = sm[1].trim();
+        if (sName.length > 4 && !/secretaria|escriv|diretor|tribunal|rua|vara|comarca/i.test(sName)) {
+          let pTitle = `Dr. ${sName.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase())}`;
+          if (promCapa && promCapa.includes('(')) {
+            pTitle += ` ${promCapa.substring(promCapa.indexOf('('))}`;
+          }
+          prosecutor = pTitle;
+          break;
+        }
+      }
+
+      // 9. Prison Status & Defendants
+      let fullPdfPrison = '';
+      for (let p of pages) {
+        const pl = p.text.toLowerCase();
+        if (pl.includes('custodiado na') || pl.includes('penitenciária') || pl.includes('cadeia pública')) {
+          const pm = p.text.match(/(custodiado\s+na\s+[^,;\n]+|penitenci[aá]ria\s+estadual\s+de\s+[^,;\n]+|cadeia\s+p[uú]blica\s+de\s+[^,;\n]+)/i);
+          if (pm) { fullPdfPrison = pm[1].trim(); break; }
+        }
+      }
+
+      // Qualification block
+      let qualText = '';
+      const qualMatch = denunciaText.match(/(?:(?:III|II|I)\)?\s*(?:Acusad[oa]s?|Denunciad[oa]s?)|DENUNCIADO\(?A?\)?:?|DOS\s+DENUNCIADOS:?|DA\s+QUALIFICA[CÇ][AÃ]O(?:\s+D[OE]S\s+DENUNCIAD[OA]S)?|oferecer\s+den[uú]ncia\s+(?:em\s+desfavor\s+de|contra)[:\s]*|oferece\s+den[uú]ncia\s+(?:em\s+desfavor\s+de|contra)[:\s]*|vem\s+perante\s+V\.\s*Exa\.?[^\n]*denunciar[:\s]*)([\s\S]*?)(?:(?:^|\n)\s*(?:(?:IV|V|VI)\)\s*Narrativa|(?:IV|V|VI)\)|DOS\s+FATOS|I\s*[-–.]\s*DOS\s+FATOS|\n\s*Consta\s+d[oe]s\s+(?:inclus[oa]s|referidos)|pela\s+pr[aá]tica\s+dos\s+fatos|pelos\s+fatos\s+a\s+seguir|pelos\s+fatos\s+e\s+fundamentos))/i);
+      if (qualMatch) {
+        qualText = cleanPjeText(qualMatch[1]);
+      }
+
+      const filteredCapaReus = reusCapa.filter(n => !isStateOrgan(n));
+      const defendantNames = filteredCapaReus.length > 0 ? filteredCapaReus : ['RÉU A QUALIFICAR'];
+      const defendants = defendantNames.map(name => {
+        const nameLower = name.toLowerCase();
+        const firstName = name.split(' ')[0].toLowerCase();
+        const surname = name.split(' ').slice(-1)[0].toLowerCase();
+
+        let status = 'respondendo ao processo em liberdade';
+        if (fullPdfPrison) {
+          status = `réu preso, atualmente ${fullPdfPrison}`;
+        } else if (/preso|custodiado|penitenciária/i.test(qualText) || /preso|custodiado/i.test(fullText)) {
+          status = 'réu preso';
+        }
+        if (/edital/i.test(qualText) || /citado por edital/i.test(fullText)) {
+          status = 'citado por edital';
+        }
+
+        // Subpoena ID & Citation ID
+        let subpoenaId = '';
+        let citationId = '';
+        for (let md of mandadosDocs) {
+          const mt = md.text.toLowerCase();
+          if (mt.includes(nameLower) || (firstName.length > 3 && surname.length > 3 && mt.includes(firstName) && mt.includes(surname))) {
+            if (mt.includes('citação') || mt.includes('citei')) citationId = md.doc_id;
+            if (mt.includes('intimação') || mt.includes('intimei') || mt.includes('audiência')) {
+              subpoenaId = md.doc_id;
+              break;
+            }
+          }
+        }
+        if (!subpoenaId) {
+          const genMandado = mandadosDocs.find(d => /mandado/i.test(d.doc_name) && /intimação|cumprido/i.test(d.doc_name));
+          if (genMandado) subpoenaId = genMandado.doc_id;
+        }
+
+        return {
+          name: name.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+          status: status,
+          citation_id: citationId,
+          subpoena_id: subpoenaId
+        };
+      });
+
+      let ipText = '';
+      const ipDocs = pjeCatalog.filter(d => /inquérito|inquerito|flagrante|interrogat|qualifica|boletim/i.test(`${d.doc_name} ${d.doc_type}`));
+      for (let ipD of ipDocs.slice(0, 3)) {
+        ipText += (ipD.text || '') + '\n';
+      }
+
+      const defendantQuals = [];
+      for (let name of defendantNames) {
+        if (isStateOrgan(name)) continue;
+        const dQual = extractSingleDefendantQualification(name, qualText, denunciaText, ipText);
+        defendantQuals.push(dQual);
+      }
+      if (defendantQuals.length > 0) {
+        qualText = defendantQuals.join('\n\n');
+      } else if (!qualText) {
+        qualText = defendants.map(d => `${d.name.toUpperCase()}, qualificação nos autos.`).join('\n\n');
+      }
+
+      // 10. Imputation
+      let imputationText = extractImputationFromDenuncia(denunciaText);
+
+      // 11. Facts Extraction & ANPP Structure
+      let factsSummary = '';
+      if (actType === 'ANPP') {
+        const termoDoc = pjeCatalog.find(d => {
+          const c = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+          return (c.includes('termo') && (c.includes('anpp') || c.includes('acordo'))) || (c.includes('acordo') && c.includes('persecu'));
+        }) || pjeCatalog.find(d => `${d.doc_name} ${d.doc_type}`.toLowerCase().includes('acordo'));
+
+        const cisaoDoc = pjeCatalog.find(d => /desmembramento|cisão|cisao/.test(`${d.doc_name} ${d.doc_type}`.toLowerCase()));
+        
+        let despachoDoc = null;
+        for (let i = pjeCatalog.length - 1; i >= 0; i--) {
+          const d = pjeCatalog[i];
+          const c = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+          if (/despacho|decisão|decisao/i.test(c) && hearingDesigRegex.test(d.text)) {
+            despachoDoc = d;
+            break;
+          }
+        }
+        if (!despachoDoc) {
+          despachoDoc = pjeCatalog.find(d => d.doc_name.toLowerCase() === 'despacho' && d.start_page > 400);
+        }
+
+        const ipDoc = pjeCatalog.find(d => /inquérito|inquerito|ip_/.test(`${d.doc_name} ${d.doc_type}`.toLowerCase()));
+
+        // Paragraph 1: Desmembramento / Origem
+        let originProc = '';
+        if (cisaoDoc) {
+          const cM = cisaoDoc.text.match(/principal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i) ||
+                     cisaoDoc.text.match(/a[cç][aã]o\s+penal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i);
+          if (cM) originProc = cM[1];
+        }
+        if (!originProc && despachoDoc) {
+          const dM = despachoDoc.text.match(/principal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i);
+          if (dM) originProc = dM[1];
+        }
+        if (!originProc) {
+          const gM = fullText.match(/principal\s+n[ºo]?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/i);
+          if (gM) originProc = gM[1];
+        }
+
+        const paras = [];
+        if (originProc) {
+          paras.push(`OBS: este processo foi oriundo de um desmembramento da ação penal nº ${originProc} que possuía outros indiciados que foram denunciados pelo MP, com exceção da acusada que foi beneficiada com ANPP.`);
+        } else {
+          paras.push(`OBS: Processo com proposta de Acordo de Não Persecução Penal (ANPP) formulada pelo Ministério Público nos termos do art. 28-A do CPP.`);
+        }
+
+        // Paragraph 2: Indiciamento
+        const artM = fullText.match(/(art(?:igo)?\.?\s*\d+[^.\n;]+(?:Código Penal|CP|Lei[^.\n;]+)?)/i);
+        const artStr = artM ? artM[1].trim() : 'art. 28-A do Código de Processo Penal';
+        const ipIdStr = ipDoc ? ` (inquérito policial no ID ${ipDoc.doc_id})` : '';
+        paras.push(`A acusada foi indiciada por crime previsto no ${artStr}${ipIdStr}`);
+
+        // Paragraph 3: Tratativa com MP
+        const tDate = termoDoc ? formatShortDate(termoDoc.date_str) : formatShortDate(cisaoDoc ? cisaoDoc.date_str : '');
+        const tId = termoDoc ? termoDoc.doc_id : '';
+        const idJuntadoStr = tId ? ` juntado no ID ${tId}` : '';
+        paras.push(`${tDate}: O Ministério Público realizou a tratativa de ANPP, tendo a indiciada aceitado as condições - termo de ANPP firmado entre o MP e a indiciada${idJuntadoStr}, pendente de homologação`);
+
+        // Paragraph 4: Condições do Acordo
+        const termoText = termoDoc ? termoDoc.text : '';
+        const condList = [];
+        if (termoText) {
+          const pecM = termoText.match(/(?:presta[çc][aã]o\s+pecuni[aá]ria|valor|quantia)[^\n;.]+(?:R\$\s*[\d.,]+|\d+\s+sal[aá]rio)[^\n;.]*/i);
+          if (pecM) {
+            condList.push(`a) pagamento de ${pecM[0].trim()};`);
+          } else {
+            condList.push('a) pagamento de prestação pecuniária fixada no termo de acordo;');
+          }
+          const depM = termoText.match(/(?:juntar|comprovante)[^\n;.]*dep[oó]sito[^\n;.]*/i);
+          if (depM) {
+            condList.push(`b) ${depM[0].trim()};`);
+          } else {
+            condList.push('b) juntar nos autos os comprovantes de depósito mensal, no prazo de 10 dias;');
+          }
+          const crimM = termoText.match(/n[aã]o\s+voltar\s+a\s+cometer\s+(?:crimes|infra[cç][õo]es)[^\n;.]*/i);
+          if (crimM) {
+            condList.push(`c) ${crimM[0].trim()}.`);
+          } else {
+            condList.push('c) não voltar a cometer crimes, durante o período de cumprimento do acordo.');
+          }
+        } else {
+          condList.push('a) pagamento de prestação pecuniária fixada no acordo;');
+          condList.push('b) juntar nos autos os comprovantes de depósito mensal, no prazo de 10 dias;');
+          condList.push('c) não voltar a cometer crimes, durante o período de cumprimento do acordo.');
+        }
+        paras.push(`CONDIÇÕES DO ACORDO: ${condList.join(' ')}`);
+
+        // Paragraph 5: Decisão de Cisão
+        if (cisaoDoc) {
+          const cDate = formatShortDate(cisaoDoc.date_str);
+          paras.push(`${cDate}: Decisão de ID ${cisaoDoc.doc_id} determinou a cisão dos autos em relação à investigada que gerou estes autos.`);
+        }
+
+        // Paragraph 6: Despacho Designação Audiência
+        if (despachoDoc) {
+          const dDate = formatShortDate(despachoDoc.date_str);
+          const dtStr = hearingDateTime && hearingDateTime !== 'Data a definir' ? ` para ${hearingDateTime}` : '';
+          paras.push(`${dDate}: Despacho designando a audiência de homologação de ANPP${dtStr} (ID ${despachoDoc.doc_id})`);
+        }
+
+        factsSummary = paras.join('\n\n');
+      } else {
+        // Standard AIJ / PAnP factual narrative
+        const narrativeParas = extractCleanNarrative(denunciaText);
+
+        // Modus operandi & apreensões
+        const apreensaoMatch = denunciaText.match(/(?:auto\s+de\s+exibi[cç][aã]o\s+e\s+apreens[aã]o|apreens[aã]o\s+d[eo]|apreendid[oa]s?[^\n.]+(?:arma|rev[oó]lver|pistola|muni[cç]|entorpecente|coca[ií]na|maconha|crack|droga|ve[ií]culo)[^\n.]+)/i);
+        if (apreensaoMatch) {
+          const aprLine = apreensaoMatch[0].trim();
+          if (!narrativeParas.some(p => p.toLowerCase().includes(aprLine.slice(0, 25).toLowerCase()))) {
+            narrativeParas.push(aprLine);
+          }
+        }
+
+        // Forensic reports & materiality
+        const matMatch = denunciaText.match(/(?:(?:laudo\s+pericial|laudo\s+de\s+exame|laudo\s+toxicol[oó]gico|exame\s+cadav[eé]rico|exame\s+de\s+corpo\s+de\s+delito|boletim\s+de\s+ocorr[eê]ncia)[^\n.]+(?:comprov|demonstr|atest|conclusivo)[^\n.]+|(?:A\s+materialidade\s+e\s+a\s+autoria|A\s+autoria\s+e\s+a\s+materialidade)[^\n.]+(?:demonstradas|comprovadas)[^\n.]+)/i);
+        if (matMatch) {
+          const matLine = matMatch[0].trim();
+          if (!narrativeParas.some(p => p.toLowerCase().includes(matLine.slice(0, 25).toLowerCase()))) {
+            narrativeParas.push(matLine);
+          }
+        }
+
+        // Police interrogation & confession/denial
+        const confMatch = denunciaText.match(/(?:Interrogad[oa]\s+em\s+sede\s+policial[^\n.]+(?:confessou|alegou|negou|optou|declarou|afirmou)[^\n.]+|Em\s+sede\s+policial[^\n.]+(?:confessou|negou|alegou|admitiu)[^\n.]+)/i);
+        if (confMatch) {
+          const confLine = confMatch[0].trim();
+          if (!narrativeParas.some(p => p.toLowerCase().includes(confLine.slice(0, 25).toLowerCase()))) {
+            narrativeParas.push(confLine);
+          }
+        }
+
+        if (narrativeParas.length > 6) {
+          factsSummary = narrativeParas.slice(0, 5).concat([narrativeParas[narrativeParas.length - 1]]).join('\n\n');
+        } else if (narrativeParas.length > 0) {
+          factsSummary = narrativeParas.join('\n\n');
+        } else {
+          factsSummary = 'Consta nos autos do inquérito policial que os fatos narrados na denúncia encontram-se descritos nos autos.';
+        }
+      }
+
+      // 12. Defense Documents Parsing (Named and Inominada)
+      const defenseDocs = [];
+      pjeCatalog.forEach(d => {
+        const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+        if (/denúncia|denuncia|decis|despacho|mandado|extrato|dados telef|laudo|inquérito|certidão de triagem/.test(comb)) return;
+        const isNamedDef = /resposta.*acusa[cç][aã]o|defesa\s*pr[eé]via|defesa\s*preliminar|defesa\s*escrita/i.test(comb);
+        const isUnnamedPet = /peti[cç][aã]o|manifesta[cç][aã]o|avulsa|intermediária|outras peças|requerimento/i.test(comb);
+        if (!isNamedDef && !isUnnamedPet) return;
+
+        const dTxt = d.text || '';
+        if (!dTxt.trim()) return;
+        const txtL = dTxt.toLowerCase();
+
+        const hasArt396 = /art(?:igo)?s?\.?\s*396(?:-A)?\b/i.test(txtL) || txtL.includes('396-a') || txtL.includes('396 e 396-a');
+        const hasDefHeader = /resposta\s*(?:[aà]\s*)?acusa[cç][aã]o|defesa\s*pr[eé]via|defesa\s*preliminar|defesa\s*escrita/i.test(txtL);
+        const hasAbsolvicao = txtL.includes('absolvição sumária') || txtL.includes('absolvicao sumaria') || txtL.includes('art. 397') || txtL.includes('artigo 397');
+        const hasPrelim = /inépcia da denúncia|inepcia da denuncia|falta de justa causa|nulidade|preliminarmente|preliminar de/i.test(txtL);
+        const hasReserva = /reserva-se|reservando-se|alegações finais|alegacoes finais|oportunidade própria|mérito da ação|momento oportuno/i.test(txtL);
+        const hasWitReq = /rol de testemunhas|rol testemunhal|mesmas testemunhas|testemunhas arroladas na denúncia|mesmo rol|reitera o rol/i.test(txtL);
+
+        if (!isNamedDef && !(hasArt396 || hasDefHeader || (hasAbsolvicao && (hasPrelim || hasReserva || hasWitReq)))) return;
+
+        let isDefensoria = false;
+        if (/defensoria pública|defensoria publica|defensor público|defensora pública|dpe\/rn/i.test(txtL)) {
+          isDefensoria = true;
+        } else if (/advogado|advogada|oab/i.test(txtL)) {
+          isDefensoria = false;
+        } else {
+          isDefensoria = advsCapa.some(a => a.toLowerCase().includes('defensor'));
+        }
+
+        let lawyerName = '';
+        let lawyerOab = '';
+        let petitionerStr = 'pela Defensoria Pública';
+
+        if (!isDefensoria) {
+          const oabM = dTxt.match(/OAB[/\s]+([A-Z]{2}\s*n?\.?\s*[\d.]+)/i) || dTxt.match(/OAB[^\n,;)]+/i);
+          if (oabM) lawyerOab = oabM[0].trim();
+          const advM = dTxt.match(/(?:Assinado\s+eletronicamente\s+por:\s*|Advogad[oa]:?\s*|Dr\(?a\)?\.?\s+)([A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõ]+(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõ]+)+)/);
+          if (advM && !/estado|comarca|natal|tribunal|secretaria|justiça/i.test(advM[1])) {
+            lawyerName = advM[1].toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase());
+          }
+          if (!lawyerName && advsCapa.length > 0) {
+            const priv = advsCapa.filter(a => !/defensoria|defensor|procuradoria/.test(a.toLowerCase()));
+            if (priv.length > 0) lawyerName = priv[0].toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase());
+          }
+          petitionerStr = lawyerName ? (lawyerOab ? `pelo Advogado Dr. ${lawyerName} (${lawyerOab})` : `pelo Advogado Dr. ${lawyerName}`) : 'por advogado particular';
+        } else {
+          petitionerStr = 'pela Defensoria Pública';
+        }
+
+        const repDefendants = [];
+        filteredCapaReus.forEach(rName => {
+          const parts = rName.split(' ');
+          const fn = parts[0].toLowerCase();
+          const ln = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+          if (txtL.includes(rName.toLowerCase()) || (fn.length > 3 && ln.length > 3 && txtL.includes(fn) && txtL.includes(ln))) {
+            repDefendants.push(rName.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()));
+          }
+        });
+        if (repDefendants.length === 0 && filteredCapaReus.length === 1) {
+          repDefendants.push(filteredCapaReus[0].toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()));
+        }
+
+        const repStr = repDefendants.length > 0 ? ` em defesa de ${repDefendants.join(', ')}` : '';
+        const reqList = [];
+        if (hasPrelim) {
+          if (/inépcia|inepcia/i.test(txtL)) reqList.push('arguindo preliminar de inépcia da denúncia');
+          else if (/falta de justa causa/i.test(txtL)) reqList.push('arguindo preliminar de ausência de justa causa');
+          else if (/nulidade/i.test(txtL)) reqList.push('arguindo preliminar de nulidade');
+          else reqList.push('arguindo preliminares');
+        }
+        if (hasAbsolvicao) reqList.push('pugnando pela absolvição sumária');
+        if (hasReserva && !hasAbsolvicao) reqList.push('reservando-se para o mérito em alegações finais');
+
+        const adoptsMp = /mesmas testemunhas|mesmo rol|reitera o rol|adota o rol|testemunhas arroladas na denúncia|testemunhas da acusação|oitiva de todas as testemunhas arroladas na denúncia/i.test(txtL);
+        
+        // Extract explicit defense witnesses
+        const explicitDefWitnesses = [];
+        const mDefRol = dTxt.match(/(?:(?:^|\n)\s*(?:[IVXLCDM]+\)?\.?\s*)?(?:ROL\s+(?:DE\s+)?TESTEMUNHAS?\s*(?:\([^)]*\))?|ROL\s+TESTEMUNHAL|TESTEMUNHAS\s*:))/i);
+        if (mDefRol) {
+          const subDef = dTxt.substring(mDefRol.index + mDefRol[0].length);
+          const stopM = subDef.match(/(?:^|\n)\s*(?:Termos\s+em\s+que|Nestes\s+termos|Pede\s+deferimento|Pede\s+e\s+espera|Local\s+e\s+data|Assinatura)/i);
+          const rolDefBody = stopM ? subDef.substring(0, stopM.index) : subDef;
+          const defLines = rolDefBody.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+          const blacklistDefRx = /\b(?:rua|avenida|travessa|alameda|telefone|e-mail|whatsapp|cpf|rg|cep|residente|domiciliado|bairro|natal|termos|requer|pede|defensoria|advogado|mesmas\s+testemunhas|reitera|protesta|apresenta|oab|comarca)\b/i;
+          defLines.forEach(l => {
+            const wm = l.match(/^(?:\d+[\s.)-]+)?([A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ\s.]{3,60}?)(?:[-–,]\s*|\s*\((.*?)\)|\s+[-–]\s*(.*)|$)/);
+            if (wm) {
+              const defName = wm[1].trim();
+              if (defName.length > 3 && !blacklistDefRx.test(defName)) {
+                explicitDefWitnesses.push(defName.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()));
+              }
+            }
+          });
+        }
+
+        if (adoptsMp) reqList.push('requerendo a oitiva das mesmas testemunhas da acusação');
+        else if (explicitDefWitnesses.length > 0) reqList.push(`arrolando ${explicitDefWitnesses.length} testemunha${explicitDefWitnesses.length > 1 ? 's' : ''}`);
+        else if (/rol de testemunhas|rol testemunhal/i.test(txtL)) reqList.push('arrolando testemunhas');
+
+        if (/liberdade provisória|revogação da prisão|revogação da preventiva/i.test(txtL)) reqList.push('pleiteando a revogação da prisão preventiva');
+        if (reqList.length === 0) reqList.push('pugnando pela absolvição sumária do acusado');
+
+        let reqSummary = '';
+        if (reqList.length === 1) reqSummary = reqList[0];
+        else if (reqList.length === 2) reqSummary = `${reqList[0]} e ${reqList[1]}`;
+        else reqSummary = `${reqList.slice(0, -1).join(', ')} e ${reqList[reqList.length - 1]}`;
+
+        const summaryHist = `Resposta à acusação apresentada ${petitionerStr}${repStr}, ${reqSummary}`;
+
+        defenseDocs.push({
+          doc_id: d.doc_id,
+          date_str: formatShortDate(d.date_str),
+          is_defensoria: isDefensoria,
+          lawyer_name: lawyerName,
+          lawyer_oab: lawyerOab,
+          represented_defendants: repDefendants,
+          adopts_mp_witnesses: adoptsMp,
+          explicit_witnesses: explicitDefWitnesses,
+          summary_for_history: summaryHist,
+          doc: d
+        });
+      });
+
+      // 13. Witnesses Extraction & Unified Deduplication
+      const prosWitnesses = [];
+      const seenWitnessNames = new Set();
+      let witNum = 1;
+
+      // Helper to query mandados for witness service
+      const findSubpoenaStatus = (name, isPm) => {
+        const nameLower = name.toLowerCase();
+        const fn = name.split(' ')[0].toLowerCase();
+        const sn = name.split(' ').slice(-1)[0].toLowerCase();
+        const matched = [];
+        const negative = [];
+
+        mandadosDocs.forEach(md => {
+          const mt = md.text.toLowerCase();
+          if (mt.includes(nameLower) || (fn.length > 3 && sn.length > 3 && mt.includes(fn) && mt.includes(sn))) {
+            if (mt.includes('contrafé negativa') || mt.includes('contrafe negativa') || mt.includes('não localizado') || mt.includes('deixei de citar') || mt.includes('deixei de intimar')) {
+              negative.push(md.doc_id);
+            } else {
+              matched.push(md.doc_id);
+            }
+          }
+        });
+
+        if (negative.length > 0) return `Certidão contrafé negativa IDs ${negative.join('; ')}`;
+        if (matched.length > 0) {
+          if (isPm) return `Ofício enviado ID ${matched[0]}`;
+          return /maria|ana|julia|samara|dra|sra/i.test(nameLower) ? `Intimada ID ${matched[0]}` : `Intimado ID ${matched[0]}`;
+        }
+        if (isPm) {
+          const ofDoc = mandadosDocs.find(d => d.doc_name.toLowerCase().includes('ofício'));
+          return ofDoc ? `Ofício enviado ID ${ofDoc.doc_id}` : 'Ofício expedido';
+        }
+        return 'Mandado expedido';
+      };
+
+      const cleanedDenuncia = cleanPjeText(denunciaText);
+      const startPat = /(?:(?:^|\n)\s*(?:[IVXLCDM]+\)?\.?\s*)?(?:ROL\s+(?:DE\s+)?(?:DECLARANTES?\s*(?:\([^)]*\))?\s*(?:E\s*)?)?TESTEMUNHAS?\s*(?:\([^)]*\))?(?:\s*E\s*DECLARANTES?)?|ROL\s+TESTEMUNHAL|TESTEMUNHAS\s*:))/i;
+      const mStart = cleanedDenuncia.match(startPat);
+      if (mStart) {
+        const sub = cleanedDenuncia.substring(mStart.index + mStart[0].length);
+        const stopPat = /(?:^|\n)\s*(?:COTA\b|Termos\s+em\s+que|Nestes\s+termos|Pede\s+(?:e\s+espera\s+)?deferimento|Pede\s+deferimento)/i;
+        const mStop = sub.match(stopPat);
+        const rolBody = mStop ? sub.substring(0, mStop.index) : sub;
+
+        const blacklistRx = /\b(?:rua|avenida|travessa|alameda|telefone|e-mail|whatsapp|cpf|rg|cep|residente|domiciliado|bairro|natal|termos|requer|pede|ministério|promotoria|defesa|secretaria|vara|tribunal|estado|assinado|documento|pág|registre|dessa\s+maneira|cota|rol\s+de|declarantes|promotor)\b/i;
+
+        const lines = rolBody.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        const hasNumbers = lines.some(l => /^\d+[\s.)-]/.test(l));
+
+        lines.forEach(line => {
+          if (hasNumbers && !/^\d+[\s.)-]/.test(line)) return;
+
+          const m = line.match(/^(?:\d+[\s.)-]+)?([A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ\s.]{3,60}?)(?:[-–,]\s*|\s*\((.*?)\)|\s+[-–]\s*(.*)|$)/);
+          if (m) {
+            const wn = m[1].trim();
+            const wnLower = wn.toLowerCase();
+            if (wn.length <= 3 || blacklistRx.test(wnLower)) return;
+
+            const ext1 = m[2] || '';
+            const ext2 = m[3] || '';
+            const extra = `${line.slice(m[0].length).toLowerCase()} ${ext1.toLowerCase()} ${ext2.toLowerCase()}`.trim();
+
+            const isPm = /\b(?:pm|policial|militar|civil|cabo|sgt|sargento|soldado)\b/i.test(extra) || /\b(?:pm|policial)\b/i.test(wnLower);
+            const isVit = /vítima|vitima|declarante/i.test(extra);
+            const role = isVit ? 'vítima' : (isPm ? 'PM' : 'Testemunha');
+            const st = findSubpoenaStatus(wn, isPm);
+
+            if (!seenWitnessNames.has(wnLower)) {
+              seenWitnessNames.add(wnLower);
+              prosWitnesses.push({
+                number: witNum++,
+                name: wn.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+                role: role,
+                status_id: st
+              });
+            }
+          }
+        });
+      }
+
+      vitimasCapa.forEach(v => {
+        if (!seenWitnessNames.has(v.toLowerCase())) {
+          seenWitnessNames.add(v.toLowerCase());
+          prosWitnesses.push({
+            number: witNum++,
+            name: v.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+            role: 'vítima',
+            status_id: findSubpoenaStatus(v, false)
+          });
+        }
+      });
+
+      testemunhasCapa.forEach(t => {
+        if (!seenWitnessNames.has(t.toLowerCase())) {
+          seenWitnessNames.add(t.toLowerCase());
+          const isPm = /\b(?:pm|policial|cabo|sargento|militar)\b/i.test(t.toLowerCase());
+          prosWitnesses.push({
+            number: witNum++,
+            name: t.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+            role: isPm ? 'PM' : 'Testemunha',
+            status_id: findSubpoenaStatus(t, isPm)
+          });
+        }
+      });
+
+      // Deduplication & Unified Labeling of Common Witnesses in JS
+      const defWitnesses = [];
+      if (defenseDocs.length > 0) {
+        prosWitnesses.forEach(w => {
+          const wNameClean = w.name.toLowerCase();
+          const defensesRolling = [];
+          defenseDocs.forEach(dInfo => {
+            if (dInfo.adopts_mp_witnesses) {
+              defensesRolling.push(dInfo);
+            } else {
+              dInfo.explicit_witnesses.forEach(exW => {
+                if (exW.toLowerCase().includes(wNameClean) || wNameClean.includes(exW.toLowerCase())) {
+                  defensesRolling.push(dInfo);
+                }
+              });
+            }
+          });
+
+          let tag = '';
+          if (defensesRolling.length === defenseDocs.length && defenseDocs.length > 0) {
+            if (defenseDocs.length > 1) {
+              tag = '(arrolada por todos)';
+            } else {
+              const dSingle = defenseDocs[0];
+              if (dSingle.is_defensoria) {
+                tag = '(arrolada pelo Ministério Público e pela Defensoria Pública)';
+              } else {
+                const lawN = dSingle.lawyer_name || 'Advogado';
+                const repN = dSingle.represented_defendants.join(', ') || 'do réu';
+                tag = `(arrolada pelo Ministério Público e pelo Advogado Dr. ${lawN}, em defesa de ${repN})`;
+              }
+            }
+          } else if (defensesRolling.length > 0) {
+            const dFirst = defensesRolling[0];
+            if (dFirst.is_defensoria) {
+              tag = '(arrolada pelo Ministério Público e pela Defensoria Pública)';
+            } else {
+              const lawN = dFirst.lawyer_name || 'Advogado';
+              const repN = dFirst.represented_defendants.join(', ') || 'do réu';
+              tag = `(arrolada pelo Ministério Público e pelo Advogado Dr. ${lawN}, em defesa de ${repN})`;
+            }
+          }
+
+          if (tag) {
+            w.role = `${w.role} ${tag}`;
+          }
+        });
+
+        // Exclusive defense witnesses
+        const prosNames = new Set(prosWitnesses.map(w => w.name.toLowerCase()));
+        let defWitNum = 1;
+        defenseDocs.forEach(dInfo => {
+          dInfo.explicit_witnesses.forEach(exW => {
+            if (![...prosNames].some(pn => exW.toLowerCase().includes(pn) || pn.includes(exW.toLowerCase()))) {
+              prosNames.add(exW.toLowerCase());
+              defWitnesses.push({
+                number: defWitNum++,
+                name: exW,
+                role: 'Testemunha de Defesa',
+                status_id: findSubpoenaStatus(exW, false)
+              });
+            }
+          });
+        });
+      }
+
+      // 14. Chronological History with Deep Defense Synthesis
+      const chronologicalHistory = [];
+      const seenHistIds = new Set();
+      const defenseDocsMap = {};
+      defenseDocs.forEach(d => { defenseDocsMap[d.doc_id] = d; });
+
+      pjeCatalog.forEach(d => {
+        const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
+        if (/(?:extrato\s*banc[aá]rio|dados\s*telef[oô]nicos|quebra\s*de\s*sigilo|comprovante|guia\s*(?:de\s*)?recolhimento|custas\s*processuais|danfe|nota\s*fiscal|certid[aã]o\s*de\s*(?:triagem|juntada\s*gen[eé]rica|remessa)|autentica[cç][aã]o|foto|laudo|relat[oó]rio\s*t[eé]cnico|manual|tela\s*whatsapp|print)/i.test(comb)) return;
+        if (/denúncia|denuncia|decis|despacho|ato ordinat|resposta|defesa prévia|defesa previa|petição|peticao|manifestação|manifestacao|mandado|edital|ata|termo de audiência/.test(comb) || defenseDocsMap[d.doc_id]) {
+          if (!seenHistIds.has(d.doc_id) && d.start_page > 0) {
+            seenHistIds.add(d.doc_id);
+            let desc = '';
+            if (defenseDocsMap[d.doc_id]) {
+              desc = defenseDocsMap[d.doc_id].summary_for_history;
+            } else {
+              desc = summarizeHistoryAct(d.doc_name, d.doc_type, d.text);
+            }
+            chronologicalHistory.push({
+              date_str: formatShortDate(d.date_str),
+              description: desc,
+              doc_id: d.doc_id
+            });
+          }
+        }
+      });
+
+      // Sort strictly in ascending chronological order:
+      chronologicalHistory.sort((a, b) => parseDateSortKey(a.date_str, a.doc_id) - parseDateSortKey(b.date_str, b.doc_id));
+
+      // 15. Defense Counsel Consolidation
+      let defenseCounsel = 'Assistido pela Defensoria Pública';
+      if (defenseDocs.length > 0) {
+        const counselParts = [];
+        const seenLawyers = new Set();
+
+        defenseDocs.forEach(dInfo => {
+          const repList = dInfo.represented_defendants || [];
+          const repStr = (repList.length > 0 && defenseDocs.length > 1) ? ` (em defesa de ${repList.join(', ')})` : '';
+
+          if (dInfo.is_defensoria) {
+            const lStr = `Assistido pela Defensoria Pública${repStr}`;
+            if (!counselParts.includes(lStr)) counselParts.push(lStr);
+          } else {
+            const lName = dInfo.lawyer_name || 'Advogado';
+            const lOab = dInfo.lawyer_oab || '';
+            const oabSuff = lOab ? ` - ${lOab}` : '';
+            const lStr = `Dr. ${lName}${oabSuff}${repStr}`;
+            if (!seenLawyers.has(lName)) {
+              seenLawyers.add(lName);
+              counselParts.push(lStr);
+            }
+          }
+        });
+
+        if (counselParts.length > 0) {
+          const hasDef = counselParts.some(c => c.includes('Defensoria'));
+          const hasPriv = counselParts.some(c => c.includes('Dr.'));
+          if (hasDef && !hasPriv) defenseCounsel = counselParts.length === 1 ? counselParts[0] : 'Assistidos pela Defensoria Pública';
+          else if (hasPriv && !hasDef) defenseCounsel = `Representado por advogado particular, ${counselParts.join(', ')}`;
+          else defenseCounsel = counselParts.join('; ');
+        }
+      } else if (advsCapa.length > 0) {
+        const privateAdvs = advsCapa.filter(a => !/defensoria|defensor|procuradoria|estado|tribunal/.test(a.toLowerCase()));
+        if (privateAdvs.length > 0) {
+          const names = privateAdvs.map(a => `Dr. ${a.toLowerCase().replace(/(?:^|\s)\S/g, x => x.toUpperCase())}`);
+          defenseCounsel = `Representado por advogado particular, ${names.join(', ')}`;
+        } else {
+          defenseCounsel = 'Assistido pela Defensoria Pública';
+        }
+      }
+
+      let defNote = 'A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia.';
+      if (defWitnesses.length > 0) defNote = null;
+
+      // Strict ANPP Omissions
+      if (actType === 'ANPP') {
+        qualText = '';
+        imputationText = '';
+        chronologicalHistory.length = 0;
+        prosWitnesses.length = 0;
+        defWitnesses.length = 0;
+        defNote = '';
+      }
+
+      return {
+        case_number: caseNumber,
+        act_type: actType,
+        hearing_datetime: hearingDateTime,
+        hearing_link: hearingLink,
+        is_in_person: !hearingLink,
+        prosecutor: prosecutor,
+        defendants: defendants,
+        defense_counsel: defenseCounsel,
+        qualification_text: qualText,
+        imputation_text: imputationText,
+        facts_summary: factsSummary,
+        chronological_history: chronologicalHistory,
+        prosecution_witnesses: prosWitnesses,
+        defense_witnesses: defWitnesses,
+        defense_witness_note: defNote,
+        closure_text: 'Cordial e respeitosamente,'
+      };
+    }
+    }
+
+    function extractCleanNarrative(rawText) {
+      if (!rawText) return [];
+
+      const stopRegex = /(?:(?:^|\n)\s*Termos\s+em\s+que[,\s]+pede|(?:^|\n)\s*pede\s+e\s+aguarda\s+deferimento|(?:^|\n)\s*pede\s+deferimento|(?:^|\n)\s*Nestes\s+termos|(?:^|\n)\s*Pede\s+deferimento|(?:^|\n)\s*ROL\s+DE\s+TESTEMUNHAS|(?:^|\n)\s*ROL\s+TESTEMUNHAL|(?:^|\n)\s*TESTEMUNHAS\s*:|(?:^|\n)\s*COTA\s*(?:[ÀA]\s*DENÚNCIA|DE\s*OFERECIMENTO)?|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?(?:DOS\s+)?PEDIDOS?\b|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?REQUERIMENTOS?\b|(?:Ante|Diante)\s+[^\n]*exposto[^\n]*requer|Requer\s+o\s+Minist[eé]rio\s+P[uú]blico|(?:^|\n)\s*Assinaturas?\s+do\s+Documento)/i;
+      const startRegex = /(?:pelos?\s+fatos\s+e\s+fundamentos\s+que\s+passa\s+a\s+expor[^\n]*\n|pela\s+pr[aá]tica\s+dos\s+fatos\s+delituosos\s+a\s+seguir\s+narrados[^\n]*\n|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+FATOS|NARRATIVA\s+F[AÁ]TICA(?:\s+CRIMINOSA)?|CONTEXTUALIZA[CÇ][AÃ]O\s+DA\s+INVESTIGA[CÇ][AÃ]O)[^\n]*\n|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?(?:1\)?\s*[-–.]?\s*)?(Consta\s+(?:[nd][oe]s|[nd]as)\s+(?:inclus[oa]s|referidos)\s+autos[^\n]*\n))/i;
+
+      let factsText = rawText;
+      const mStart = rawText.match(startRegex);
+      if (mStart) {
+        const mTxt = mStart[0];
+        const constaPos = mTxt.indexOf('Consta');
+        if (constaPos !== -1) {
+          factsText = rawText.substring(mStart.index + constaPos);
+        } else {
+          factsText = rawText.substring(mStart.index + mTxt.length);
+        }
+      }
+
+      factsText = factsText.replace(/^(?:[IVXLCDM]+\)?\s*)?Narrativa\s+f[aá]tica(?:\s+criminosa)?\s*/i, '').trim();
+
+      const mStop = factsText.match(stopRegex);
+      if (mStop) {
+        factsText = factsText.substring(0, mStop.index);
+      }
+
+      const lines = factsText.split('\n');
+      const headerPatterns = [
+        /^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO/i, /PROMOTORIA\s+DE\s+JUSTI[CÇ]A/i, /Defesa\s+dos\s+Direitos/i,
+        /^\s*Rua\s+(?:Promotor|Milit[aã]o|Doutor|Serid[oó]|Alameda)/i, /Telefone\(s\):/i, /E-mail:/i,
+        /www\./i, /^\s*AO\s+JU[IÍ]ZO/i, /^\s*Excelent[ií]ssimo/i, /^\s*Ilustr[ií]ssimo/i, /^\s*Merit[ií]ssimo/i,
+        /^\s*Vossa\s+Excelência/i, /^\s*Inqu[eé]rito\s+Policial\s+n[ºo]/i, /^\s*Autos\s+n[ºo]/i, /^\s*TCO\s+n[ºo]/i,
+        /Num\.\s*\d+/i, /P[aá]g\.\s*Total/i, /P[aá]g\.\s*\d+\s*de\s*\d+/i, /Documento\s+n[ºo]/i,
+        /Valida[cç][aã]o\s+em/i, /Assinado\s+eletronicamente/i, /N[uú]mero\s+do\s+documento/i,
+        /https?:\/\//i, /^={3,}\s*PAGE/i, /^\s*_{5,}\s*$/, /^\d+\s*$/, /^\d+\s*Em\s*\d{4}:/i
+      ];
+
+      const cleanedLines = [];
+      for (const l of lines) {
+        const lS = l.trim();
+        if (!lS || headerPatterns.some(rx => rx.test(lS))) continue;
+        cleanedLines.push(lS);
+      }
+
+      // JEV / Leya System One Line-Level Noise Filtering
+      const jevStampRe = /(?:Num\.\s*\d+\s*-\s*P[aáAÁ]g\.\s*\d+|Assinado\s+eletronicamente\s+por|C[oó]digo\s+de\s+valida[cç][aã]o|Valide\s+a\s+autenticidade|Tribunal\s+de\s+Justi[cç]a\s+do\s+Rio\s+Grande\s+do\s+Norte\s*-\s*DJe|Identificador\s*:\s*\d+)/i;
+      const jevBankRe = /(?:comprovante\s+de\s+(?:pagamento|transfer[eê]ncia|agendamento|dep[oó]sito)|autentica[cç][aã]o\s+mec[aâ]nica|linha\s+digit[aá]vel|\b\d{5}\.\d{5}\s+\d{5}\.\d{6}\b|guia\s+de\s+recolhimento|tarifa\s+banc[aá]ria)/i;
+
+      const jevCleaned = [];
+      for (const l of cleanedLines) {
+        let alnum = 0;
+        for (let i = 0; i < l.length; i++) {
+          const code = l.charCodeAt(i);
+          if ((code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122) || code > 127) alnum++;
+        }
+        if (alnum < 2) continue;
+        if (jevStampRe.test(l) || jevBankRe.test(l)) continue;
+        if (alnum / l.length < 0.35 && l.length > 5) continue;
+        if (/^https?:\/\//i.test(l) && !/teams|meet/i.test(l)) continue;
+        jevCleaned.push(l);
+      }
+
+      const paragraphs = [];
+      let currPara = [];
+      for (const l of jevCleaned) {
+        currPara.push(l);
+        if (/[.:;]$/.test(l)) {
+          let pText = currPara.join(' ').replace(/^\d+\)\s*/, '').replace(/\s+/g, ' ').trim();
+          pText = pText.replace(/^(?:O\s+MINIST[EÉ]RIO\s+P[UÚ]BLICO[^\n]+vem[,\s]+perante\s+Vossa\s+Excelência[^\n]+oferecer\s+denúncia[^\n]+?:\s*|vem[,\s]+perante\s+Vossa\s+Excelência[^\n]+?:\s*|Excelent[ií]ssim[oa][^,;:]+[;,:]\s*|Ao\s+Ju[ií]zo[^,;:]+[;,:]\s*)/i, '').trim();
+          if (pText.length > 35) paragraphs.push(pText);
+          currPara = [];
+        }
+      }
+      if (currPara.length > 0) {
+        let pText = currPara.join(' ').replace(/^\d+\)\s*/, '').replace(/\s+/g, ' ').trim();
+        pText = pText.replace(/^(?:O\s+MINIST[EÉ]RIO\s+P[UÚ]BLICO[^\n]+vem[,\s]+perante\s+Vossa\s+Excelência[^\n]+oferecer\s+denúncia[^\n]+?:\s*|vem[,\s]+perante\s+Vossa\s+Excelência[^\n]+?:\s*|Excelent[ií]ssim[oa][^,;:]+[;,:]\s*|Ao\s+Ju[ií]zo[^,;:]+[;,:]\s*)/i, '').trim();
+        if (pText.length > 35) paragraphs.push(pText);
+      }
+
+      if (paragraphs.length > 6) {
+        return paragraphs.slice(0, 5).concat([paragraphs[paragraphs.length - 1]]);
+      }
+      return paragraphs;
+    }
+
+    // UI Binding & Preview
+    function loadDataIntoUI(data) {
+      activeData = data;
+      document.getElementById('case_number').value = data.case_number || '';
+      document.getElementById('act_type').value = data.act_type || 'AIJ';
+      document.getElementById('hearing_datetime').value = data.hearing_datetime || '';
+      document.getElementById('hearing_link').value = data.hearing_link || '';
+      document.getElementById('is_in_person').checked = data.is_in_person || false;
+      document.getElementById('prosecutor').value = data.prosecutor || '';
+      document.getElementById('defense_counsel').value = data.defense_counsel || '';
+      document.getElementById('qualification_text').value = data.qualification_text || '';
+      document.getElementById('imputation_text').value = data.imputation_text || '';
+      document.getElementById('facts_summary').value = data.facts_summary || '';
+      document.getElementById('defense_witness_note').value = data.defense_witness_note || '';
+
+      renderDefendants(data.defendants || []);
+      renderHistory(data.chronological_history || []);
+      renderWitnesses(data.prosecution_witnesses || []);
+
+      const isAnpp = (data.act_type || '').includes('ANPP');
+      document.getElementById('card-qual').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-imp').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-hist').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-wits').style.display = isAnpp ? 'none' : 'block';
+
+      document.getElementById('btn-export-docx').disabled = false;
+      updateLivePreview();
+    }
+
+    function renderDefendants(defs) {
+      const container = document.getElementById('defendants-container');
+      container.innerHTML = '';
+      defs.forEach((d, idx) => {
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.innerHTML = `
+          <input type="text" class="form-control" value="${d.name || ''}" placeholder="Nome" oninput="activeData.defendants[${idx}].name=this.value;updateLivePreview();">
+          <input type="text" class="form-control" value="${d.status || ''}" placeholder="Situação" oninput="activeData.defendants[${idx}].status=this.value;updateLivePreview();">
+          <input type="text" class="form-control mono" value="${d.subpoena_id || ''}" placeholder="ID" oninput="activeData.defendants[${idx}].subpoena_id=this.value;updateLivePreview();">
+          <button type="button" class="btn-remove-item" onclick="activeData.defendants.splice(${idx},1);renderDefendants(activeData.defendants);updateLivePreview();">&times;</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function renderHistory(items) {
+      const container = document.getElementById('history-container');
+      container.innerHTML = '';
+      items.forEach((h, idx) => {
+        const row = document.createElement('div');
+        row.className = 'history-item-row';
+        row.innerHTML = `
+          <input type="text" class="form-control mono" value="${h.date_str || ''}" placeholder="Data" oninput="activeData.chronological_history[${idx}].date_str=this.value;updateLivePreview();">
+          <input type="text" class="form-control" value="${h.description || ''}" placeholder="Ato" oninput="activeData.chronological_history[${idx}].description=this.value;updateLivePreview();">
+          <input type="text" class="form-control mono" value="${h.doc_id || ''}" placeholder="ID" oninput="activeData.chronological_history[${idx}].doc_id=this.value;updateLivePreview();">
+          <button type="button" class="btn-remove-item" onclick="activeData.chronological_history.splice(${idx},1);renderHistory(activeData.chronological_history);updateLivePreview();">&times;</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function renderWitnesses(wits) {
+      const container = document.getElementById('pros-witnesses-container');
+      container.innerHTML = '';
+      wits.forEach((w, idx) => {
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.innerHTML = `
+          <input type="text" class="form-control" value="${w.name || ''}" placeholder="Nome" oninput="activeData.prosecution_witnesses[${idx}].name=this.value;updateLivePreview();">
+          <input type="text" class="form-control" value="${w.role || ''}" placeholder="Papel" oninput="activeData.prosecution_witnesses[${idx}].role=this.value;updateLivePreview();">
+          <input type="text" class="form-control" value="${w.status_id || ''}" placeholder="Status" oninput="activeData.prosecution_witnesses[${idx}].status_id=this.value;updateLivePreview();">
+          <button type="button" class="btn-remove-item" onclick="activeData.prosecution_witnesses.splice(${idx},1);renderWitnesses(activeData.prosecution_witnesses);updateLivePreview();">&times;</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    document.getElementById('btn-add-defendant').onclick = () => {
+      if (!activeData) activeData = { defendants: [] };
+      activeData.defendants.push({ name: '', status: 'respondendo ao processo em liberdade', subpoena_id: '' });
+      renderDefendants(activeData.defendants);
+      updateLivePreview();
+    };
+    document.getElementById('btn-add-history').onclick = () => {
+      if (!activeData) activeData = { chronological_history: [] };
+      activeData.chronological_history.push({ date_str: '', description: '', doc_id: '' });
+      renderHistory(activeData.chronological_history);
+      updateLivePreview();
+    };
+    document.getElementById('btn-add-witness').onclick = () => {
+      if (!activeData) activeData = { prosecution_witnesses: [] };
+      activeData.prosecution_witnesses.push({ number: activeData.prosecution_witnesses.length + 1, name: '', role: 'Testemunha', status_id: 'Intimada' });
+      renderWitnesses(activeData.prosecution_witnesses);
+      updateLivePreview();
+    };
+
+    document.getElementById('hearing-form').oninput = () => {
+      if (!activeData) return;
+      activeData.case_number = document.getElementById('case_number').value;
+      activeData.act_type = document.getElementById('act_type').value;
+      activeData.hearing_datetime = document.getElementById('hearing_datetime').value;
+      activeData.hearing_link = document.getElementById('hearing_link').value;
+      activeData.is_in_person = document.getElementById('is_in_person').checked;
+      activeData.prosecutor = document.getElementById('prosecutor').value;
+      activeData.defense_counsel = document.getElementById('defense_counsel').value;
+      activeData.qualification_text = document.getElementById('qualification_text').value;
+      activeData.imputation_text = document.getElementById('imputation_text').value;
+      activeData.facts_summary = document.getElementById('facts_summary').value;
+      activeData.defense_witness_note = document.getElementById('defense_witness_note').value;
+
+      const isAnpp = (activeData.act_type || '').includes('ANPP');
+      document.getElementById('card-qual').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-imp').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-hist').style.display = isAnpp ? 'none' : 'block';
+      document.getElementById('card-wits').style.display = isAnpp ? 'none' : 'block';
+
+      updateLivePreview();
+    };
+
+    function updateLivePreview() {
+      if (!activeData) return;
+      document.getElementById('paper-placeholder').style.display = 'none';
+      const paperBody = document.getElementById('paper-body');
+      paperBody.classList.add('active');
+
+      document.getElementById('facts-char-count').innerText = `${(activeData.facts_summary || '').length} caracteres`;
+
+      const pjeLink = (id) => `${PJE_DOC_URL}${id}`;
+
+      let html = '';
+      html += `<div class="doc-title">Proc. ${activeData.case_number || '0000000-00.0000.8.20.0000'} ${activeData.act_type || 'AIJ'} ${activeData.hearing_datetime || ''}</div>`;
+
+      if (activeData.hearing_link && !activeData.is_in_person) {
+        html += `<div class="doc-link"><a href="${activeData.hearing_link}" target="_blank" rel="noopener noreferrer">${activeData.hearing_link}</a></div>`;
+      } else {
+        html += `<div class="doc-link" style="text-decoration: underline;">Audiência Presencial</div>`;
+      }
+
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
+      html += `<div class="doc-resumo-call">Segue o resumo da audiência:</div>`;
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
+
+      if ((activeData.act_type || '').includes('ANPP')) {
+        const timePart = (activeData.hearing_datetime || '').includes('às')
+          ? activeData.hearing_datetime.split('às').pop().trim()
+          : activeData.hearing_datetime || '';
+        html += `<div class="doc-callout"><span class="hl-yellow">${timePart} - ${activeData.case_number || ''} - ${activeData.act_type || ''}</span></div>`;
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
+      }
+
+      const promPrefix = (activeData.prosecutor || '').includes(';') ? 'PROMOTORES:' : 'PROMOTOR:';
+      html += `<div class="doc-promotor"><span class="hl-green">${promPrefix} ${activeData.prosecutor || ''}</span></div>`;
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
+
+      if (activeData.defendants && activeData.defendants.length === 1) {
+        const d = activeData.defendants[0];
+        const isFem = (d.name || '').trim().toLowerCase().endsWith('a');
+        const genderPrefix = isFem ? 'Ré:' : 'Réu:';
+        const idText = d.subpoena_id ? ` - Intimada ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
+        html += `<div class="doc-reus"><span class="hl-green">${genderPrefix} ${d.name} - ${d.status}${idText}</span></div>`;
+      } else if (activeData.defendants && activeData.defendants.length > 1) {
+        html += '<div class="doc-reus"><span class="hl-green">Réus:</span></div>';
+        activeData.defendants.forEach(d => {
+          const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
+          html += `<div class="doc-reus-item">${d.name} - ${d.status}${idText}</div>`;
+        });
+      }
+
+      if (activeData.defense_counsel) {
+        html += `<div class="doc-defesa"><span class="hl-green">${activeData.defense_counsel}</span></div>`;
+      }
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
+
+      const isAnpp = (activeData.act_type || '').includes('ANPP');
+
+      if (activeData.qualification_text && !isAnpp) {
+        html += '<div class="doc-section-header"><span class="hl-yellow">QUALIFICAÇÃO</span></div>';
+        activeData.qualification_text.split('\n\n').filter(p=>p.trim()).forEach(p => {
+          const commaIdx = p.indexOf(',');
+          if (commaIdx !== -1) {
+            const namePart = p.substring(0, commaIdx).trim();
+            const restPart = p.substring(commaIdx);
+            html += `<div class="doc-narrative-p"><strong>${namePart.toUpperCase()}</strong>${restPart}</div>`;
+          } else {
+            html += `<div class="doc-narrative-p">${p}</div>`;
+          }
+        });
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
+      }
+
+      if (activeData.imputation_text && !isAnpp) {
+        html += '<div class="doc-section-header"><span class="hl-yellow">IMPUTAÇÃO</span></div>';
+        activeData.imputation_text.split('\n\n').filter(p=>p.trim()).forEach(p => {
+          const formattedP = p.replace(/(\(.*?\))/g, '<strong>$1</strong>');
+          html += `<div class="doc-narrative-p">${formattedP}</div>`;
+        });
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
+      }
+
+      if (activeData.facts_summary) {
+        html += '<div class="doc-section-header"><span class="hl-yellow">RESUMO DOS FATOS</span></div>';
+        activeData.facts_summary.split('\n\n').filter(p=>p.trim()).forEach(p => {
+          const linkedP = p.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
+          html += `<div class="doc-narrative-p">${linkedP}</div>`;
+        });
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
+      }
+
+      if (activeData.chronological_history && activeData.chronological_history.length > 0 && !isAnpp) {
+        html += '<div class="doc-section-header"><span class="hl-yellow">HISTÓRICO PROCESSUAL</span></div>';
+        activeData.chronological_history.forEach(h => {
+          html += `<div class="doc-history-p">${h.date_str}: ${h.description} (ID <a href="${pjeLink(h.doc_id)}" target="_blank" rel="noopener noreferrer">${h.doc_id}</a>)</div>`;
+        });
+        html += '<div style="margin-bottom: 0.85rem;"></div>';
+      }
+
+      if (!isAnpp) {
+        if (activeData.prosecution_witnesses && activeData.prosecution_witnesses.length > 0) {
+          html += '<div class="doc-section-header"><span class="hl-yellow">TESTEMUNHAS DE ACUSAÇÃO:</span></div>';
+          activeData.prosecution_witnesses.forEach(w => {
+            const num = String(w.number).padStart(2, '0');
+            let st = w.status_id ? ` - ${w.status_id}` : '';
+            st = st.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
+            html += `<div class="doc-witness-p">${num}) ${w.name} - ${w.role}${st}</div>`;
+          });
+        }
+
+        if (activeData.defense_witnesses && activeData.defense_witnesses.length > 0) {
+          html += '<div class="doc-section-header"><span class="hl-yellow">TESTEMUNHAS DE DEFESA:</span></div>';
+          activeData.defense_witnesses.forEach(w => {
+            const num = String(w.number).padStart(2, '0');
+            let st = w.status_id ? ` - ${w.status_id}` : '';
+            st = st.replace(/\b(\d{7,10})\b/g, (match) => `<a href="${pjeLink(match)}" target="_blank" rel="noopener noreferrer">${match}</a>`);
+            html += `<div class="doc-witness-p">${num}) ${w.name}${st}</div>`;
+          });
+        } else if (activeData.defense_witness_note) {
+          html += `<div class="doc-witness-p" style="margin-top: 0.6rem;"><span class="hl-yellow">${activeData.defense_witness_note}</span></div>`;
+        }
+      }
+
+      html += '<div style="margin-bottom: 0.85rem;"></div>';
+      html += `<div class="doc-closure">${activeData.closure_text || 'Cordial e respeitosamente,'}</div>`;
+      paperBody.innerHTML = html;
+    }
+
+    // DOCX OpenXML Builder strictly adhering to TJRN specifications
+    document.getElementById('btn-export-docx').onclick = async () => {
+      if (!activeData) return;
+      showToast('Construindo arquivo DOCX no navegador...', 'success');
+
+      try {
+        const zip = new JSZip();
+
+        // 1. [Content_Types].xml
+        zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`);
+
+        // 2. _rels/.rels
+        zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`);
+
+        // Manage document hyperlinks
+        const linkMap = new Map();
+        let relCount = 1;
+        function getRelId(url) {
+          if (linkMap.has(url)) return linkMap.get(url);
+          const rid = `rId${relCount++}`;
+          linkMap.set(url, rid);
+          return rid;
+        }
+
+        function runXml(text, { bold=false, italic=false, underline=false, color=null, highlight=null } = {}) {
+          let rPr = '<w:rPr><w:rFonts w:ascii="Verdana" w:hAnsi="Verdana" w:cs="Verdana"/><w:sz w:val="24"/>';
+          if (bold) rPr += '<w:b/>';
+          if (italic) rPr += '<w:i/>';
+          if (underline) rPr += '<w:u w:val="single"/>';
+          if (color) rPr += `<w:color w:val="${color}"/>`;
+          if (highlight) rPr += `<w:highlight w:val="${highlight}"/>`;
+          rPr += '</w:rPr>';
+          return `<w:r>${rPr}<w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r>`;
+        }
+
+        function hyperlinkXml(url, text, { bold=false, italic=false, underline=true, color="0000ff", highlight=null } = {}) {
+          const rid = getRelId(url);
+          let rPr = '<w:rPr><w:rFonts w:ascii="Verdana" w:hAnsi="Verdana" w:cs="Verdana"/><w:sz w:val="24"/>';
+          if (bold) rPr += '<w:b/>';
+          if (italic) rPr += '<w:i/>';
+          if (underline) rPr += '<w:u w:val="single"/>';
+          if (color) rPr += `<w:color w:val="${color}"/>`;
+          if (highlight) rPr += `<w:highlight w:val="${highlight}"/>`;
+          rPr += '</w:rPr>';
+          return `<w:hyperlink r:id="${rid}"><w:r>${rPr}<w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:hyperlink>`;
+        }
+
+        function runsWithIdLinks(text, { bold=false, italic=false, highlight=null } = {}) {
+          const idRegex = /\b(\d{7,10})\b/g;
+          let res = '';
+          let lastIdx = 0;
+          let match;
+          while ((match = idRegex.exec(text)) !== null) {
+            const before = text.substring(lastIdx, match.index);
+            if (before) res += runXml(before, { bold, italic, highlight });
+            const docId = match[1];
+            const url = `${PJE_DOC_URL}${docId}`;
+            res += hyperlinkXml(url, docId, { bold, underline: true, color: "0000ff", highlight });
+            lastIdx = idRegex.lastIndex;
+          }
+          const after = text.substring(lastIdx);
+          if (after) res += runXml(after, { bold, italic, highlight });
+          return res;
+        }
+
+        let bodyXml = '';
+        function pXml(runsXml, { firstLine=0, left=0, hanging=0, after=0, before=0 } = {}) {
+          let pPr = `<w:pPr><w:jc w:val="both"/><w:spacing w:line="454" w:lineRule="auto" w:before="${before}" w:after="${after}"/>`;
+          if (firstLine > 0) pPr += `<w:ind w:firstLine="${firstLine}"/>`;
+          else if (left > 0 || hanging > 0) pPr += `<w:ind w:left="${left}" w:hanging="${hanging}"/>`;
+          pPr += '</w:pPr>';
+          return `<w:p>${pPr}${runsXml}</w:p>`;
+        }
+
+        // Title (Underlined)
+        bodyXml += pXml(runXml(`Proc. ${activeData.case_number} ${activeData.act_type} ${activeData.hearing_datetime}`, { underline: true }));
+
+        // Meeting Link
+        if (activeData.hearing_link && !activeData.is_in_person) {
+          bodyXml += pXml(hyperlinkXml(activeData.hearing_link, activeData.hearing_link, { color: "0000ff", underline: true }));
+        } else {
+          bodyXml += pXml(runXml("Audiência Presencial", { underline: true }));
+        }
+
+        bodyXml += pXml('');
+        bodyXml += pXml(runXml("Segue o resumo da audiência:", { underline: true }));
+        bodyXml += pXml('');
+
+        const isAnpp = (activeData.act_type || '').includes('ANPP');
+
+        // ANPP Callout line
+        if (isAnpp) {
+          const timePart = (activeData.hearing_datetime || '').includes('às')
+            ? activeData.hearing_datetime.split('às').pop().trim()
+            : activeData.hearing_datetime || '';
+          bodyXml += pXml(runXml(`${timePart} - ${activeData.case_number} - ${activeData.act_type}`, { bold: true, highlight: "yellow" }));
+          bodyXml += pXml('');
+        }
+
+        // PROMOTOR (Bold + Green highlight)
+        const promPrefix = (activeData.prosecutor || '').includes(';') ? 'PROMOTORES:' : 'PROMOTOR:';
+        bodyXml += pXml(runXml(`${promPrefix} ${activeData.prosecutor}`, { bold: true, highlight: "green" }));
+        bodyXml += pXml('');
+
+        // RÉUS (Bold + Green highlight strict pattern)
+        if (activeData.defendants && activeData.defendants.length === 1) {
+          const d = activeData.defendants[0];
+          const isFem = (d.name || '').trim().toLowerCase().endsWith('a');
+          const genderPrefix = isFem ? 'Ré:' : 'Réu:';
+          let reuStr = `${genderPrefix} ${d.name} - ${d.status}`;
+          if (d.subpoena_id) reuStr += ` - Intimado ID ${d.subpoena_id}`;
+          else if (d.citation_id) reuStr += ` - Citado ID ${d.citation_id}`;
+          bodyXml += pXml(runsWithIdLinks(reuStr, { bold: true, highlight: "green" }));
+        } else if (activeData.defendants && activeData.defendants.length > 1) {
+          bodyXml += pXml(runXml("Réus:", { bold: true, highlight: "green" }));
+          activeData.defendants.forEach(d => {
+            let reuStr = `${d.name} - ${d.status}`;
+            if (d.subpoena_id) reuStr += ` - Intimado ID ${d.subpoena_id}`;
+            else if (d.citation_id) reuStr += ` - Citado ID ${d.citation_id}`;
+            bodyXml += pXml(runsWithIdLinks(reuStr, { bold: false, highlight: null }), { left: 720, hanging: 360 });
+          });
+        }
+
+        // DEFESA (Bold + Green highlight)
+        if (activeData.defense_counsel) {
+          bodyXml += pXml(runXml(activeData.defense_counsel, { bold: true, highlight: "green" }));
+        }
+        bodyXml += pXml('');
+
+        // QUALIFICAÇÃO (omitted in ANPP)
+        if (activeData.qualification_text && !isAnpp) {
+          bodyXml += pXml(runXml("QUALIFICAÇÃO", { bold: true, highlight: "yellow" }));
+          const qParas = activeData.qualification_text.split('\n\n').filter(p=>p.trim());
+          qParas.forEach(p => {
+            const commaIdx = p.indexOf(',');
+            let runs = '';
+            if (commaIdx !== -1) {
+              const namePart = p.substring(0, commaIdx).trim();
+              const restPart = p.substring(commaIdx);
+              runs = runXml(namePart.toUpperCase(), { bold: true }) + runXml(restPart, { bold: false });
+            } else {
+              runs = runXml(p, { bold: false });
+            }
+            bodyXml += pXml(runs, { firstLine: 720 });
+          });
+          bodyXml += pXml('');
+        }
+
+        // IMPUTAÇÃO (omitted in ANPP)
+        if (activeData.imputation_text && !isAnpp) {
+          bodyXml += pXml(runXml("IMPUTAÇÃO", { bold: true, highlight: "yellow" }));
+          const iParas = activeData.imputation_text.split('\n\n').filter(p=>p.trim());
+          iParas.forEach(p => {
+            const parts = p.split(/(\(.*?\))/g);
+            let runs = '';
+            parts.forEach(part => {
+              if (part.startsWith('(') && part.endsWith(')')) {
+                runs += runXml(part, { bold: true });
+              } else if (part) {
+                runs += runXml(part, { bold: false });
+              }
+            });
+            bodyXml += pXml(runs, { firstLine: 720 });
+          });
+          bodyXml += pXml('');
+        }
+
+        // RESUMO DOS FATOS
+        if (activeData.facts_summary) {
+          bodyXml += pXml(runXml("RESUMO DOS FATOS", { bold: true, highlight: "yellow" }));
+          const fParas = activeData.facts_summary.split('\n\n').filter(p=>p.trim());
+          fParas.forEach(p => {
+            bodyXml += pXml(runsWithIdLinks(p, { bold: false }), { firstLine: 720 });
+          });
+          bodyXml += pXml('');
+        }
+
+        // HISTÓRICO PROCESSUAL (omitted in ANPP)
+        if (activeData.chronological_history && activeData.chronological_history.length > 0 && !isAnpp) {
+          bodyXml += pXml(runXml("HISTÓRICO PROCESSUAL", { bold: true, highlight: "yellow" }));
+          activeData.chronological_history.forEach(h => {
+            const prefix = `${h.date_str}: ${h.description} (ID `;
+            const url = `${PJE_DOC_URL}${h.doc_id}`;
+            const runs = runXml(prefix, { bold: false }) +
+                         hyperlinkXml(url, h.doc_id, { bold: false, underline: true, color: "0000ff" }) +
+                         runXml(')', { bold: false });
+            bodyXml += pXml(runs, { after: 283 });
+          });
+          bodyXml += pXml('');
+        }
+
+        // TESTEMUNHAS (omitted in ANPP)
+        if (!isAnpp) {
+          if (activeData.prosecution_witnesses && activeData.prosecution_witnesses.length > 0) {
+            bodyXml += pXml(runXml("TESTEMUNHAS DE ACUSAÇÃO:", { bold: true, highlight: "yellow" }));
+            activeData.prosecution_witnesses.forEach(w => {
+              const num = String(w.number).padStart(2, '0');
+              const st = w.status_id ? ` - ${w.status_id}` : '';
+              const wText = `${num}) ${w.name} - ${w.role}${st}`;
+              bodyXml += pXml(runsWithIdLinks(wText, { bold: false }), { after: 283 });
+            });
+          }
+
+          if (activeData.defense_witnesses && activeData.defense_witnesses.length > 0) {
+            bodyXml += pXml(runXml("TESTEMUNHAS DE DEFESA:", { bold: true, highlight: "yellow" }));
+            activeData.defense_witnesses.forEach(w => {
+              const num = String(w.number).padStart(2, '0');
+              const st = w.status_id ? ` - ${w.status_id}` : '';
+              const wText = `${num}) ${w.name}${st}`;
+              bodyXml += pXml(runsWithIdLinks(wText, { bold: false }), { after: 283 });
+            });
+          } else if (activeData.defense_witness_note) {
+            bodyXml += pXml(runXml(activeData.defense_witness_note, { bold: true, highlight: "yellow" }), { after: 142 });
+          }
+        }
+
+        bodyXml += pXml('');
+        bodyXml += pXml(runXml(activeData.closure_text || "Cordial e respeitosamente,", { bold: false }), { firstLine: 720, after: 142 });
+
+        // Build word/document.xml
+        const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<w:body>${bodyXml}<w:sectPr><w:pgSz w:w="11906" w:h="16838" w:orient="portrait"/><w:pgMar w:top="1134" w:bottom="1134" w:left="1134" w:right="1134" w:header="0" w:footer="0"/></w:sectPr></w:body></w:document>`;
+        zip.file('word/document.xml', docXml);
+
+        // Build word/_rels/document.xml.rels
+        let relsDocXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n`;
+        linkMap.forEach((rid, url) => {
+          relsDocXml += `  <Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${escapeXml(url)}" TargetMode="External"/>\n`;
+        });
+        relsDocXml += `</Relationships>`;
+        zip.file('word/_rels/document.xml.rels', relsDocXml);
+
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const safeCase = (activeData.case_number || 'Processo').replace(/[\/\\]/g, '-');
+        a.download = `Resumo - ${safeCase} ${activeData.act_type || 'AIJ'}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        a.remove();
+        showToast('Documento Word (.docx) gerado com sucesso!', 'success');
+      } catch (err) {
+        showToast('Erro ao gerar DOCX: ' + err.message, 'error');
+        console.error(err);
+      }
+    };
+
+    function escapeXml(unsafe) {
+      return String(unsafe || '').replace(/[<>&'"]/g, c => {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+        }
+      });
+    }
+
+    function showToast(msg, type='success') {
+      const container = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerText = msg;
+      container.appendChild(t);
+      setTimeout(() => t.remove(), 4000);
+    }
+  </script>
 </body>
 </html>

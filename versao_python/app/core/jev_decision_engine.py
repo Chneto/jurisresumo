@@ -219,7 +219,17 @@ class JEVDecisionEngine:
                 rationale="Peça inaugural ministerial com narrativa fática acusatória.",
             )
 
-        # 5. Avaliação de Mandado Cumprido / Citação
+        # 5. Avaliação de Resposta à Acusação (Nominada ou Inominada)
+        if any(k in combined_meta for k in ["resposta", "defesa", "petiç", "petic", "manifesta", "avulsa"]) or ("art. 396" in cleaned_text.lower() or "artigo 396" in cleaned_text.lower()):
+            if re.search(r"art(?:igo)?s?\.?\s*396(?:-a)?\b|absolvi[cç][aã]o\s*sum[aá]ria|resposta\s*(?:[aà]\s*)?acusa[cç][aã]o|defesa\s*pr[eé]via", cleaned_text, re.I):
+                return JEVDecisionResult(
+                    category=DocumentCategory.RESPOSTA_ACUSACAO,
+                    relevance_score=0.92,
+                    is_essential=True,
+                    rationale="Resposta à acusação ou peça defensiva (art. 396/396-A CPP).",
+                )
+
+        # 6. Avaliação de Mandado Cumprido / Citação
         if any(k in combined_meta for k in ["mandado", "certidão de citação", "contrafé"]):
             if "cumprid" in cleaned_text.lower() or "citei" in cleaned_text.lower() or "intimei" in cleaned_text.lower():
                 return JEVDecisionResult(

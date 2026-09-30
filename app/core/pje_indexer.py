@@ -36,6 +36,7 @@ KEY_DOCUMENT_PATTERNS = [
     re.compile(r"pron[uú]ncia", re.IGNORECASE),
     re.compile(r"resposta\s*(?:[aà]\s*)?acusa[cç][aã]o", re.IGNORECASE),
     re.compile(r"defesa\s*pr[eé]via", re.IGNORECASE),
+    re.compile(r"defesa\s*(?:preliminar|escrita)?", re.IGNORECASE),
     re.compile(r"mandado", re.IGNORECASE),
     re.compile(r"intima[cç][aã]o", re.IGNORECASE),
     re.compile(r"cita[cç][aã]o", re.IGNORECASE),
