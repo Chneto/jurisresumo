@@ -175,7 +175,8 @@ def test_stacked_footer_stamps_priority():
 def test_scanned_page_detection_on_sample_case():
     """Tests detection of native text pages vs scanned image pages on Proc. 0801889."""
     pdf_path = find_case_pdf("0801889")
-    assert pdf_path is not None, "Proc. 0801889 PDF not found"
+    if not pdf_path or not os.path.exists(pdf_path):
+        pytest.skip("Proc. 0801889 PDF not present in environment (LGPD sanitized)")
 
     doc = pymupdf.open(pdf_path)
     # Page 39 (0-indexed, so page 40) is Denúncia (native digital text)
@@ -190,7 +191,8 @@ def test_scanned_page_detection_on_sample_case():
 def test_ocr_engine_execution_and_stamp_filtering():
     """Tests that OCREngine correctly crops headers/footers and extracts structured lines."""
     pdf_path = find_case_pdf("0801889")
-    assert pdf_path is not None
+    if not pdf_path or not os.path.exists(pdf_path):
+        pytest.skip("Proc. 0801889 PDF not present in environment (LGPD sanitized)")
 
     doc = pymupdf.open(pdf_path)
     scanned_page = doc[19]  # Page 20 (ITEP Atestado Nº 1348/2023)
@@ -218,7 +220,8 @@ def test_ocr_engine_execution_and_stamp_filtering():
 def test_toc_parsing_proc_0801889():
     """Verifies TOC extraction on Proc. 0801889 (3 TOC pages, 67 documents)."""
     pdf_path = find_case_pdf("0801889")
-    assert pdf_path is not None
+    if not pdf_path or not os.path.exists(pdf_path):
+        pytest.skip("Proc. 0801889 PDF not present in environment (LGPD sanitized)")
     doc = pymupdf.open(pdf_path)
 
     entries, toc_count = parse_toc_entries(doc)
@@ -239,7 +242,8 @@ def test_toc_parsing_proc_0801889():
 def test_toc_parsing_proc_0860849():
     """Verifies TOC extraction on Proc. 0860849 (2 TOC pages, 27 documents)."""
     pdf_path = find_case_pdf("0860849")
-    assert pdf_path is not None
+    if not pdf_path or not os.path.exists(pdf_path):
+        pytest.skip("Proc. 0860849 PDF not present in environment (LGPD sanitized)")
     doc = pymupdf.open(pdf_path)
 
     entries, toc_count = parse_toc_entries(doc)
@@ -250,7 +254,8 @@ def test_toc_parsing_proc_0860849():
 def test_toc_parsing_proc_0820550():
     """Verifies TOC extraction on Proc. 0820550 (4 TOC pages, 97 documents)."""
     pdf_path = find_case_pdf("0820550")
-    assert pdf_path is not None
+    if not pdf_path or not os.path.exists(pdf_path):
+        pytest.skip("Proc. 0820550 PDF not present in environment (LGPD sanitized)")
     doc = pymupdf.open(pdf_path)
 
     entries, toc_count = parse_toc_entries(doc)
@@ -265,7 +270,8 @@ def test_toc_parsing_proc_0820550():
 def test_index_pje_pdf_proc_0801889():
     """Verifies 100% page-by-page mapping and start/end pages on Proc. 0801889."""
     pdf_path = find_case_pdf("0801889")
-    assert pdf_path is not None
+    if not pdf_path or not os.path.exists(pdf_path):
+        pytest.skip("Proc. 0801889 PDF not present in environment (LGPD sanitized)")
 
     catalog, doc = index_pje_pdf(pdf_path)
     assert len(doc) == 119
@@ -358,7 +364,8 @@ ALL_NINE_CASES_EXPECTATIONS = [
 def test_toc_parsing_across_all_nine_cases(case_prefix: str, expected_toc_pages: int, expected_doc_count: int):
     """Verifies TOC pages and document counts across all 9 reference cases."""
     pdf_path = find_case_pdf(case_prefix)
-    assert pdf_path is not None, f"PDF for case {case_prefix} not found"
+    if not pdf_path or not os.path.exists(pdf_path):
+        pytest.skip(f"PDF for case {case_prefix} not present in environment (LGPD sanitized)")
 
     doc = pymupdf.open(pdf_path)
     entries, toc_count = parse_toc_entries(doc)

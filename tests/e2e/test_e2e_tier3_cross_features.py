@@ -11,6 +11,7 @@ Exercises pairwise feature combinations and end-to-end integration flows:
 
 import io
 import json
+import os
 import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -51,6 +52,8 @@ from tests.e2e.test_e2e_tier1_features import build_reference_docx
 def test_tier3_ingestion_to_stamp_mapping(primary_case_metadata):
     """X01: Ingests case 0801889 PDF, indexes documents, and maps stamps to pages."""
     pdf_path = str(primary_case_metadata["pdf_path"])
+    if not os.path.exists(pdf_path):
+        pytest.skip("Primary case PDF not present in environment (LGPD sanitized)")
     catalog, doc = index_pje_pdf(pdf_path)
 
     assert len(catalog) >= 40
@@ -69,6 +72,8 @@ def test_tier3_ingestion_to_stamp_mapping(primary_case_metadata):
 def test_tier3_indexing_to_pruning_reduction(primary_case_metadata):
     """X02: Indexing followed by selective pruning yields significant page reduction."""
     pdf_path = str(primary_case_metadata["pdf_path"])
+    if not os.path.exists(pdf_path):
+        pytest.skip("Primary case PDF not present in environment (LGPD sanitized)")
     catalog, doc = index_pje_pdf(pdf_path)
     total_pages = len(doc)
     doc.close()
@@ -91,6 +96,8 @@ def test_tier3_scanned_page_to_ocr_integration(reference_cases):
     """X03: Identifies scanned page in 0820550, runs OCR engine, and yields lines."""
     case_meta = reference_cases["0820550-12.2025.8.20.5001"]
     pdf_path = str(case_meta["pdf_path"])
+    if not os.path.exists(pdf_path):
+        pytest.skip("Case 0820550 PDF not present in environment (LGPD sanitized)")
     ocr = OCREngine.get_instance()
 
     with pymupdf.open(pdf_path) as doc:
@@ -221,6 +228,8 @@ def test_tier3_dual_engine_schema_parity():
 def test_tier3_full_pipeline_standard_aij(primary_case_metadata):
     """X07: Full end-to-end integration pipeline on reference case 0801889."""
     pdf_path = str(primary_case_metadata["pdf_path"])
+    if not os.path.exists(pdf_path):
+        pytest.skip("Primary case PDF not present in environment (LGPD sanitized)")
 
     # 1. Ingestion & Indexing
     catalog, doc = index_pje_pdf(pdf_path)
@@ -269,6 +278,8 @@ def test_tier3_full_pipeline_anpp(reference_cases):
     """X08: Full pipeline on ANPP case 0860849 with agreement conditions."""
     case_meta = reference_cases["0860849-94.2026.8.20.5001"]
     pdf_path = str(case_meta["pdf_path"])
+    if not os.path.exists(pdf_path):
+        pytest.skip("Case 0860849 PDF not present in environment (LGPD sanitized)")
 
     catalog, doc = index_pje_pdf(pdf_path)
     assert len(catalog) > 0
@@ -301,6 +312,8 @@ def test_tier3_full_pipeline_multi_defendant(reference_cases):
     """X09: Full pipeline on multi-defendant robbery case 0820550."""
     case_meta = reference_cases["0820550-12.2025.8.20.5001"]
     pdf_path = str(case_meta["pdf_path"])
+    if not os.path.exists(pdf_path):
+        pytest.skip("Case 0820550 PDF not present in environment (LGPD sanitized)")
 
     catalog, doc = index_pje_pdf(pdf_path)
     assert len(catalog) > 0

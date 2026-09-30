@@ -382,6 +382,8 @@ def test_f04_is_scanned_page_detection_vector_page(primary_case_metadata):
     """F04-2: A native vector text page is identified as not scanned."""
     import pymupdf
     pdf_path = primary_case_metadata["pdf_path"]
+    if not os.path.exists(pdf_path):
+        pytest.skip("Primary case PDF not present in environment (LGPD sanitized)")
     with pymupdf.open(pdf_path) as doc:
         # Page 0 (cover) contains native vector text
         page = doc[0]
@@ -392,6 +394,8 @@ def test_f04_is_scanned_page_detection_scanned_page(reference_cases):
     """F04-3: Scanned image page in case 0820550 is identified as scanned."""
     import pymupdf
     pdf_path = reference_cases["0820550-12.2025.8.20.5001"]["pdf_path"]
+    if not os.path.exists(pdf_path):
+        pytest.skip("Case 0820550 PDF not present in environment (LGPD sanitized)")
     with pymupdf.open(pdf_path) as doc:
         # Page 10 is inside the scanned police inquérito
         page = doc[10]
@@ -433,6 +437,9 @@ def test_f04_ocr_structured_result_schema():
 def test_f05_pje_cover_metadata_extraction(primary_case_metadata):
     """F05-1: Reads CNJ case number from first page of real PJe PDF."""
     import pymupdf
+    pdf_path = primary_case_metadata["pdf_path"]
+    if not os.path.exists(pdf_path):
+        pytest.skip("Primary case PDF not present in environment (LGPD sanitized)")
     with pymupdf.open(primary_case_metadata["pdf_path"]) as doc:
         page0_text = doc[0].get_text()
         assert "0801889-53.2023.8.20.5001" in page0_text
