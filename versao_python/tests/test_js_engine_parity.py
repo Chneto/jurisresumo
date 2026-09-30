@@ -102,3 +102,232 @@ def test_javascript_analytical_engine_features():
     assert 'w:ind w:left="${left}" w:hanging="${hanging}"' in content
 
 
+def validate_javascript_syntax(js_code: str) -> list[str]:
+    """Scans JavaScript code and checks bracket/brace/parenthesis balancing,
+    taking into account single quotes, double quotes, template literals (including ${...} interpolation),
+    single-line comments (//), multi-line comments (/* */), and regular expression literals (/[...]/).
+    Returns a list of syntax error descriptions.
+    """
+    stack = []
+    i = 0
+    n = len(js_code)
+    line = 1
+    col = 1
+
+    state = "DEFAULT"
+    prev_token = None
+
+    regex_preceders = {
+        "(", "[", "{", ";", ",", "=", "!", "&", "|", "?", ":", "~", "+", "-", "*", "/", "%", "^", "<", ">",
+        "return", "typeof", "throw", "case", "delete", "void", "in", "instanceof", "yield", "await", "=>"
+    }
+
+    errors = []
+
+    while i < n:
+        c = js_code[i]
+
+        if c == "\n":
+            line += 1
+            col = 1
+        else:
+            col += 1
+
+        if state == "DEFAULT":
+            if c in " \t\r\n":
+                i += 1
+                continue
+
+            # Check comments
+            if c == "/" and i + 1 < n and js_code[i + 1] == "/":
+                state = "IN_LINE_COMMENT"
+                i += 2
+                continue
+            if c == "/" and i + 1 < n and js_code[i + 1] == "*":
+                state = "IN_BLOCK_COMMENT"
+                i += 2
+                continue
+
+            # Strings
+            if c == "'":
+                state = "IN_STRING_SINGLE"
+                i += 1
+                continue
+            if c == '"':
+                state = "IN_STRING_DOUBLE"
+                i += 1
+                continue
+            if c == "`":
+                state = "IN_TEMPLATE"
+                i += 1
+                continue
+
+            # Regex vs Division
+            if c == "/":
+                if prev_token in regex_preceders or prev_token is None:
+                    state = "IN_REGEX"
+                    i += 1
+                    continue
+                else:
+                    prev_token = "/"
+                    i += 1
+                    continue
+
+            # Brackets / braces / parens
+            if c in "({[":
+                stack.append((c, line, col, False))
+                prev_token = c
+                i += 1
+                continue
+            elif c in ")}]":
+                if not stack:
+                    errors.append(f"Unmatched closing '{c}' at line {line}, col {col}")
+                    i += 1
+                    continue
+                top, top_l, top_c, is_tmpl = stack.pop()
+                expected = {"(": ")", "{": "}", "[": "]"}[top]
+                if c != expected:
+                    errors.append(
+                        f"Mismatched closing '{c}' at line {line}, col {col} (expected '{expected}' opened at line {top_l}, col {top_c})"
+                    )
+                if is_tmpl:
+                    state = "IN_TEMPLATE"
+                prev_token = c
+                i += 1
+                continue
+
+            # Tokens / identifiers
+            if c.isalnum() or c in "$_":
+                start_id = i
+                while i < n and (js_code[i].isalnum() or js_code[i] in "$_"):
+                    i += 1
+                prev_token = js_code[start_id:i]
+                continue
+            else:
+                prev_token = c
+                i += 1
+                continue
+
+        elif state == "IN_LINE_COMMENT":
+            if c == "\n":
+                state = "DEFAULT"
+            i += 1
+            continue
+
+        elif state == "IN_BLOCK_COMMENT":
+            if c == "*" and i + 1 < n and js_code[i + 1] == "/":
+                state = "DEFAULT"
+                i += 2
+                continue
+            i += 1
+            continue
+
+        elif state == "IN_STRING_SINGLE":
+            if c == "\\":
+                i += 2
+                continue
+            if c == "'":
+                state = "DEFAULT"
+                prev_token = "STRING"
+            i += 1
+            continue
+
+        elif state == "IN_STRING_DOUBLE":
+            if c == "\\":
+                i += 2
+                continue
+            if c == '"':
+                state = "DEFAULT"
+                prev_token = "STRING"
+            i += 1
+            continue
+
+        elif state == "IN_TEMPLATE":
+            if c == "\\":
+                i += 2
+                continue
+            if c == "$" and i + 1 < n and js_code[i + 1] == "{":
+                stack.append(("{", line, col, True))
+                state = "DEFAULT"
+                prev_token = "{"
+                i += 2
+                continue
+            if c == "`":
+                state = "DEFAULT"
+                prev_token = "STRING"
+            i += 1
+            continue
+
+        elif state == "IN_REGEX":
+            if c == "\\":
+                i += 2
+                continue
+            if c == "[":
+                i += 1
+                while i < n and js_code[i] != "]":
+                    if js_code[i] == "\\":
+                        i += 2
+                    else:
+                        i += 1
+                if i < n:
+                    i += 1
+                continue
+            if c == "/":
+                state = "DEFAULT"
+                prev_token = "REGEX"
+            i += 1
+            continue
+
+    if stack:
+        for top, l, c, is_tmpl in stack:
+            errors.append(f"Unclosed '{top}' opened at line {l}, col {c}")
+
+    return errors
+
+
+def test_html_javascript_syntax_and_bracket_balance():
+    """Verifies that all <script> blocks across all HTML files have 100% valid bracket/brace balance and zero syntax errors."""
+    html_files = [p for p in ROOT_DIR.rglob("*.html") if ".git" not in str(p)]
+    assert len(html_files) >= 6, f"Expected at least 6 HTML files in project, found {len(html_files)}"
+
+    total_scripts_checked = 0
+    for html_file in html_files:
+        content = html_file.read_text(encoding="utf-8")
+        scripts = re.findall(r"<script\b[^>]*>(.*?)</script>", content, flags=re.DOTALL | re.IGNORECASE)
+        for idx, script_body in enumerate(scripts):
+            # Skip empty scripts or external src tags with empty body
+            if not script_body.strip():
+                continue
+            total_scripts_checked += 1
+            errors = validate_javascript_syntax(script_body)
+            assert not errors, f"JavaScript syntax errors in {html_file.relative_to(ROOT_DIR)} (script #{idx + 1}):\n" + "\n".join(errors)
+
+    assert total_scripts_checked > 0, "At least one JavaScript script block must be verified"
+
+
+def test_js_syntax_validator_catches_unbalanced_braces():
+    """Verifies that the syntax validator correctly detects extra or missing braces and parens."""
+    broken_code = """
+    function testFunc() {
+        if (true) {
+            console.log("hello");
+        }
+    }
+    }
+    """
+    errors = validate_javascript_syntax(broken_code)
+    assert len(errors) > 0
+    assert any("Unmatched closing '}'" in err for err in errors)
+
+    unclosed_code = """
+    function testFunc() {
+        if (true) {
+            console.log("hello");
+    }
+    """
+    errors_unclosed = validate_javascript_syntax(unclosed_code)
+    assert len(errors_unclosed) > 0
+    assert any("Unclosed '{'" in err for err in errors_unclosed)
+
+
+
