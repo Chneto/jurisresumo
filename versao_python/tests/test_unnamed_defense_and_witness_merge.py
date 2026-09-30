@@ -407,3 +407,72 @@ def test_unnamed_defense_with_contestacao_and_documento_diverso():
     assert "Gabriel Santos" in parsed["represented_defendants"][0]
     assert "absolvição sumária" in parsed["summary_for_history"].lower()
 
+
+def test_defense_lawyer_name_dr_prefix_no_duplicate():
+    """Validates that 'Dr.' prefix in lawyer name is not duplicated into 'Dr. Dr.'."""
+    engine = OfflineExtractionEngine()
+
+    p_doc = PJeDocument(
+        doc_id="999000",
+        date_str="01/05/2025 10:00",
+        doc_name="Petição",
+        doc_type="Petição",
+        start_page=1,
+        end_page=1,
+    )
+    txt = """
+    RESPOSTA À ACUSAÇÃO (art. 396 do CPP).
+    Pugna pela absolvição sumária e reitera o rol de testemunhas da acusação.
+    DR. FRANCISCO CHAGAS - OAB/RN 1234
+    """
+    reus_capa = ["JOÃO DA SILVA"]
+    advs_capa = ["DR. FRANCISCO CHAGAS"]
+
+    parsed = engine._parse_defense_document(p_doc, txt, reus_capa, advs_capa, is_named_defense=True)
+    assert parsed is not None
+    assert "Dr. Dr." not in parsed["petitioner_str"]
+    assert "Dr. Francisco Chagas" in parsed["petitioner_str"]
+
+    pros_w, def_w, _ = engine._extract_witnesses(
+        denuncia_text="ROL DE TESTEMUNHAS:\n1. Soldado Silva (PM)",
+        resposta_text="",
+        vitimas_capa=[],
+        testemunhas_capa=[],
+        mandados_docs=[],
+        doc=None,
+        defense_docs=[parsed],
+    )
+    assert "Dr. Dr." not in pros_w[0].role
+    assert "Dr. Francisco Chagas" in pros_w[0].role
+    assert "em defesa de do réu" not in pros_w[0].role
+
+
+def test_multiple_private_lawyers_counsel_string():
+    """Validates defense counsel formatting when multiple co-defendants have distinct private attorneys."""
+    engine = OfflineExtractionEngine()
+    reus_capa = ["RÉU ALFA", "RÉU BETA"]
+    advs_capa = ["DR. ADVOGADO UM", "DR. ADVOGADO DOIS"]
+
+    defense_docs = [
+        {
+            "doc_id": "1",
+            "is_defensoria": False,
+            "lawyer_name": "Advogado Um",
+            "lawyer_oab": "OAB/RN 111",
+            "represented_defendants": ["Réu Alfa"],
+        },
+        {
+            "doc_id": "2",
+            "is_defensoria": False,
+            "lawyer_name": "Advogado Dois",
+            "lawyer_oab": "OAB/RN 222",
+            "represented_defendants": ["Réu Beta"],
+        },
+    ]
+
+    counsel = engine._extract_defense_counsel("", advs_capa, None, defense_docs, reus_capa)
+    assert "Representados por advogados particulares:" in counsel
+    assert "Dr. Advogado Um - OAB/RN 111 (em defesa de Réu Alfa)" in counsel
+    assert "Dr. Advogado Dois - OAB/RN 222 (em defesa de Réu Beta)" in counsel
+
+

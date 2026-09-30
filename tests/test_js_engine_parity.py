@@ -101,6 +101,14 @@ def test_javascript_analytical_engine_features():
     assert '{ left: 720, hanging: 360 }' in content
     assert 'w:ind w:left="${left}" w:hanging="${hanging}"' in content
 
+    # Unnamed defense detection and unified witness deduplication/labeling
+    assert "findAllDefenseDocuments" in content
+    assert "parseDefenseDocument" in content
+    assert "extractDefenseWitnessNamesFromText" in content
+    assert "(arrolada por todos)" in content
+    assert "pela Defensoria Pública" in content
+    assert "pelo Advogado Dr." in content
+
 
 def validate_javascript_syntax(js_code: str) -> list[str]:
     """Scans JavaScript code and checks bracket/brace/parenthesis balancing,

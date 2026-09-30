@@ -1433,11 +1433,13 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                     lawyer_name = priv[0].title()
 
             if lawyer_name:
+                clean_lawyer = re.sub(r"^(?:Dr(?:a|\(a\))?\.?\s*)+", "", lawyer_name, flags=re.IGNORECASE).strip()
                 if lawyer_oab:
-                    petitioner_str = f"pelo Advogado Dr. {lawyer_name} ({lawyer_oab})"
+                    petitioner_str = f"pelo Advogado Dr. {clean_lawyer} ({lawyer_oab})"
                 else:
-                    petitioner_str = f"pelo Advogado Dr. {lawyer_name}"
+                    petitioner_str = f"pelo Advogado Dr. {clean_lawyer}"
             else:
+                clean_lawyer = ""
                 petitioner_str = "por advogado particular"
         else:
             defensor_m = re.search(
@@ -1518,7 +1520,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             "date_str": _format_date_short(p_doc.date_str),
             "is_inominada": not is_named_defense,
             "is_defensoria": is_defensoria,
-            "lawyer_name": lawyer_name,
+            "lawyer_name": clean_lawyer if not is_defensoria else lawyer_name,
             "lawyer_oab": lawyer_oab,
             "petitioner_str": petitioner_str,
             "represented_defendants": rep_defendants,
@@ -1869,8 +1871,10 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                                 parties.append("pela Defensoria Pública")
                         else:
                             lawyer_n = d.get("lawyer_name") or "Advogado"
-                            rep_n = ", ".join(d.get("represented_defendants", [])) or "do réu"
-                            parties.append(f"pelo Advogado Dr. {lawyer_n}, em defesa de {rep_n}")
+                            clean_lawyer_n = re.sub(r"^(?:Dr(?:a|\(a\))?\.?\s*)+", "", lawyer_n, flags=re.IGNORECASE).strip()
+                            rep_list = d.get("represented_defendants", [])
+                            rep_str = f", em defesa de {', '.join(rep_list)}" if rep_list else ""
+                            parties.append(f"pelo Advogado Dr. {clean_lawyer_n}{rep_str}")
 
                     if len(parties) == 1:
                         tag = f"(arrolada pelo Ministério Público e {parties[0]})"
@@ -1918,11 +1922,12 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                         counsel_parts.append(l_str)
                 else:
                     l_name = d_info.get("lawyer_name") or "Advogado"
+                    clean_lname = re.sub(r"^(?:Dr(?:a|\(a\))?\.?\s*)+", "", l_name, flags=re.IGNORECASE).strip()
                     l_oab = d_info.get("lawyer_oab") or ""
                     oab_suff = f" - {l_oab}" if l_oab else ""
-                    l_str = f"Dr. {l_name}{oab_suff}{rep_str}"
-                    if l_name not in seen_lawyers:
-                        seen_lawyers.add(l_name)
+                    l_str = f"Dr. {clean_lname}{oab_suff}{rep_str}"
+                    if clean_lname not in seen_lawyers:
+                        seen_lawyers.add(clean_lname)
                         counsel_parts.append(l_str)
 
             if counsel_parts:
@@ -1931,7 +1936,9 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                 if has_def and not has_priv:
                     return counsel_parts[0] if len(counsel_parts) == 1 else "Assistidos pela Defensoria Pública"
                 if has_priv and not has_def:
-                    return f"Representado por advogado particular, {', '.join(counsel_parts)}"
+                    if len(counsel_parts) == 1:
+                        return f"Representado por advogado particular, {counsel_parts[0]}"
+                    return f"Representados por advogados particulares: {'; '.join(counsel_parts)}"
                 return "; ".join(counsel_parts)
 
         # Fallback to standard parsing
