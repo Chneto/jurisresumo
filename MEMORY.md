@@ -2,7 +2,7 @@
 
 > **Documento Vivo de Memória e Conhecimento Técnico**  
 > **Finalidade:** Orientar desenvolvedores e subagentes em futuras modificações, manutenções, refatorações e auditorias da aplicação.  
-> **Última Atualização:** 30/09/26 (Versão 2.9 — Extração Rígida e Literal de Qualificação e Imputação Penal Ampla + Fallback no Inquérito Policial + Auditoria Determinística no JEV)
+> **Última Atualização:** 30/09/26 (Versão 3.0 — Detecção Profunda de Resposta à Acusação Inominada + Deduplicação/Rotulagem Composta de Testemunhas + 207 Testes Pytest)
 > **Autor e Desenvolvedor:** FChNeto
 
 ---
@@ -753,5 +753,28 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
   - Execução da suíte completa de testes no Pytest: **199 testes aprovados com 100% de sucesso**.
   - Checkpoint de recuperação salvo: `20260930_100323_v2_9-qualif-imputacao-rigida`.
   - Sincronização e publicação no GitHub via commit `a1d0571`.
+
+---
+
+## 22. Versão 3.0 — Detecção de Resposta à Acusação Inominada & Deduplicação de Testemunhas Comuns (30/09/26)
+
+### Ato 1: Varredura e Identificação de Respostas à Acusação Inominadas no PJe
+* **Problema:** Quando a defesa protocolava a peça com títulos genéricos no PJe ("Petição", "Manifestação", "Contestação", "Documento Diverso"), o sistema ignorava a peça defensiva.
+* **Solução:** Implementação de varredura profunda no corpo do texto e catálogo do PJe (Python e JS) detectando termos nucleares do art. 396/396-A do CPP, pedidos de absolvição sumária, preliminares e rol de testemunhas, registrando no histórico cronológico: data, ID do documento, patrono (Defensoria ou Advogado com OAB), réu defendido e síntese dos pedidos.
+
+### Ato 2: Deduplicação e Rotulagem Composta do Rol de Testemunhas
+* **Problema:** Testemunhas arroladas concomitantemente pela acusação e pela defesa eram listadas em duplicidade ou tinham a indicação de patrono truncada para múltiplos corréus.
+* **Solução:** Unificação inteligente em entrada única com anotação composta de autoria:
+  - `(arrolada pelo Ministério Público e pela Defensoria Pública)`
+  - `(arrolada pelo Ministério Público e pela Defesa de [Réu] - Dr. [Advogado])`
+  - `(arrolada por todos)` (quando arrolada pela acusação e por todas as defesas).
+
+### Ato 3: Criação de Suíte de Testes e Paridade Python / JavaScript
+* **Ação:** Criação de `tests/test_unnamed_defense_and_witness_merge.py` e atualização de `versao_javascript/index.html` e réplicas de distribuição.
+* **Resultados:** **207 testes no Pytest com 100% de aprovação** (165 passados, 42 skipped com segurança em ambiente sanitizado LGPD).
+
+### Ato 4: Sanitização, LGPD e Sincronização no GitHub
+* **Ação:** Remoção de arquivos temporários, verificação estrita de privacidade LGPD e publicação sincronizada no GitHub (`commit 791296c`).
+
 
 
