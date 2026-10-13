@@ -17,8 +17,9 @@ from app.generators.docx_generator import generate_docx_summary
 router = APIRouter(prefix="/api")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-if not any(PROJECT_ROOT.glob("Proc.*")) and any(PROJECT_ROOT.parent.glob("Proc.*")):
-    PROJECT_ROOT = PROJECT_ROOT.parent
+if (PROJECT_ROOT / "versao_python").is_dir():
+    # If called from within versao_python
+    PROJECT_ROOT = PROJECT_ROOT
 
 
 

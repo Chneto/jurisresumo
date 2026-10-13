@@ -13,6 +13,7 @@ from typing import List, Optional
 
 import pymupdf
 
+from app.core.jev_decision_engine import JEVDecisionEngine
 from app.core.models import HearingSummaryData, PJeDocument
 from app.core.pje_indexer import index_pje_pdf, prune_documents
 from app.engines.base import BaseExtractionEngine
@@ -124,7 +125,35 @@ class GeminiExtractionEngine(BaseExtractionEngine):
             )
 
             result_dict = json.loads(response.text)
-            return HearingSummaryData.model_validate(result_dict)
+            llm_data = HearingSummaryData.model_validate(result_dict)
+
+            # Baseline determinístico offline para validação de ground-truth e fallback
+            offline_baseline = self.offline_engine.extract(pdf_path, pje_catalog=pje_catalog)
+
+            # Localizar texto da denúncia para auditoria de artigos
+            denuncia_text = ""
+            try:
+                doc_d = pymupdf.open(pdf_path)
+                for k_doc in key_docs:
+                    if any(k in k_doc.doc_name.lower() for k in ["denún", "denun", "queixa"]):
+                        text_parts = []
+                        for p in range(k_doc.start_page - 1, min(k_doc.end_page, len(doc_d))):
+                            text_parts.append(doc_d[p].get_text())
+                        denuncia_text = "\n".join(text_parts)
+                        break
+                doc_d.close()
+            except Exception:
+                pass
+
+            # JEV/LAYA Ground-Truth & Citation Guardrail
+            audited_data = JEVDecisionEngine.get_instance().audit_llm_ground_truth(
+                llm_data=llm_data,
+                pje_catalog=pje_catalog or [],
+                denuncia_text=denuncia_text,
+                offline_fallback_data=offline_baseline,
+            )
+
+            return audited_data
 
         except Exception as err:
             # If any Gemini API or quota error occurs, fallback seamlessly to offline engine

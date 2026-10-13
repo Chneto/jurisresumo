@@ -798,82 +798,90 @@
       }
     };
 
-    // Text Cleaning Helper
+    // Text Cleaning Helper with Complete GAECO, Header and Margin Noise Expunging
     function cleanPjeText(text) {
       if (!text) return '';
-      return text.split('\n')
-        .filter(line => {
-          const l = line.trim();
-          if (/Num\.\s*\d+\s*-\s*P[aáAÁ]g\./i.test(l)) return false;
-          if (/P[aá]g\.\s*Total\s*-\s*\d+/i.test(l)) return false;
-          if (/P[aá]g\.\s*\d+\s*de\s*\d+/i.test(l)) return false;
-          if (/Assinado\s+eletronicamente\s+por/i.test(l)) return false;
-          if (/https?:\/\/pje\S+/i.test(l) || /https?:\/\/consultapublica\S+/i.test(l)) return false;
-          if (/Documento\s+n[ºo]\s*\d+\s+do\s+procedimento/i.test(l)) return false;
-          if (/Valida[cç][aã]o\s+em\s+/i.test(l)) return false;
-          if (/N[úu]mero\s+do\s+documento:\s*\d+/i.test(l)) return false;
-          if (/^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO/i.test(l)) return false;
-          if (/PROMOTORIA\s+DE\s+JUSTI[CÇ]A/i.test(l)) return false;
-          if (/Defesa\s+dos\s+Direitos/i.test(l)) return false;
-          if (/^\s*Rua\s+(?:Promotor|Milit[aã]o|Doutor|Serid[oó]|Alameda)/i.test(l)) return false;
-          if (/^Telefone\(s\):/i.test(l) || /^E-mail:/i.test(l) || /^www\./i.test(l)) return false;
-          if (/^\s*_{5,}\s*$/.test(l)) return false;
-          return true;
-        })
-        .join('\n')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
+      const cleanedText = text.replace(/\u200b/g, ' ').replace(/\ufeff/g, '');
+      const lines = cleanedText.split('\n');
+      const headerPatterns = [
+        /Num\.\s*\d+\s*-\s*P[aáAÁ]g\./i,
+        /P[aá]g\.\s*Total\s*-\s*\d+/i,
+        /P[aá]g\.\s*\d+\s*de\s*\d+/i,
+        /Assinado\s+eletronicamente\s+por/i,
+        /https?:\/\/pje\S+/i,
+        /https?:\/\/consultapublica\S+/i,
+        /Documento\s+n[ºo]\s*\d+\s+do\s+procedimento/i,
+        /Valida[cç][aã]o\s+em\s+/i,
+        /N[úu]mero\s+do\s+documento:\s*\d+/i,
+        /^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO/i,
+        /PROMOTORIA\s+DE\s+JUSTI[CÇ]A/i,
+        /Defesa\s+dos\s+Direitos/i,
+        /^\s*Rua\s+(?:Promotor|Milit[aã]o|Doutor|Serid[oó]|Alameda)/i,
+        /^Telefone\(s\):/i,
+        /^E-mail:/i,
+        /^www\./i,
+        /^\s*_{5,}\s*$/,
+        /GRUPO\s+DE\s+ATUA[CÇ][AÃ]O\s+ESPECIAL/i,
+        /\d+ª\s+PROMOTORIA\s+DE\s+JUSTI[CÇ]A/i,
+        /-\s*\d+\s+de\s+\d+\s+laudas\s*-/i,
+        /GABINETE\s+\d+/i,
+        /N[UÚ]CLEO\s+REGIONAL/i
+      ];
+
+      const cleanedLines = [];
+      for (let line of lines) {
+        const l = line.trim();
+        if (!l) continue;
+        if (headerPatterns.some(rx => rx.test(l))) continue;
+        cleanedLines.push(l);
+      }
+      let res = cleanedLines.join('\n');
+      // Line reflow: reunite words hyphenated across line breaks
+      res = res.replace(/(\b[a-zA-ZáàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]+)-\s*\n\s*([a-zA-ZáàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]+\b)/g, '$1$2');
+      return res;
     }
 
-    // Portuguese written date parser
-    function parsePtDateTime(str) {
-      if (!str) return null;
-      const months = {
-        'janeiro': '01', 'fevereiro': '02', 'marco': '03', 'março': '03',
-        'abril': '04', 'maio': '05', 'junho': '06', 'julho': '07',
-        'agosto': '08', 'setembro': '09', 'outubro': '10', 'novembro': '11', 'dezembro': '12'
+    // Portuguese Accent-Tolerant Regex Pattern Generator
+    function makeAccentTolerantRegex(text) {
+      if (!text) return '';
+      const vowelMap = {
+        'a': '[aáàãâäAÁÀÃÂÄ]', 'á': '[aáàãâäAÁÀÃÂÄ]', 'à': '[aáàãâäAÁÀÃÂÄ]', 'ã': '[aáàãâäAÁÀÃÂÄ]', 'â': '[aáàãâäAÁÀÃÂÄ]', 'ä': '[aáàãâäAÁÀÃÂÄ]',
+        'e': '[eéêëEÉÊË]', 'é': '[eéêëEÉÊË]', 'ê': '[eéêëEÉÊË]', 'ë': '[eéêëEÉÊË]',
+        'i': '[iíîïIÍÎÏ]', 'í': '[iíîïIÍÎÏ]', 'î': '[iíîïIÍÎÏ]', 'ï': '[iíîïIÍÎÏ]',
+        'o': '[oóôõöOÓÔÕÖ]', 'ó': '[oóôõöOÓÔÕÖ]', 'ô': '[oóôõöOÓÔÕÖ]', 'õ': '[oóôõöOÓÔÕÖ]', 'ö': '[oóôõöOÓÔÕÖ]',
+        'u': '[uúûüUÚÛÜ]', 'ú': '[uúûüUÚÛÜ]', 'û': '[uúûüUÚÛÜ]', 'ü': '[uúûüUÚÛÜ]',
+        'c': '[cçCÇ]', 'ç': '[cçCÇ]'
       };
-
-      const writtenM = str.match(/(?:(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+(?:designada\s+)?(?:em|para)?)\s+)?(\d{1,2})\s+de\s+(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)(?:\s+de)?\s+(\d{2,4})(?:[^\n\d]{1,25}(?:às|as)\s*(\d{1,2})(?::|h)?(\d{2})?(?:min)?)?/i);
-      if (writtenM) {
-        const d = writtenM[1].padStart(2, '0');
-        const mKey = writtenM[2].toLowerCase().replace('ç', 'c');
-        const m = months[mKey] || '01';
-        let y = writtenM[3];
-        if (y.length === 4) y = y.slice(2);
-        let time = '';
-        if (writtenM[4]) {
-          const h = writtenM[4].padStart(2, '0');
-          const min = writtenM[5] ? writtenM[5].padStart(2, '0') : '00';
-          time = ` às ${h}h${min}min`;
+      let pattern = '';
+      for (let ch of text) {
+        const lower = ch.toLowerCase();
+        if (vowelMap[lower]) {
+          pattern += vowelMap[lower];
+        } else {
+          pattern += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
-        return `${d}.${m}.${y}${time}`;
       }
-
-      const numM = str.match(/(?:(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+(?:designada\s+)?(?:em|para)?)\s+)?(\d{1,2})[./](\d{1,2})[./](\d{2,4})(?:[^\n\d]{1,25}(?:às|as)\s*(\d{1,2})(?::|h)?(\d{2})?(?:min)?)?/i);
-      if (numM) {
-        const d = numM[1].padStart(2, '0');
-        const m = numM[2].padStart(2, '0');
-        let y = numM[3];
-        if (y.length === 4) y = y.slice(2);
-        let time = '';
-        if (numM[4]) {
-          const h = numM[4].padStart(2, '0');
-          const min = numM[5] ? numM[5].padStart(2, '0') : '00';
-          time = ` às ${h}h${min}min`;
-        }
-        return `${d}.${m}.${y}${time}`;
-      }
-
-      return null;
+      return pattern;
     }
 
-    const STATE_ORGANS_BLACKLIST_REGEX = /^(?:delegacia|estado(?:\s+d[oae]s?)?|defensoria|minist[eé]rio\s+p[uú]blico|pol[ií]cia|secretaria|comando|tribunal|juizado|vara\s+criminal|procuradoria|instituto|banco|central\s+de\s+flagrantes|dp\s+de|dpc\b|plant[aã]o\s+da\s+pol[ií]cia|departamento|munic[ií]pio|uni[aã]o)\b/i;
+    // Witness and Participant Name Normalizer (stripping military ranks and noise)
+    function normalizeWitnessName(name) {
+      if (!name) return '';
+      const clean = name.replace(
+        /^(?:pm\s+|policial(?:\s+militar|\s+civil)?\s+|cabo\s+|cb\s+|sgt\s+|sargento\s+|sd\s+|soldado\s+|subtenente\s+|tenente\s+|capit[aã]o\s+|dr(?:a|\(a\))?\.?\s+)+/gi,
+        ''
+      );
+      return clean.replace(/\u200b/g, ' ').replace(/\ufeff/g, '').trim();
+    }
+
+    // State Organs Blacklist (to never mistake a Police Station or Public Defender Office as a defendant)
+    const STATE_ORGANS_BLACKLIST_REGEX = /^(?:(?:\d+[ªa°º]?\s+)?(?:delegacia|dp\b|dpc\b|distrito\s+policial|defensoria|vara\s+criminal|promotoria)|delegacia|estado(?:\s+d[oae]s?)?|defensoria|minist[eé]rio\s+p[uú]blico|pol[ií]cia|secretaria|comando|tribunal|juizado|vara\s+criminal|procuradoria|instituto|banco|central\s+de\s+(?:flagrantes|recebimento|cust[oó]dia)|dp\s+de|dpc\b|plant[aã]o\s+(?:da\s+)?pol[ií]cia|departamento|munic[ií]pio|uni[aã]o|deicot|deicor|denarc|dhpp|dea\b|deprov|dapr)\b/i;
 
     function isStateOrgan(name) {
       return STATE_ORGANS_BLACKLIST_REGEX.test((name || '').trim());
     }
 
+    // Short Date Formatter (DD/MM/AA)
     function formatShortDate(dtStr) {
       if (!dtStr) return '';
       const m = dtStr.trim().match(/(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);
@@ -886,6 +894,7 @@
       return dtStr.trim();
     }
 
+    // Date Sort Key for strict ascending chronological sorting
     function parseDateSortKey(dtStr, docId) {
       const m = (dtStr || '').match(/(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);
       const idNum = parseInt(docId || '0', 10) || 0;
@@ -899,22 +908,119 @@
       return idNum % 1000000;
     }
 
+    // Portuguese written date parser with strict calendar and time validation
+    function parsePtDateTime(str) {
+      if (!str) return null;
+      const months = {
+        'janeiro': '01', 'jan': '01',
+        'fevereiro': '02', 'fev': '02',
+        'março': '03', 'marco': '03', 'mar': '03',
+        'abril': '04', 'abr': '04',
+        'maio': '05', 'mai': '05',
+        'junho': '06', 'jun': '06',
+        'julho': '07', 'jul': '07',
+        'agosto': '08', 'ago': '08',
+        'setembro': '09', 'set': '09',
+        'outubro': '10', 'out': '10',
+        'novembro': '11', 'nov': '11',
+        'dezembro': '12', 'dez': '12'
+      };
+
+      // 1. Portuguese written month format
+      const mPt = str.match(/(?:(?:no\s+dia|dia|data|para|em|pauta|audi[eê]ncia)\s+)?(\d{1,2})\s*(?:(?:de|[^\w\d]){1,20}(?:[a-zçãõ-]+feira|[^\w\d]){0,20})?\s*(?:de\s+)?(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s+)?(\d{2,4})[^\n\d]{1,40}?(?:às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?/i);
+      if (mPt) {
+        const dI = parseInt(mPt[1], 10);
+        const mKey = mPt[2].toLowerCase().replace('ç', 'c');
+        const yStr = mPt[3];
+        const yI = parseInt(yStr, 10);
+        const hI = parseInt(mPt[4], 10);
+        const mnCol = mPt[5];
+        const mnH = mPt[6];
+        const yValid = (yStr.length === 4) ? (yI >= 2020 && yI <= 2035) : (yI >= 20 && yI <= 35);
+        if (dI >= 1 && dI <= 31 && hI >= 0 && hI <= 23 && yValid) {
+          const d = String(dI).padStart(2, '0');
+          const m = months[mKey] || '01';
+          const yr = yStr.length === 4 ? yStr.slice(-2) : yStr.padStart(2, '0');
+          const mn = (mnCol || mnH || '00').padStart(2, '0');
+          return `${d}.${m}.${yr} às ${String(hI).padStart(2, '0')}h${mn}min`;
+        }
+      }
+
+      // 2. Numeric date format (DD/MM/AAAA às HH:MM)
+      const mNum = str.match(/(?:(?:no\s+dia|dia|data|para|em|pauta|audi[eê]ncia)\s+)?(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?/i);
+      if (mNum) {
+        const dI = parseInt(mNum[1], 10);
+        const moI = parseInt(mNum[2], 10);
+        const yStr = mNum[3];
+        const yI = parseInt(yStr, 10);
+        const hI = parseInt(mNum[4], 10);
+        const mnCol = mNum[5];
+        const mnH = mNum[6];
+        const yValid = (yStr.length === 4) ? (yI >= 2020 && yI <= 2035) : (yI >= 20 && yI <= 35);
+        if (dI >= 1 && dI <= 31 && moI >= 1 && moI <= 12 && hI >= 0 && hI <= 23 && yValid) {
+          const d = String(dI).padStart(2, '0');
+          const mo = String(moI).padStart(2, '0');
+          const yr = yStr.length === 4 ? yStr.slice(-2) : yStr.padStart(2, '0');
+          const mn = (mnCol || mnH || '00').padStart(2, '0');
+          return `${d}.${mo}.${yr} às ${String(hI).padStart(2, '0')}h${mn}min`;
+        }
+      }
+
+      // 3. General scheduling phrase fallback
+      const mGen = str.match(/(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+em)\s+(\d{1,2})[./](\d{1,2})[./](\d{2,4})\s*(?:,|às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2}))/i);
+      if (mGen) {
+        const dI = parseInt(mGen[1], 10);
+        const moI = parseInt(mGen[2], 10);
+        const yStr = mGen[3];
+        const yI = parseInt(yStr, 10);
+        const hI = parseInt(mGen[4], 10);
+        const mnCol = mGen[5];
+        const mnH = mGen[6];
+        const yValid = (yStr.length === 4) ? (yI >= 2020 && yI <= 2035) : (yI >= 20 && yI <= 35);
+        if (dI >= 1 && dI <= 31 && moI >= 1 && moI <= 12 && hI >= 0 && hI <= 23 && yValid) {
+          const d = String(dI).padStart(2, '0');
+          const mo = String(moI).padStart(2, '0');
+          const yr = yStr.length === 4 ? yStr.slice(-2) : yStr.padStart(2, '0');
+          const mn = (mnCol || mnH || '00').padStart(2, '0');
+          return `${d}.${mo}.${yr} às ${String(hI).padStart(2, '0')}h${mn}min`;
+        }
+      }
+
+      return null;
+    }
+
+    // Multiline Qualification Extractor with Accents, Filiação, RG, CPF, Address and IP Fallback
     function extractSingleDefendantQualification(name, rawQual, denunciaText, ipText) {
       const nameClean = (name || '').trim();
       if (!nameClean) return '';
-      const firstName = nameClean.split(' ')[0];
-      const esc = nameClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escName = makeAccentTolerantRegex(nameClean);
+      const parts = nameClean.split(/\s+/).filter(Boolean);
+      const firstName = parts[0] || '';
+      let nameRx = escName;
+      if (parts.length >= 2) {
+        const lastName = parts[parts.length - 1];
+        const escFirstSurname = `${makeAccentTolerantRegex(firstName)}[^\\n,;]+?${makeAccentTolerantRegex(lastName)}`;
+        nameRx = `(?:${escName}|${escFirstSurname})`;
+      }
 
-      const qualBlockRegex = new RegExp('(?:^|\\n|[;.]\\s*)\\b(' + esc + '[\\s\\S]{1,1200}?)(?=(?:\\n\\s*(?:(?:[I|V|X]+\\)?\\s*)?(?:DOS\\s+FATOS|DA\\s+IMPUTA[CÇ][AÃ]O|DOS\\s+PEDIDOS|DO\\s+PEDIDO|ROL\\s+DE\\s+TESTEMUNHAS|DA\\s+QUALIFICA[CÇ][AÃ]O)|Vem\\s+perante|pela\\s+pr[aá]tica|oferecer\\s+den[uú]ncia)|\\n\\s*(?:\\d+[\\.\\)]\\s*)?[A-ZÁÉÍÓÚ]{3,}(?:\\s+[A-ZÁÉÍÓÚ]{2,}){1,4},?\\s*(?:brasileir|solteir|casad|divorciad|nascid|filh|portador|residente|rg\\b|cpf\\b|vulgo)|$))', 'i');
+      const lookahead = '(?=(?:\\n\\s*(?:[IVXLCDM]+[).]?\\s*[-–.]?\\s*)?(?:DOS\\s+FATOS|FATOS|DA\\s+IMPUTA[CÇ][AÃ]O|DELIMITA[CÇ][AÃ]O|DOS\\s+PEDIDOS|DO\\s+PEDIDO|ROL\\s+DE\\s+TESTEMUNHAS|DA\\s+QUALIFICA[CÇ][AÃ]O|DA\\s+CONTEXTUALIZA[CÇ][AÃ]O|CONTEXTUALIZA[CÇ][AÃ]O|HIST[OÓ]RICO)|Vem\\s+perante|pela\\s+pr[aá]tica|oferecer\\s+den[uú]ncia|(?:,\\s*|[;.]\\s*|\\n\\s*)(?:pelos?\\s+fatos\\s+e\\s+fundamentos|(?:em\\s+raz[aã]o|por\\s+motivo|diante)\\s+d[oae]s\\s+(?:motivos|fatos)\\s+f[aá]ticos|passa\\s+a\\s+expor)|\\n\\s*(?:\\d+[\\.\\)]\\s*)?[A-ZÁÉÍÓÚ]{3,}(?:\\s+[A-ZÁÉÍÓÚ]{2,}){1,4},?\\s*(?:brasileir|solteir|casad|divorciad|nascid|filh|portador|residente|rg\\b|cpf\\b|vulgo)|$))';
+      const qualPattern = new RegExp('(?:^|\\n|[;.]\\s*|em\\s+face\\s+de\\s+)\\b(' + nameRx + '[\\s\\S]{1,1200}?)' + lookahead, 'i');
 
       let chunk = '';
       if (rawQual) {
-        const m = rawQual.match(qualBlockRegex);
-        if (m) chunk = m[1].trim();
+        const m = rawQual.match(qualPattern);
+        if (m) chunk = cleanPjeText(m[1]).replace(/^[ ;.\n]+|[ ;.\n]+$/g, '');
       }
       if (!chunk && denunciaText) {
-        const m2 = denunciaText.match(qualBlockRegex);
-        if (m2) chunk = m2[1].trim();
+        const m2 = denunciaText.match(qualPattern);
+        if (m2) chunk = cleanPjeText(m2[1]).replace(/^[ ;.\n]+|[ ;.\n]+$/g, '');
+      }
+
+      if (chunk) {
+        chunk = chunk.replace(/-\s*\d+\s+de\s+\d+\s+laudas\s*-/gi, '');
+        chunk = chunk.replace(/GRUPO\s+DE\s+ATUA[CÇ][AÃ]O\s+ESPECIAL\s+DE\s+COMBATE\s+AO\s+CRIME\s+ORGANIZADO[^\n]*/gi, '');
+        chunk = chunk.replace(/\d+ª\s+PROMOTORIA\s+DE\s+JUSTI[CÇ]A[^\n]*/gi, '');
+        chunk = cleanPjeText(chunk).replace(/^[ ;.\n]+|[ ;.\n]+$/g, '');
       }
 
       const hasFiliacao = /\bfilh[oa]\b|\bm[aã]e\b|\bpai\b|\bgenitor/i.test(chunk);
@@ -923,45 +1029,56 @@
       const isGeneric = !chunk || /qualificad/i.test(chunk);
 
       if (ipText && (isGeneric || !(hasFiliacao && hasRg && hasCpf))) {
-        const ipRegex = new RegExp('(' + esc + '[\\s\\S]{1,900}?)(?=(?:\\n\\n|\\n\\s*(?:[A-ZÁÉÍÓÚ]{3,}|\\d+[\\.\\)]|\\n)|$))', 'i');
-        const m3 = ipText.match(ipRegex);
-        if (m3 && /cpf|rg|filho|filha|nascid|natural|brasileir/i.test(m3[1])) {
-          const ipChunk = m3[1].trim();
-          if (isGeneric || !chunk) {
-            chunk = ipChunk;
-          } else {
-            const supplements = [];
-            if (!hasFiliacao) {
-              const filM = ipChunk.match(/(\bfilh[oa]\s+de\s+[A-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ\s]{3,80}?)(?=[,;\n.]|$)/i);
-              if (filM) supplements.push(filM[1].trim());
-            }
-            if (!hasRg) {
-              const rgM = ipChunk.match(/(\bRG\s*(?:n[º°\.]?)?\s*[\d\.-]+(?:\s*[A-Z/]+)?)/i);
-              if (rgM) supplements.push(rgM[1].trim());
-            }
-            if (!hasCpf) {
-              const cpfM = ipChunk.match(/(\bCPF\s*(?:n[º°\.]?)?\s*[\d\.-]+)/i);
-              if (cpfM) supplements.push(cpfM[1].trim());
-            }
-            if (supplements.length > 0) {
-              chunk = `${chunk}, ${supplements.join(', ')}`;
+        const ipPattern = new RegExp('(' + escName + '[\\s\\S]{1,1200}?)(?=(?:\\n\\s*\\n\\s*\\n|\\n\\s*(?:[IVXLCDM]+[).]?\\s*)?(?:TERMO|DEPOIMENTO|DECLARA[CÇ][OÕ]ES|INTERROGAT[OÓ]RIO|DESPACHO|CERTID[AÃ]O|RELAT[OÓ]RIO)|\\n\\s*(?:\\d+[\\.\\)]\\s*)?[A-ZÁÉÍÓÚ]{3,}(?:\\s+[A-ZÁÉÍÓÚ]{2,}){1,4},?\\s*(?:brasileir|solteir|casad|divorciad|nascid|filh|portador|residente|rg\\b|cpf\\b)|$))', 'i');
+        const m3 = ipText.match(ipPattern);
+        if (m3) {
+          const ipChunk = cleanPjeText(m3[1]).replace(/^[ ;.\n]+|[ ;.\n]+$/g, '');
+          if (/cpf|rg|filho|filha|nascid|natural|brasileir|residente/i.test(ipChunk)) {
+            if (isGeneric || !chunk) {
+              chunk = ipChunk;
+            } else {
+              const supplements = [];
+              if (!hasFiliacao) {
+                const filM = ipChunk.match(/(\bfilh[oa]\s+de\s+[A-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ\s]{3,120}?)(?=[,;\n.]|$)/i);
+                if (filM) supplements.push(filM[1].trim());
+              }
+              if (!hasRg) {
+                const rgM = ipChunk.match(/(\bRG\s*(?:n[º°\.]?)?\s*[\d\.-]+(?:\s*[A-Z/]+)?)/i);
+                if (rgM) supplements.push(rgM[1].trim());
+              }
+              if (!hasCpf) {
+                const cpfM = ipChunk.match(/(\bCPF\s*(?:n[º°\.]?)?\s*[\d\.-]+)/i);
+                if (cpfM) supplements.push(cpfM[1].trim());
+              }
+              if (supplements.length > 0) {
+                chunk = `${chunk.replace(/[ ,;.]+$/, '')}, ${supplements.join(', ')}`;
+              }
             }
           }
         }
       }
 
       if (chunk) {
-        return chunk.replace(/^[;.\s]+|[;.\s]+$/g, '').replace(/[ \t]+/g, ' ');
+        chunk = chunk.replace(/[,;.]\s*pelos?\s+fatos\s+e\s+fundamentos.*$/is, '').replace(/^[ ;.\n]+|[ ;.\n]+$/g, '');
+        chunk = chunk.replace(/[ \t]+/g, ' ');
+        return chunk;
       }
 
-      if (rawQual && nameClean.length > 5 && rawQual.toLowerCase().includes(firstName.toLowerCase())) {
-        const clean = rawQual.replace(/^[;.\s]+|[;.\s]+$/g, '').replace(/[ \t]+/g, ' ');
-        if (/cpf|rg|filho|nascid|brasileir/i.test(clean)) return clean;
+      if (rawQual && parts.length >= 2 && (rawQual.toLowerCase().includes(nameClean.toLowerCase()) || rawQual.toLowerCase().includes(firstName.toLowerCase()))) {
+        const cleanedSingle = cleanPjeText(rawQual).replace(/^[ ;.\n]+|[ ;.\n]+$/g, '');
+        if (/cpf|rg|filho|nascid|brasileir/i.test(cleanedSingle)) {
+          return cleanedSingle.replace(/[ \t]+/g, ' ');
+        }
       }
 
       return `${nameClean.toUpperCase()}, qualificação nos autos.`;
     }
 
+    // Videoconference regexes (Teams, Meet, and TJRN link shortener)
+    const TEAMS_REGEX = /(?:https?:\/\/)?(?:[a-z0-9-]+\.)?teams\.(?:microsoft|live)\.com\/(?:meet|l\/meetup-join|dl\/launcher)\/[^\s"'>)]+|(?:https?:\/\/)?(?:[a-z0-9-]+\.)?teams\.(?:microsoft|live)\.com\/[^\s"'>)]+|(?:https?:\/\/)?lnk\.tjrn\.jus\.br\/[a-zA-Z0-9_-]+/i;
+    const MEET_REGEX = /https?:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}/i;
+
+    // Crime Taxonomy for automatic substantive penal nomenclature annotation
     const CRIME_TAXONOMY = {
       '121': { qualificado: 'homicídio qualificado', privilegiado: 'homicídio privilegiado', culposo: 'homicídio culposo', padrao: 'homicídio' },
       '129': { domestica: 'lesão corporal em contexto de violência doméstica', gravissima: 'lesão corporal gravíssima', grave: 'lesão corporal grave', morte: 'lesão corporal seguida de morte', padrao: 'lesão corporal' },
@@ -1076,6 +1193,7 @@
       return data.padrao || null;
     }
 
+    // Annotates imputation text with substantive crime names in brackets [nomen juris]
     function annotateImputationWithCrimeNames(imputationText) {
       if (!imputationText || !imputationText.trim()) return imputationText || '';
       let text = imputationText.trim();
@@ -1122,72 +1240,118 @@
       return res.replace(/[ \t]+/g, ' ').trim();
     }
 
+    // Filter procedural (CPP), constitutional (CF) and accessory non-imputational articles
     function isProceduralOrConstJs(itemStr, ctx) {
-      const comb = `${itemStr} ${ctx}`.toLowerCase();
-      if (/\b(?:da\s+cf(?:[ /]88)?|da\s+constitui[cç][aã]o|do\s+cpp|do\s+c[oó]digo\s+de\s+processo\s+penal|processual\s+penal|processo\s+penal)\b/i.test(comb)) return true;
-      if (/\bart(?:igo)?s?\b\.?\s*(?:41|396(?:-[a-z])?|399|400|383|384)\b/i.test(itemStr)) {
-        if (!/\b(?:do\s+cp|do\s+c[oó]digo\s+penal)\b/i.test(comb)) return true;
+      const matchLower = (itemStr || '').toLowerCase().trim();
+      // 1. Direct procedural / constitutional indication in match_text
+      if (/\b(?:da\s+cf(?:[ /]88)?|da\s+constitui[cç][aã]o|do\s+cpp|do\s+c[oó]digo\s+de\s+processo\s+penal|processual\s+penal|processo\s+penal)\b/i.test(matchLower)) {
+        return true;
+      }
+      // 1.5. Articles 61, 62 (agravantes genéricas), 91, 92 (efeitos da condenação), 107, 115 (extinção punibilidade), 143 (retratação) and 145 (rito queixa) are non-imputational
+      if (/\bart(?:igo)?s?\b\.?\s*(?:61|62|91|92|107|115|143|145)\b/i.test(matchLower)) {
+        return true;
+      }
+      // 2. If match_text explicitly specifies penal code, it is substantive penal law
+      if (/\b(?:do\s+cp|do\s+c[oó]digo\s+penal)\b/i.test(matchLower)) {
+        return false;
+      }
+      // 3. Known exclusively procedural or administrative articles (unless explicitly marked "do CP")
+      if (/\bart(?:igo)?s?\b\.?\s*(?:30|38|41|44|45|158-[a-f]|201|311|312|366|383|384|396(?:-[a-z])?|399|400|519|520)\b/i.test(matchLower)) {
+        return true;
+      }
+      // 4. Context check: inspect local window around match_text
+      if (ctx) {
+        if (ctx.length <= 300) {
+          const comb = `${matchLower} ${ctx.toLowerCase()}`;
+          if (/\b(?:da\s+cf(?:[ /]88)?|da\s+constitui[cç][aã]o|do\s+cpp|do\s+c[oó]digo\s+de\s+processo\s+penal|processual\s+penal|processo\s+penal)\b/i.test(comb)) {
+            return true;
+          }
+        } else {
+          try {
+            const esc = itemStr.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const rx = new RegExp(esc, 'gi');
+            let m;
+            while ((m = rx.exec(ctx)) !== null) {
+              const start = Math.max(0, m.index - 60);
+              const end = Math.min(ctx.length, m.index + itemStr.length + 80);
+              const windowStr = ctx.substring(start, end).toLowerCase();
+              if (/\b(?:da\s+cf(?:[ /]88)?|da\s+constitui[cç][aã]o|do\s+cpp|do\s+c[oó]digo\s+de\s+processo\s+penal|processual\s+penal|processo\s+penal)\b/i.test(windowStr)) {
+                return true;
+              }
+            }
+          } catch (_) {}
+        }
       }
       return false;
     }
 
+    // Imputation Extraction from Denúncia or Queixa-Crime
     function extractImputationFromDenuncia(denunciaText) {
       if (!denunciaText) return 'Artigo de lei a ser apurado';
 
-      let imputationText = '';
-      const impMatch = denunciaText.match(/(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)/i);
+      let baseImputation = '';
+      const impMatch = denunciaText.match(/(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL|FATOS)\b)[^\n]+)?)/i);
       if (impMatch) {
-        imputationText = cleanPjeText(impMatch[1]).replace(/\s+/g, ' ').trim();
-      } else {
-        const crimeMatch = denunciaText.match(/(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao])\s*([^\n;]+)/i);
-        if (crimeMatch) {
-          imputationText = cleanPjeText(crimeMatch[1]).replace(/\s+/g, ' ').trim();
+        const rawImp = impMatch[1].trim();
+        const isNarrative = /imputa à querelada|imputa ao querelado|consta dos autos|o ministério público|fatos criminosos autônomos/i.test(rawImp);
+        const hasPenalArticle = /\bart(?:igo)?s?\b\.?\s*\d+/i.test(rawImp);
+        if (hasPenalArticle && !isNarrative && rawImp.length <= 250) {
+          baseImputation = cleanPjeText(rawImp).replace(/\s+/g, ' ').trim();
         }
       }
 
-      const artMatches = [];
-      const artRx = /\bart(?:igo)?s?\b\.?\s*\d+(?:-[A-Z])?\b(?:\s*,\s*§\s*\d+[º°]?(?:-[A-Z])?|\s+§\s*\d+[º°]?(?:-[A-Z])?)*(?:\s*,\s*(?:inciso\s+)?[I|V|X|L|C|D|M]+\b|\s+(?:inciso\s+)?[I|V|X|L|C|D|M]+\b)*(?:\s*,\s*al[íi]nea\s+[a-z]|\s+al[íi]nea\s+[a-z])*(?:\s+(?:c\/c|comb|combinado\s+com)\s+art(?:igo)?s?\b\.?\s*\d+[^,.;\n]*)*(?:\s+(?:do\s+CP|do\s+C[oó]digo\s+Penal|da\s+Lei[^\n,.;]*))?/gi;
-      let m;
-      while ((m = artRx.exec(denunciaText)) !== null) {
-        const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
-        if (c && !artMatches.includes(c) && !isProceduralOrConstJs(c, denunciaText)) artMatches.push(c);
+      if (!baseImputation) {
+        const crimeMatch = cleanPjeText(denunciaText).match(/(?:condena[cç][aã]o\s+(?:d[oa]\s+(?:querelad[oa]|acusad[oa]|denunciad[oa]|r[eé]u)[a-z]*|d[eo]s?\s+(?:acusad[oa]s?|denunciad[oa]s?|r[eé]us?))?\s*)?(?:(?:os\s+)?crimes\s+previstos\s+n[ao]s?\s+|como\s+incurs[oa]\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]\s*|incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]\s*|condena[cç][aã]o\s+(?:d[oa]\s+querelad[oa]\s+)?pela\s+pr[aá]tica[,\s]+|(?:em\s+raz[aã]o\s+d[oe]|pelo)\s+(?:cometimento\s+do\s+)?crime\s+previsto\s+n[ao]s?\s*)([\s\S]*?(?:art(?:igo)?\.?\s*\d+[\s\S]*?))(?=[;.]\s*(?:\n\s*[a-zA-ZÁÉÍÓÚ\d\-]|\n\s*\n|$)|$)/i);
+        if (crimeMatch) {
+          const rawImp = cleanPjeText(crimeMatch[1]).replace(/\s+/g, ' ').trim();
+          if (rawImp.length > 5) {
+            baseImputation = rawImp;
+          }
+        }
       }
+
+      const allArticles = [];
+      const penalRx = /\bart(?:igo)?s?\b\.?\s*\d+(?:-[A-Z])?\b(?:\s*,\s*§\s*\d+[º°]?(?:-[A-Z])?|\s+§\s*\d+[º°]?(?:-[A-Z])?)*(?:\s*,\s*(?:inciso\s+)?[I|V|X|L|C|D|M]+\b|\s+(?:inciso\s+)?[I|V|X|L|C|D|M]+\b)*(?:\s*,\s*al[íi]nea\s+[a-z]|\s+al[íi]nea\s+[a-z])*(?:\s+(?:c\/c|comb|combinado\s+com)\s+art(?:igo)?s?\b\.?\s*\d+[^,.;\n]*)*(?:\s+(?:do\s+CP|do\s+C[oó]digo\s+Penal|da\s+Lei[^\n,.;]*))?/gi;
+      let m;
+      while ((m = penalRx.exec(denunciaText)) !== null) {
+        const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
+        if (c && !allArticles.includes(c) && !isProceduralOrConstJs(c, denunciaText)) allArticles.push(c);
+      }
+
       const lawRx = /\b(?:Lei\s+(?:n[º°\.]?\s*)?[\d\./]+|ECA|Lei\s+Maria\s+da\s+Penha|Estatuto\s+do\s+Desarmamento|Lei\s+de\s+Drogas)(?:\s*\([^\)]+\))?(?:\s*,\s*art(?:igo)?\.?\s*\d+[^;.\n]*)?/gi;
       while ((m = lawRx.exec(denunciaText)) !== null) {
         const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
-        if (c && !artMatches.includes(c) && !isProceduralOrConstJs(c, denunciaText)) artMatches.push(c);
-      }
-      const concursoRx = /\bart[s]?\.?\s*(?:69|70|71)[^\n,.;]*(?:do\s+CP|do\s+C[oó]digo\s+Penal)?/gi;
-      while ((m = concursoRx.exec(denunciaText)) !== null) {
-        const c = m[0].replace(/^[ ,.;]+|[ ,.;]+$/g, '').trim();
-        if (c && !artMatches.includes(c) && !isProceduralOrConstJs(c, denunciaText)) artMatches.push(c);
+        if (c && !allArticles.includes(c) && !isProceduralOrConstJs(c, denunciaText)) allArticles.push(c);
       }
 
-      if (imputationText) {
-        const missing = [];
-        for (let art of artMatches) {
-          const nums = art.match(/\d+/g);
-          if (nums) {
-            const numFound = nums.some(n => imputationText.includes(n));
-            const hasParagraphInArt = art.includes('§');
-            const hasParagraphInImp = imputationText.includes('§');
-            const hasEcaInArt = art.includes('244') || art.includes('ECA');
-            const hasEcaInImp = imputationText.includes('244') || imputationText.includes('ECA');
-            if (!numFound || (hasParagraphInArt && !hasParagraphInImp) || (hasEcaInArt && !hasEcaInImp)) {
-              if (!imputationText.includes(art)) missing.push(art);
-            }
+      const concursoRx = /\bart[s]?\.?\s*(?:69|70|71)\b[^\n,.;)]*(?:do\s+CP|do\s+C[oó]digo\s+Penal)?/gi;
+      while ((m = concursoRx.exec(denunciaText)) !== null) {
+        const c = m[0].replace(/^[ ,.;)]+|[ ,.;)]+$/g, '').trim();
+        if (c && !allArticles.includes(c) && !isProceduralOrConstJs(c, denunciaText)) allArticles.push(c);
+      }
+
+      if (baseImputation) {
+        let finalImp = baseImputation.replace(/^[:\s\d\.\)\-]+/, '').trim();
+        for (let art of allArticles) {
+          if ((art.includes('244') || art.toLowerCase().includes('eca')) && (!finalImp.includes('244') && !finalImp.toLowerCase().includes('eca'))) {
+            finalImp += ` c/c ${art}`;
           }
         }
-        if (missing.length > 0) {
-          const uniqueMissing = Array.from(new Set(missing));
-          imputationText += ' c/c ' + uniqueMissing.join(' c/c ');
-        }
-        return annotateImputationWithCrimeNames(imputationText);
+        return annotateImputationWithCrimeNames(finalImp);
       }
 
-      if (artMatches.length > 0) {
-        const unique = Array.from(new Set(artMatches));
-        return annotateImputationWithCrimeNames(`Imputação penal (${unique.join(', ')})`);
+      if (allArticles.length > 0) {
+        const uniqueArticles = [];
+        const seenClean = new Set();
+        for (let art of allArticles) {
+          const norm = art.replace(/\s+/g, ' ').replace('§ ', '§').trim().toLowerCase();
+          if (!seenClean.has(norm)) {
+            seenClean.add(norm);
+            uniqueArticles.push(art);
+          }
+        }
+        const joined = uniqueArticles.length <= 4 ? uniqueArticles.join(' c/c ') : uniqueArticles.join(', ');
+        return annotateImputationWithCrimeNames(joined);
       }
 
       return 'Artigo de lei a ser apurado';
@@ -1432,6 +1596,7 @@
         const arrayBuffer = await file.arrayBuffer();
         const pages = [];
         const stampRegex = /Num\.\s*(\d{7,10})\s*-\s*P[aáAÁ]g\.\s*(\d+)/i;
+        const detectedBlocks = new Set();
 
         if (window.pdfjsLib) {
           initPdfWorker();
@@ -1448,13 +1613,13 @@
           const batchSize = 10;
           for (let b = 1; b <= numPages; b += batchSize) {
             const end = Math.min(b + batchSize - 1, numPages);
-            loadingMsg.innerText = `Processando páginas ${b} a ${end} de ${numPages} (${Math.round((end / numPages) * 100)}%)...`;
+            const blockIndicator = detectedBlocks.size > 0 ? ` [${Array.from(detectedBlocks).join(' • ')}]` : '';
+            loadingMsg.innerText = `Lendo página ${b} de ${numPages}...${blockIndicator} (${Math.round((end / numPages) * 100)}%)`;
             const batchPromises = [];
             for (let i = b; i <= end; i++) {
               batchPromises.push(
                 pdf.getPage(i).then(page =>
                   page.getTextContent().then(textContent => {
-                    // Reconstruct text lines with preserved vertical layout
                     const items = textContent.items || [];
                     const lines = [];
                     let currentY = null;
@@ -1476,11 +1641,20 @@
                     const pageText = lines.join('\n');
                     const allStamps = [...pageText.matchAll(new RegExp(stampRegex.source, 'gi'))];
                     const mStamp = allStamps.length > 0 ? allStamps[allStamps.length - 1] : null;
+
+                    // Detect substantive blocks for user feedback
+                    const ptL = pageText.toLowerCase();
+                    if (i === 1) detectedBlocks.add('Capa');
+                    if (/denúncia|denuncia|queixa-crime/i.test(ptL) && !detectedBlocks.has('Denúncia')) detectedBlocks.add('Denúncia');
+                    if (/audiência|audiencia|designo|designa-se/i.test(ptL) && !detectedBlocks.has('Audiência')) detectedBlocks.add('Audiência');
+                    if (/resposta\s*[aà]\s*acusa|defesa\s*pr[eé]via/i.test(ptL) && !detectedBlocks.has('Defesa')) detectedBlocks.add('Defesa');
+                    if (/acordo\s*de\s*n[aã]o\s*persecu|anpp/i.test(ptL) && !detectedBlocks.has('ANPP')) detectedBlocks.add('ANPP');
+
                     return {
                       pageNum: i,
                       text: pageText,
                       stampDocId: mStamp ? mStamp[1] : null,
-                      stampSubpage: mStamp ? parseInt(mStamp[2]) : null
+                      stampSubpage: mStamp ? parseInt(mStamp[2], 10) : null
                     };
                   })
                 )
@@ -1502,7 +1676,7 @@
               pageNum: idx + 1,
               text: pTxt,
               stampDocId: mStamp ? mStamp[1] : null,
-              stampSubpage: mStamp ? parseInt(mStamp[2]) : null
+              stampSubpage: mStamp ? parseInt(mStamp[2], 10) : null
             });
           });
         }
@@ -1524,12 +1698,13 @@
     const ANPP_REVOCATION_REGEX = /(?:revog(?:a[cç][aã]o|ou|ando|ado|o)?|rescis[aã]o|rescind(?:iu|indo|ida|ido)?|descumprimento)\s+(?:d[eoa]\s+|[oa]\s+)?(?:acordo\s+de\s+n[aã]o\s+persecu[cç][aã]o(?:\s+penal)?|anpp)|(?:anpp|acordo)\s+(?:foi\s+)?revogad[ao]|revogo\s+o\s+(?:acordo|anpp)/i;
     const PSCP_REVOCATION_REGEX = /(?:revog(?:a[cç][aã]o|ou|ando|ado|o)?|descumprimento)\s+(?:d[eoa]\s+|[oa]\s+)?(?:suspens[aã]o\s+condicional\s+do\s+processo|pscp|benef[ií]cio\s+do\s+art\.?\s*89)|descumprimento\s+d[ae]\s+(?:condi[cç][oõ]es\s+da\s+)?(?:suspens[aã]o|pscp)|(?:suspens[aã]o\s+condicional\s+do\s+processo|pscp)\s+(?:foi\s+)?revogad[ao]|revogo\s+a\s+suspens[aã]o\s+condicional\s+do\s+processo/i;
 
-    // Legal Substantive Act Summarizer
+    // Legal Substantive Act Summarizer (all 25 procedural acts)
     function summarizeHistoryAct(docName, docType, text) {
       const nL = (docName || '').toLowerCase();
       const tL = (docType || '').toLowerCase();
       const txtL = (text || '').toLowerCase();
 
+      // 1. Denúncia / Queixa-Crime / Petição Inicial
       if (nL.includes('denúncia') || nL.includes('denuncia')) {
         if (txtL.includes('não foi proposto anpp') || txtL.includes('deixo de propor anpp')) {
           return 'Denúncia. Consta cota afirmando que não foi proposto ANPP em face dos denunciados';
@@ -1539,7 +1714,14 @@
         return 'Denúncia oferecida pelo Ministério Público';
       }
 
-      // Revogação de ANPP ou PSCP em qualquer ato judicial decisório (Decisão, Despacho, Termo, Ata)
+      if (nL.includes('petição inicial') || nL.includes('peticao inicial')) {
+        if (txtL.includes('queixa') || txtL.includes('querelante') || txtL.includes('querelada')) {
+          return 'Queixa-crime oferecida pelo querelante';
+        }
+        return 'Petição inicial protocolada';
+      }
+
+      // 2. Revogação de ANPP ou PSCP em qualquer ato decisório
       const hasAnppRev = ANPP_REVOCATION_REGEX.test(txtL);
       const hasPscpRev = PSCP_REVOCATION_REGEX.test(txtL) || (txtL.includes('revoga') && (txtL.includes('suspensão') || txtL.includes('sursis')));
 
@@ -1555,6 +1737,7 @@
         }
       }
 
+      // 3. Decisão
       if (nL.includes('decisão') || nL.includes('decisao')) {
         if (txtL.includes('recebo a denúncia') || txtL.includes('recebida a denúncia') || txtL.includes('recebimento da denúncia')) {
           if (txtL.includes('pauta') || txtL.includes('designo')) {
@@ -1570,8 +1753,21 @@
         }
         return 'Decisão interlocutória';
       }
+
+      // 4. Despacho
       if (nL.includes('despacho')) {
+        if (txtL.includes('conciliação') || txtL.includes('conciliacao')) {
+          const dtM = (text || '').match(/(\d{1,2}\/\d{1,2}\/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})/);
+          if (dtM) {
+            return `Despacho incluindo o feito em pauta de audiência de conciliação para ${dtM[1]}, às ${dtM[2]}`;
+          }
+          return 'Despacho incluindo o feito em pauta de audiência de conciliação';
+        }
         if (txtL.includes('pauta') || txtL.includes('designo') || txtL.includes('instrução')) {
+          const dtM = (text || '').match(/(\d{1,2}\/\d{1,2}\/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})/);
+          if (dtM) {
+            return `Despacho incluindo o feito em pauta de audiência de instrução e julgamento para ${dtM[1]}, às ${dtM[2]}`;
+          }
           return 'Despacho incluindo o feito em pauta de audiência de instrução e julgamento';
         }
         if (txtL.includes('reaprazo') || txtL.includes('redesigno')) {
@@ -1580,30 +1776,110 @@
         if (txtL.includes('homologação de anpp') || txtL.includes('homologar')) {
           return 'Despacho designando audiência de homologação de ANPP';
         }
+        if (txtL.includes('admissibilidade') || txtL.includes('requisitos')) {
+          return 'Despacho para análise de admissibilidade da queixa-crime';
+        }
+        if (txtL.includes('aguarde-se o inquérito') || txtL.includes('aguarde-se o inqu')) {
+          return 'Despacho tomando ciência do APF e determinando aguardo do inquérito policial';
+        }
         return 'Despacho judicial';
       }
+
+      // 5. Resposta à acusação
       if (nL.includes('resposta') || nL.includes('defesa prévia') || nL.includes('defesa previa')) {
         return 'Resposta à acusação pugnando pela absolvição sumária do acusado';
       }
-      if (nL.includes('edital')) {
-        return 'Citação por edital do acusado';
+
+      // 6. Manifestação / Devolução de inquérito
+      if (/manifesta|promo|cota|devolu/i.test(nL)) {
+        if (nL.includes('devolu') || txtL.includes('devolu')) {
+          const dpM = (text || '').match(/(\d+ª?\s*DP[^\n,;.]+)/i);
+          const dpStr = dpM ? ` à ${dpM[1].trim()}` : '';
+          if (txtL.includes('dilig') || nL.includes('dilig')) {
+            return `Manifestação ministerial devolvendo os autos${dpStr} para realização de diligências`;
+          }
+          return `Manifestação ministerial devolvendo os autos${dpStr}`;
+        }
+        if (txtL.includes('laudo') && txtL.includes('pericial')) {
+          return 'Manifestação ministerial requerendo juntada de Laudo Pericial';
+        }
+        if (txtL.includes('cota') || txtL.includes('denúncia')) {
+          return 'Manifestação ministerial (cota da denúncia)';
+        }
+        return 'Manifestação ministerial';
       }
-      if (nL.includes('mandado') && nL.includes('citação')) {
-        return 'Mandado de citação';
+
+      // 7. APF e Inquérito Policial
+      if (nL.includes('apf')) {
+        const apfM = (docName || '').match(/APF\s+(\d+\/\d+)/i);
+        if (apfM) return `Auto de Prisão em Flagrante (APF ${apfM[1]})`;
+        return 'Auto de Prisão em Flagrante (APF)';
       }
-      if (nL.includes('mandado') && nL.includes('intimação')) {
-        return 'Mandado de intimação de audiência';
+
+      if (nL.includes('inquérito') || nL.includes('inquerito') || /\bip\s+\d+\/\d+/i.test(nL)) {
+        const ipM = (docName || '').match(/IP\s+(\d+\/\d+)/i);
+        if (ipM) return `Inquérito Policial (IP ${ipM[1]})`;
+        return 'Inquérito Policial';
       }
-      if (nL.includes('intimação de audiência') || tL.includes('intimação de audiência')) {
+
+      // 8. Alvará de Soltura
+      if (nL.includes('alvará de soltura') || nL.includes('alvara de soltura')) {
+        let clean = (docName || '').replace(/_\d+$/, '').replace(/_/g, ' ');
+        clean = clean.replace(/^alvar[aá]\s+de\s+soltura\s*/i, '').trim();
+        if (clean) return `Alvará de soltura expedido em favor de ${clean.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase())}`;
+        return 'Alvará de soltura expedido';
+      }
+
+      // 9. Link de Audiência
+      if (nL.includes('link') && nL.includes('audi')) {
+        return 'Expedição de link de acesso para a audiência';
+      }
+
+      // 10. Devolução de Mandado / Certidões
+      if (nL.includes('devolução de mandado') || (nL.includes('certidão') && nL.includes('mandado'))) {
+        if (/contrafé negativa|contrafe negativa|não localizado|deixei de citar|deixei de intimar/i.test(txtL)) {
+          return 'Certidão do Oficial de Justiça - contrafé negativa (não localizado)';
+        }
+        if (txtL.includes('alvará') || txtL.includes('alvara')) {
+          return 'Certidão de cumprimento de alvará de soltura';
+        }
+        if (/positivo|cumprido|citei|intimei/i.test(txtL)) {
+          return 'Certidão do Oficial de Justiça informando cumprimento de mandado';
+        }
+        return 'Certidão do Oficial de Justiça devolvendo mandado';
+      }
+
+      // 11. Citação / Edital / Mandados / Atos Ordinatórios
+      if (nL.includes('edital')) return 'Citação por edital do acusado';
+      if (nL.includes('mandado') && nL.includes('citação')) return 'Mandado de citação';
+      if (nL.includes('mandado') && nL.includes('intimação')) return 'Mandado de intimação de audiência';
+      if (nL.includes('intimação de audiência') || tL.includes('intimação de audiência') || txtL.includes('mandado de intimação audiência')) {
         return 'Intimação de audiência expedida';
       }
+
+      if (nL.includes('ato ordinat') || (nL.includes('intima') && !nL.includes('audi'))) {
+        if (/vistas ao mp|abro vistas|vistas ao ministério/i.test(txtL)) {
+          return 'Ato ordinatório abrindo vistas ao Ministério Público';
+        }
+        if (txtL.includes('autoridade policial') && txtL.includes('tramitação direta')) {
+          return 'Intimação da Autoridade Policial para diligências (tramitação direta)';
+        }
+        if (txtL.includes('ministério público') && txtL.includes('tramitação direta')) {
+          return 'Intimação do Ministério Público (tramitação direta)';
+        }
+        if (nL.includes('intima')) return 'Intimação expedida';
+      }
+
+      // 12. Audiências Anteriores / Atas
       if (nL.includes('ata da audiência') || nL.includes('termo de audiência') || nL.includes('ata de audiência')) {
         if (txtL.includes('custódia')) return 'Audiência de Custódia realizada';
         if (txtL.includes('suspensão') || txtL.includes('sursis')) return 'Audiência de Suspensão Condicional do Processo realizada';
         if (txtL.includes('instrução')) return 'Ata de audiência de instrução realizada';
         return 'Ata da audiência';
       }
-      return docName.replace(/^\d+\s*-\s*/, '').trim();
+
+      let cleanFallback = (docName || '').replace(/^\d+\s*-\s*/, '').replace(/_\d{10,}$/, '').replace(/\.pdf$/i, '').trim();
+      return cleanFallback;
     }
 
     // Core Analytical Engine for PJe
@@ -1615,7 +1891,7 @@
       const cnjMatch = fullText.match(/\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b/) || filename.match(/\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b/);
       const caseNumber = cnjMatch ? cnjMatch[1] : '0000000-00.0000.8.20.0000';
 
-      // 2. Capa Parties from Page 1
+      // 2. Capa Parties from Page 1 (with multiline buffering and strict role extraction)
       const reusCapa = [];
       const vitimasCapa = [];
       const testemunhasCapa = [];
@@ -1624,36 +1900,106 @@
 
       if (pages.length > 0) {
         const page1Lines = pages[0].text.split('\n');
-        let prevLine = '';
-        page1Lines.forEach(l => {
-          const lTrim = l.trim();
-          const lu = lTrim.toUpperCase();
-          if (/\((?:REU|RÉU|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA])\)/i.test(lu)) {
-            let name = lTrim.replace(/\((?:R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA])\)/ig, '').trim();
-            if (!name && prevLine) name = prevLine;
-            name = name.replace(/^[A-Z]+:\s*/, '').trim();
-            if (name.length > 3 && !isStateOrgan(name) && !reusCapa.includes(name)) reusCapa.push(name);
-          } else if (/\(V[IÍ]TIMA\)/i.test(lu)) {
-            let name = lTrim.replace(/\(V[IÍ]TIMA\)/ig, '').trim();
-            if (!name && prevLine) name = prevLine;
-            name = name.replace(/^[A-Z]+:\s*/, '').trim();
-            if (name.length > 3 && !vitimasCapa.includes(name)) vitimasCapa.push(name);
-          } else if (/\(TESTEMUNHA\)/i.test(lu)) {
-            let name = lTrim.replace(/\(TESTEMUNHA\)/ig, '').trim();
-            if (!name && prevLine) name = prevLine;
-            name = name.replace(/^[A-Z]+:\s*/, '').trim();
-            if (name.length > 3 && !testemunhasCapa.includes(name)) testemunhasCapa.push(name);
-          } else if (/\(ADVOGADO\w*\)|\(DEFENSOR\w*\)/i.test(lu)) {
-            let name = lTrim.replace(/\(ADVOGADO\w*\)|\(DEFENSOR\w*\)/ig, '').trim();
-            if (!name && prevLine) name = prevLine;
-            name = name.replace(/^[A-Z]+:\s*/, '').trim();
-            if (name.length > 3 && !advsCapa.includes(name)) advsCapa.push(name);
-          } else if (/\(AUTOR\)/i.test(lu) && (/PROMOTORIA/i.test(lu) || /MINISTÉRIO/i.test(lu))) {
-            const promM = lTrim.match(/(\d+ª?\s+Promotoria[^\n)]+)/i);
-            promCapa = 'Dr. Promotor de Justiça' + (promM ? ` (${promM[1].trim()})` : '');
+        let inParties = false;
+        let pendingLines = [];
+
+        const processEntry = (combined) => {
+          const c = combined.trim();
+          if (!c) return;
+          const cUpper = c.toUpperCase();
+
+          const mRole = c.match(/\((AUTOR(?:A)?|R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA]|QUERELAD[OA]|QUERELANTE|AUTOR(?:A)?\s+DO\s+FATO|ADVOGAD[OA]|DEFENSOR(?:IA)?(?:\s*\([^)]*\))?|V[IÍ]TIMA|TESTEMUNHA|TERCEIRO\s+INTERESSADO|CUSTOS\s+LEGIS)\)/i);
+          const roleType = mRole ? mRole[1].toUpperCase() : '';
+
+          let rawName = '';
+          if (c.toLowerCase().includes('registrado') && c.toLowerCase().includes('civilmente como')) {
+            const mCiv = c.split(/registrado(?:\(a\))?\s+civilmente\s+como\s+/i);
+            rawName = mCiv[0].trim();
+            if (!rawName && mCiv.length > 1) {
+              rawName = mCiv[1].replace(/\(.*?\)/g, '').trim();
+            }
+          } else {
+            rawName = c.replace(/\([^)]*\([^)]*\)[^)]*\)|\([^)]*\)/g, '').trim();
           }
-          prevLine = lTrim;
-        });
+
+          rawName = rawName.replace(/^[A-Z]+:\s*/, '').replace(/\s+/g, ' ').replace(/[ )]+$/, '').trim();
+
+          const isReu = ['(REU)', '(RÉU)', '(INVESTIGADO)', '(INVESTIGADA)', '(INDICIADO)', '(INDICIADA)', '(ACUSADO)', '(ACUSADA)', '(QUERELADO)', '(QUERELADA)', '(AUTOR DO FATO)', '(AUTORA DO FATO)'].some(r => roleType.includes(r) || cUpper.includes(r));
+
+          if (isReu) {
+            if (rawName && rawName.length > 3 && !isStateOrgan(rawName) && !reusCapa.includes(rawName)) {
+              reusCapa.push(rawName);
+            }
+          } else if (cUpper.includes('(ADVOGADO)') || cUpper.includes('(DEFENSOR') || roleType.includes('DEFENSORIA')) {
+            if (rawName && rawName.length > 3 && !advsCapa.includes(rawName)) {
+              advsCapa.push(rawName);
+            }
+          } else if (cUpper.includes('(VÍTIMA)') || cUpper.includes('(VITIMA)')) {
+            if (rawName && rawName.length > 3 && !vitimasCapa.includes(rawName)) {
+              vitimasCapa.push(rawName);
+            }
+          } else if (cUpper.includes('(TESTEMUNHA)')) {
+            if (rawName && rawName.length > 3 && !testemunhasCapa.includes(rawName)) {
+              testemunhasCapa.push(rawName);
+            }
+          } else if (cUpper.includes('(AUTOR)') && (cUpper.includes('PROMOTORIA') || cUpper.includes('MINISTÉRIO'))) {
+            const promM = c.match(/(\d+ª?\s+Promotoria[^\n)]+)/i);
+            if (promM) {
+              promCapa = `Dr. Promotor de Justiça (${promM[1].replace(/\(AUTOR\)/i, '').trim()})`;
+            } else {
+              promCapa = 'Dr. Promotor de Justiça';
+            }
+          }
+        };
+
+        for (let line of page1Lines) {
+          const l = line.trim();
+          if (!l) continue;
+          const lUpper = l.toUpperCase();
+          if (lUpper.includes('PARTES')) {
+            inParties = true;
+            continue;
+          }
+          if (inParties && ['DOCUMENTOS', 'ID.', 'DATA\tDOCUMENTO', 'TABELA DE DOCUMENTOS'].some(k => lUpper.includes(k))) {
+            if (pendingLines.length > 0) {
+              processEntry(pendingLines.join(' '));
+              pendingLines = [];
+            }
+            inParties = false;
+            break;
+          }
+          if (!inParties || lUpper.includes('PROCURADOR/TERCEIRO VINCULADO')) continue;
+
+          pendingLines.push(l);
+          const comb = pendingLines.join(' ');
+          const mRole = comb.match(/\((?:AUTOR(?:A)?|R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA]|QUERELAD[OA]|QUERELANTE|AUTOR(?:A)?\s+DO\s+FATO|ADVOGAD[OA]|DEFENSOR(?:IA)?(?:\s*\([^)]*\))?|V[IÍ]TIMA|TESTEMUNHA|TERCEIRO\s+INTERESSADO|CUSTOS\s+LEGIS)\)/i);
+          if (mRole) {
+            processEntry(comb);
+            pendingLines = [];
+          } else if (pendingLines.length >= 3) {
+            processEntry(comb);
+            pendingLines = [];
+          }
+        }
+        if (pendingLines.length > 0) {
+          processEntry(pendingLines.join(' '));
+        }
+
+        // Fallback line loop if no reus found
+        if (reusCapa.length === 0) {
+          let prevL = '';
+          for (let l of page1Lines) {
+            const lTrim = l.trim();
+            const lu = lTrim.toUpperCase();
+            if (['(REU)', '(RÉU)', '(INVESTIGADO)', '(INVESTIGADA)', '(INDICIADO)', '(INDICIADA)', '(ACUSADO)', '(ACUSADA)', '(QUERELADO)', '(QUERELADA)', '(AUTOR DO FATO)', '(AUTORA DO FATO)'].some(k => lu.includes(k))) {
+              let name = lTrim.replace(/\((?:R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA]|QUERELAD[OA]|AUTOR(?:A)?\s+DO\s+FATO)\)/ig, '').trim();
+              if (!name && prevL) name = prevL;
+              name = name.replace(/^[A-Z]+:\s*/, '').trim();
+              if (name.length > 3 && !isStateOrgan(name) && !reusCapa.includes(name)) reusCapa.push(name);
+            }
+            prevL = lTrim;
+          }
+        }
       }
 
       // 3. Catalog & TOC Parsing
@@ -1665,7 +2011,6 @@
         }
       });
 
-      // Find TOC pages (pages without footer stamp at start)
       const tocPages = [];
       for (let p of pages) {
         if (p.stampDocId === null) tocPages.push(p);
@@ -1714,7 +2059,6 @@
         }
       });
 
-      // Assemble full document catalog with correlated page text
       const pjeCatalog = [];
       tocEntries.forEach(entry => {
         const dId = entry.doc_id;
@@ -1725,7 +2069,6 @@
           ep = Math.max(...mp);
           txtP = pages.filter(p => p.pageNum >= sp && p.pageNum <= ep).map(p => p.text).join('\n');
         } else {
-          // Search doc_id across pages
           const found = pages.find(p => p.text.includes(dId));
           if (found) txtP = found.text;
         }
@@ -1740,7 +2083,7 @@
         });
       });
 
-      // Interpolate page ranges for documents listed in TOC that lacked explicit footer stamps
+      // Interpolate page ranges for documents listed in TOC without stamps
       const tocCount = tocPages.length;
       for (let idx = 0; idx < pjeCatalog.length; idx++) {
         const d = pjeCatalog[idx];
@@ -1761,37 +2104,60 @@
         }
       }
 
-      // 4. Locate Key Documents
-      let denunciaDoc = null;
-      for (let i = pjeCatalog.length - 1; i >= 0; i--) {
-        const d = pjeCatalog[i];
-        const nl = d.doc_name.toLowerCase();
-        const tl = d.doc_type.toLowerCase();
-        if (/cota|recebimento|aditamento|certidão|bnmp|seeu|antecedentes/.test(nl)) continue;
-        if (nl.includes('requerimento') && !nl.includes('denún') && !nl.includes('denun')) continue;
-        if (nl.startsWith('denún') || nl.startsWith('denun') || tl.startsWith('denún') || tl.startsWith('denun') || nl.includes('queixa')) {
-          denunciaDoc = d;
-          break;
+      // 4. Locate Key Documents & Concatenate Multipart Complaints
+      const matchingDenuncias = [];
+      for (let pDoc of pjeCatalog) {
+        const nameC = (pDoc.doc_name || '').toLowerCase().trim();
+        const typeC = (pDoc.doc_type || '').toLowerCase().trim();
+        if (/(?:cota|requerimento|recebimento|aditamento|certidão|bnmp|seeu|antecedentes)/i.test(nameC)) continue;
+        if (nameC.startsWith('denún') || nameC.startsWith('denun') || typeC.startsWith('denún') || typeC.startsWith('denun') || nameC.includes('queixa')) {
+          matchingDenuncias.push(pDoc);
         }
       }
-      if (!denunciaDoc) {
+      if (matchingDenuncias.length === 0) {
         for (let i = pjeCatalog.length - 1; i >= 0; i--) {
           const comb = `${pjeCatalog[i].doc_name} ${pjeCatalog[i].doc_type}`.toLowerCase();
           if ((comb.includes('denún') || comb.includes('denun') || comb.includes('queixa')) && !comb.includes('cota')) {
-            denunciaDoc = pjeCatalog[i];
+            matchingDenuncias.push(pjeCatalog[i]);
             break;
           }
         }
       }
-      if (!denunciaDoc) {
-        denunciaDoc = pjeCatalog.find(d => `${d.doc_name} ${d.doc_type}`.toLowerCase().includes('petição inicial'));
+      if (matchingDenuncias.length === 0) {
+        for (let pDoc of pjeCatalog) {
+          const comb = `${pDoc.doc_name} ${pDoc.doc_type}`.toLowerCase();
+          if (comb.includes('petição inicial')) {
+            matchingDenuncias.push(pDoc);
+            break;
+          }
+        }
+      }
+
+      let denunciaDocs = [];
+      let denunciaDoc = null;
+      if (matchingDenuncias.length > 0) {
+        const latest = matchingDenuncias[matchingDenuncias.length - 1];
+        denunciaDocs = [latest];
+        for (let i = matchingDenuncias.length - 2; i >= 0; i--) {
+          const prev = matchingDenuncias[i];
+          if ((prev.end_page > 0 && prev.end_page + 1 === denunciaDocs[0].start_page) || prev.doc_name === latest.doc_name) {
+            denunciaDocs.unshift(prev);
+          } else {
+            break;
+          }
+        }
+        denunciaDoc = denunciaDocs[0];
       }
 
       let denunciaText = '';
-      if (denunciaDoc && denunciaDoc.text && denunciaDoc.text.trim().length > 50) {
-        denunciaText = denunciaDoc.text;
-      } else if (denunciaDoc && denunciaDoc.start_page > 0 && denunciaDoc.end_page >= denunciaDoc.start_page) {
-        denunciaText = pages.filter(p => p.pageNum >= denunciaDoc.start_page && p.pageNum <= denunciaDoc.end_page).map(p => p.text).join('\n');
+      if (denunciaDocs.length > 0) {
+        denunciaText = denunciaDocs.map(d => {
+          if (d.text && d.text.trim().length > 50) return d.text;
+          if (d.start_page > 0 && d.end_page >= d.start_page) {
+            return pages.filter(p => p.pageNum >= d.start_page && p.pageNum <= d.end_page).map(p => p.text).join('\n');
+          }
+          return d.text || '';
+        }).join('\n\n');
       } else {
         for (let p of pages) {
           if (/\b(?:DENÚNCIA|DENUNCIA|MINISTÉRIO PÚBLICO)\b/i.test(p.text) && !/mandado|certidão|inquérito|boletim/i.test(p.text)) {
@@ -1799,9 +2165,7 @@
             break;
           }
         }
-        if (!denunciaText) {
-          denunciaText = fullText;
-        }
+        if (!denunciaText) denunciaText = fullText;
       }
 
       let respostaDoc = null;
@@ -1835,8 +2199,6 @@
         }
       }
 
-      const respostaText = respostaDoc ? respostaDoc.text : '';
-
       // Check for Revocation of ANPP or PSCP (mandatory AIJ - retomada da marcha penal)
       let anppRevDoc = null;
       let pscpRevDoc = null;
@@ -1862,9 +2224,7 @@
       } else if (pscpRevDoc) {
         revNotes.push(`Obs.: Audiência de Instrução e Julgamento designada após decisão que revogou a Suspensão Condicional do Processo (PSCP - art. 89 da Lei 9.099/95) (ID ${pscpRevDoc.doc_id}), com a retomada do curso regular da ação penal.`);
       }
-      if (revNotes.length > 0) {
-        specialNotes = revNotes.join(' ');
-      }
+      if (revNotes.length > 0) specialNotes = revNotes.join(' ');
 
       // 5. Legal Hierarchy Act Type Classification
       let hasReceivedDenuncia = false;
@@ -1906,31 +2266,29 @@
 
       // 6. Videoconference Link
       let hearingLink = '';
-      const teamsRegex = /(https:\/\/teams\.microsoft\.com\/meet\/[^\s"'>)]+|https:\/\/teams\.live\.com\/meet\/[^\s"'>)]+)/i;
-      const meetRegex = /(https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3})/i;
-
       if (hearingText) {
-        const tm = hearingText.match(teamsRegex);
-        const mm = hearingText.match(meetRegex);
-        if (tm) hearingLink = tm[1].replace(/[.,>)]+$/, '');
-        else if (mm) hearingLink = mm[1].replace(/[.,>)]+$/, '');
+        const tm = hearingText.match(TEAMS_REGEX);
+        const mm = hearingText.match(MEET_REGEX);
+        if (tm) hearingLink = tm[0].replace(/[.,>)]+$/, '');
+        else if (mm) hearingLink = mm[0].replace(/[.,>)]+$/, '');
       }
       if (!hearingLink) {
         for (let i = mandadosDocs.length - 1; i >= 0; i--) {
-          const tm = mandadosDocs[i].text.match(teamsRegex);
-          const mm = mandadosDocs[i].text.match(meetRegex);
-          if (tm) { hearingLink = tm[1].replace(/[.,>)]+$/, ''); break; }
-          if (mm) { hearingLink = mm[1].replace(/[.,>)]+$/, ''); break; }
+          const tm = mandadosDocs[i].text.match(TEAMS_REGEX);
+          const mm = mandadosDocs[i].text.match(MEET_REGEX);
+          if (tm) { hearingLink = tm[0].replace(/[.,>)]+$/, ''); break; }
+          if (mm) { hearingLink = mm[0].replace(/[.,>)]+$/, ''); break; }
         }
       }
       if (!hearingLink) {
         for (let i = pages.length - 1; i >= 0; i--) {
-          const tm = pages[i].text.match(teamsRegex);
-          const mm = pages[i].text.match(meetRegex);
-          if (tm) { hearingLink = tm[1].replace(/[.,>)]+$/, ''); break; }
-          if (mm) { hearingLink = mm[1].replace(/[.,>)]+$/, ''); break; }
+          const tm = pages[i].text.match(TEAMS_REGEX);
+          const mm = pages[i].text.match(MEET_REGEX);
+          if (tm) { hearingLink = tm[0].replace(/[.,>)]+$/, ''); break; }
+          if (mm) { hearingLink = mm[0].replace(/[.,>)]+$/, ''); break; }
         }
       }
+      if (hearingLink && !hearingLink.startsWith('http')) hearingLink = 'https://' + hearingLink;
 
       // 7. Date and Time
       let hearingDateTime = parsePtDateTime(filename);
@@ -1972,12 +2330,9 @@
         }
       }
 
-      // Qualification block
       let qualText = '';
       const qualMatch = denunciaText.match(/(?:(?:III|II|I)\)?\s*(?:Acusad[oa]s?|Denunciad[oa]s?)|DENUNCIADO\(?A?\)?:?|DOS\s+DENUNCIADOS:?|DA\s+QUALIFICA[CÇ][AÃ]O(?:\s+D[OE]S\s+DENUNCIAD[OA]S)?|oferecer\s+den[uú]ncia\s+(?:em\s+desfavor\s+de|contra)[:\s]*|oferece\s+den[uú]ncia\s+(?:em\s+desfavor\s+de|contra)[:\s]*|vem\s+perante\s+V\.\s*Exa\.?[^\n]*denunciar[:\s]*)([\s\S]*?)(?:(?:^|\n)\s*(?:(?:IV|V|VI)\)\s*Narrativa|(?:IV|V|VI)\)|DOS\s+FATOS|I\s*[-–.]\s*DOS\s+FATOS|\n\s*Consta\s+d[oe]s\s+(?:inclus[oa]s|referidos)|pela\s+pr[aá]tica\s+dos\s+fatos|pelos\s+fatos\s+a\s+seguir|pelos\s+fatos\s+e\s+fundamentos))/i);
-      if (qualMatch) {
-        qualText = cleanPjeText(qualMatch[1]);
-      }
+      if (qualMatch) qualText = cleanPjeText(qualMatch[1]);
 
       const filteredCapaReus = reusCapa.filter(n => !isStateOrgan(n));
       const defendantNames = filteredCapaReus.length > 0 ? filteredCapaReus : ['RÉU A QUALIFICAR'];
@@ -1996,7 +2351,6 @@
           status = 'citado por edital';
         }
 
-        // Subpoena ID & Citation ID
         let subpoenaId = '';
         let citationId = '';
         for (let md of mandadosDocs) {
@@ -2052,7 +2406,7 @@
         }) || pjeCatalog.find(d => `${d.doc_name} ${d.doc_type}`.toLowerCase().includes('acordo'));
 
         const cisaoDoc = pjeCatalog.find(d => /desmembramento|cisão|cisao/.test(`${d.doc_name} ${d.doc_type}`.toLowerCase()));
-        
+
         let despachoDoc = null;
         for (let i = pjeCatalog.length - 1; i >= 0; i--) {
           const d = pjeCatalog[i];
@@ -2147,10 +2501,8 @@
 
         factsSummary = paras.join('\n\n');
       } else {
-        // Standard AIJ / PAnP factual narrative
         const narrativeParas = extractCleanNarrative(denunciaText);
 
-        // Modus operandi & apreensões
         const apreensaoMatch = denunciaText.match(/(?:auto\s+de\s+exibi[cç][aã]o\s+e\s+apreens[aã]o|apreens[aã]o\s+d[eo]|apreendid[oa]s?[^\n.]+(?:arma|rev[oó]lver|pistola|muni[cç]|entorpecente|coca[ií]na|maconha|crack|droga|ve[ií]culo)[^\n.]+)/i);
         if (apreensaoMatch) {
           const aprLine = apreensaoMatch[0].trim();
@@ -2159,7 +2511,6 @@
           }
         }
 
-        // Forensic reports & materiality
         const matMatch = denunciaText.match(/(?:(?:laudo\s+pericial|laudo\s+de\s+exame|laudo\s+toxicol[oó]gico|exame\s+cadav[eé]rico|exame\s+de\s+corpo\s+de\s+delito|boletim\s+de\s+ocorr[eê]ncia)[^\n.]+(?:comprov|demonstr|atest|conclusivo)[^\n.]+|(?:A\s+materialidade\s+e\s+a\s+autoria|A\s+autoria\s+e\s+a\s+materialidade)[^\n.]+(?:demonstradas|comprovadas)[^\n.]+)/i);
         if (matMatch) {
           const matLine = matMatch[0].trim();
@@ -2168,7 +2519,6 @@
           }
         }
 
-        // Police interrogation & confession/denial
         const confMatch = denunciaText.match(/(?:Interrogad[oa]\s+em\s+sede\s+policial[^\n.]+(?:confessou|alegou|negou|optou|declarou|afirmou)[^\n.]+|Em\s+sede\s+policial[^\n.]+(?:confessou|negou|alegou|admitiu)[^\n.]+)/i);
         if (confMatch) {
           const confLine = confMatch[0].trim();
@@ -2196,19 +2546,19 @@
       const defWitnesses = [];
       const seenWitnessNames = new Set();
       let witNum = 1;
+      const reusNormalized = new Set(filteredCapaReus.map(r => normalizeWitnessName(r).toLowerCase()));
 
-      // Helper to query mandados for witness service
       const findSubpoenaStatus = (name, isPm) => {
-        const nameLower = name.toLowerCase();
-        const fn = name.split(' ')[0].toLowerCase();
-        const sn = name.split(' ').slice(-1)[0].toLowerCase();
+        const cleanN = normalizeWitnessName(name.toLowerCase());
+        const fn = cleanN.split(' ')[0].toLowerCase();
+        const sn = cleanN.split(' ').slice(-1)[0].toLowerCase();
         const matched = [];
         const negative = [];
 
         mandadosDocs.forEach(md => {
-          const mt = md.text.toLowerCase();
-          if (mt.includes(nameLower) || (fn.length > 3 && sn.length > 3 && mt.includes(fn) && mt.includes(sn))) {
-            if (mt.includes('contrafé negativa') || mt.includes('contrafe negativa') || mt.includes('não localizado') || mt.includes('deixei de citar') || mt.includes('deixei de intimar')) {
+          const mt = (md.text || '').toLowerCase();
+          if (mt.includes(cleanN) || (fn.length > 3 && sn.length > 3 && mt.includes(fn) && mt.includes(sn))) {
+            if (/contrafé negativa|contrafe negativa|não localizado|deixei de citar|deixei de intimar/i.test(mt)) {
               negative.push(md.doc_id);
             } else {
               matched.push(md.doc_id);
@@ -2219,7 +2569,7 @@
         if (negative.length > 0) return `Certidão contrafé negativa IDs ${negative.join('; ')}`;
         if (matched.length > 0) {
           if (isPm) return `Ofício enviado ID ${matched[0]}`;
-          return /maria|ana|julia|samara|dra|sra/i.test(nameLower) ? `Intimada ID ${matched[0]}` : `Intimado ID ${matched[0]}`;
+          return /maria|ana|julia|samara|dra|sra|nelisse|michele|jacilene/i.test(cleanN) ? `Intimada ID ${matched[0]}` : `Intimado ID ${matched[0]}`;
         }
         if (isPm) {
           const ofDoc = mandadosDocs.find(d => d.doc_name.toLowerCase().includes('ofício'));
@@ -2229,11 +2579,11 @@
       };
 
       const cleanedDenuncia = cleanPjeText(denunciaText);
-      const startPat = /(?:(?:^|\n)\s*(?:[IVXLCDM]+\)?\.?\s*)?(?:ROL\s+(?:DE\s+)?(?:DECLARANTES?\s*(?:\([^)]*\))?\s*(?:E\s*)?)?TESTEMUNHAS?\s*(?:\([^)]*\))?(?:\s*E\s*DECLARANTES?)?|ROL\s+TESTEMUNHAL|TESTEMUNHAS\s*:))/i;
+      const startPat = /(?:(?:^|\n)\s*(?:[IVXLCDM]+\)?\.?\s*)?(?:ROL\s+(?:DE\s+)?(?:DECLARANTES?\s*(?:\([^)]*\))?\s*(?:[/\sE]+)?)?TESTEMUNHAS?\s*(?:\([^)]*\))?(?:\s*[/\sE]+\s*DECLARANTES?)?|ROL\s+TESTEMUNHAL|TESTEMUNHAS\s*:))/i;
       const mStart = cleanedDenuncia.match(startPat);
       if (mStart) {
         const sub = cleanedDenuncia.substring(mStart.index + mStart[0].length);
-        const stopPat = /(?:^|\n)\s*(?:COTA\b|Termos\s+em\s+que|Nestes\s+termos|Pede\s+(?:e\s+espera\s+)?deferimento|Pede\s+deferimento)/i;
+        const stopPat = /(?:^|\n)\s*(?:COTA\b|Termos\s+em\s+que|Nestes\s+termos|Pede\s+(?:e\s+espera\s+)?deferimento|Pede\s+deferimento|DOCUMENTOS\s+QUE\s+INSTRUEM)/i;
         const mStop = sub.match(stopPat);
         const rolBody = mStop ? sub.substring(0, mStop.index) : sub;
 
@@ -2253,23 +2603,25 @@
           const m = line.match(/^(?:\d+[\s.)-]+)?([A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ\s.]{3,60}?)(?:[-–,]\s*|\s*\((.*?)\)|\s+[-–]\s*(.*)|$)/);
           if (m) {
             const wn = m[1].trim();
-            const wnLower = wn.toLowerCase();
-            if (wn.length <= 3 || blacklist.some(b => wnLower.includes(b))) return;
+            const normK = normalizeWitnessName(wn).toLowerCase();
+            if (wn.length <= 3 || blacklist.some(b => normK.includes(b)) || (reusNormalized.size > 0 && reusNormalized.has(normK))) return;
 
             const ext1 = m[2] || '';
             const ext2 = m[3] || '';
             const extra = `${line.slice(m[0].length).toLowerCase()} ${ext1.toLowerCase()} ${ext2.toLowerCase()}`.trim();
 
-            const isPm = /\b(?:pm|policial|militar|civil|cabo|sgt|sargento|soldado)\b/i.test(extra) || /\b(?:pm|policial)\b/i.test(wnLower);
+            const isPm = /\b(?:pm|policial|militar|civil|cabo|cb|sgt|sargento|sd|soldado|subtenente|tenente|capit[aã]o)\b/i.test(extra) || /\b(?:pm|policial)\b/i.test(normK);
             const isVit = /vítima|vitima|declarante/i.test(extra);
             const role = isVit ? 'vítima' : (isPm ? 'PM' : 'Testemunha');
             const st = findSubpoenaStatus(wn, isPm);
 
-            if (!seenWitnessNames.has(wnLower)) {
-              seenWitnessNames.add(wnLower);
+            if (!seenWitnessNames.has(normK)) {
+              seenWitnessNames.add(normK);
+              let wDisp = wn.replace(/\bPm\b/g, 'PM');
+              wDisp = wDisp.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()).replace(/\bPm\b/g, 'PM');
               prosWitnesses.push({
                 number: witNum++,
-                name: wn.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+                name: wDisp,
                 role: role,
                 status_id: st
               });
@@ -2278,9 +2630,29 @@
         });
       }
 
+      // Fallback for numbered witness lists (e.g. in Queixa-Crime or atypical Denúncia)
+      if (prosWitnesses.length === 0 && (/testemunha|declarantes/i.test(denunciaText))) {
+        const rxNum = /^\s*(\d+)[\.\)]\s+([A-ZÁÉÍÓÚÂÊÔÃÕ][A-ZÁÉÍÓÚÂÊÔÃÕ\s]{3,60}?)(?:,\s*(?:brasileir|advogad|casad|solteir|contador|servidor|funcion|portador|inscrit)|\[|\s*$)/gmi;
+        let mW;
+        while ((mW = rxNum.exec(cleanedDenuncia)) !== null) {
+          const wName = mW[2].trim();
+          const normK = normalizeWitnessName(wName).toLowerCase();
+          if (!seenWitnessNames.has(normK) && wName.length > 3 && (!reusNormalized.size || !reusNormalized.has(normK)) && !/denúncia|queixa|promotoria|ministério/i.test(normK)) {
+            seenWitnessNames.add(normK);
+            prosWitnesses.push({
+              number: witNum++,
+              name: wName.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+              role: 'Testemunha',
+              status_id: findSubpoenaStatus(wName, false)
+            });
+          }
+        }
+      }
+
       vitimasCapa.forEach(v => {
-        if (!seenWitnessNames.has(v.toLowerCase())) {
-          seenWitnessNames.add(v.toLowerCase());
+        const vNorm = normalizeWitnessName(v).toLowerCase();
+        if (!seenWitnessNames.has(vNorm) && (!reusNormalized.size || !reusNormalized.has(vNorm))) {
+          seenWitnessNames.add(vNorm);
           prosWitnesses.push({
             number: witNum++,
             name: v.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
@@ -2291,12 +2663,13 @@
       });
 
       testemunhasCapa.forEach(t => {
-        if (!seenWitnessNames.has(t.toLowerCase())) {
-          seenWitnessNames.add(t.toLowerCase());
+        const tNorm = normalizeWitnessName(t).toLowerCase();
+        if (!seenWitnessNames.has(tNorm) && (!reusNormalized.size || !reusNormalized.has(tNorm))) {
+          seenWitnessNames.add(tNorm);
           const isPm = /\b(?:pm|policial|cabo|sargento|militar)\b/i.test(t.toLowerCase());
           prosWitnesses.push({
             number: witNum++,
-            name: t.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+            name: t.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()).replace(/\bPm\b/g, 'PM'),
             role: isPm ? 'PM' : 'Testemunha',
             status_id: findSubpoenaStatus(t, isPm)
           });
@@ -2361,6 +2734,8 @@
         for (let dInfo of defenseDocs) {
           for (let exW of (dInfo.explicit_witnesses || [])) {
             const exWLower = exW.toLowerCase();
+            const exWNorm = normalizeWitnessName(exW).toLowerCase();
+            if (reusNormalized.size > 0 && reusNormalized.has(exWNorm)) continue;
             let alreadyInPros = false;
             for (let pn of prosNames) {
               if (exWLower.includes(pn) || pn.includes(exWLower)) {
@@ -2381,27 +2756,34 @@
         }
       }
 
-      // 14. Chronological History
+      // 14. Chronological History (all relevant procedural acts including Inquérito, APF, Alvará, Link)
       const chronologicalHistory = [];
       const seenHistIds = new Set();
       pjeCatalog.forEach(d => {
         const comb = `${d.doc_name} ${d.doc_type}`.toLowerCase();
         if (/(?:extrato\s*banc[aá]rio|dados\s*telef[oô]nicos|quebra\s*de\s*sigilo|comprovante|guia\s*(?:de\s*)?recolhimento|custas\s*processuais|danfe|nota\s*fiscal|certid[aã]o\s*de\s*(?:triagem|juntada\s*gen[eé]rica|remessa)|autentica[cç][aã]o|foto|laudo|relat[oó]rio\s*t[eé]cnico|manual|tela\s*whatsapp|print)/i.test(comb)) return;
-        if (/denúncia|denuncia|decis|despacho|ato ordinat|resposta|defesa prévia|defesa previa|mandado|edital|ata|termo de audiência/.test(comb) || defenseDocsMap[d.doc_id] || (anppRevDoc && d.doc_id === anppRevDoc.doc_id) || (pscpRevDoc && d.doc_id === pscpRevDoc.doc_id)) {
-          if (!seenHistIds.has(d.doc_id) && (d.start_page > 0 || d.text)) {
-            seenHistIds.add(d.doc_id);
-            let desc = '';
-            if (defenseDocsMap[d.doc_id]) {
-              desc = defenseDocsMap[d.doc_id].summary_for_history;
-            } else {
-              desc = summarizeHistoryAct(d.doc_name, d.doc_type, d.text);
-            }
-            chronologicalHistory.push({
-              date_str: formatShortDate(d.date_str),
-              description: desc,
-              doc_id: d.doc_id
-            });
+
+        const isRelevant = (
+          /denúncia|denuncia|decis|despacho|ato ordinat|resposta|defesa prévia|defesa previa|mandado|edital|ata|termo de audiência|inquérito|inquerito|apf|flagrante|alvará|alvara|manifesta|devolu|link/i.test(comb) ||
+          /\bip\s+\d+\/\d+/i.test(comb) ||
+          defenseDocsMap[d.doc_id] ||
+          (anppRevDoc && d.doc_id === anppRevDoc.doc_id) ||
+          (pscpRevDoc && d.doc_id === pscpRevDoc.doc_id)
+        );
+
+        if (isRelevant && !seenHistIds.has(d.doc_id) && (d.start_page > 0 || d.text)) {
+          seenHistIds.add(d.doc_id);
+          let desc = '';
+          if (defenseDocsMap[d.doc_id]) {
+            desc = defenseDocsMap[d.doc_id].summary_for_history;
+          } else {
+            desc = summarizeHistoryAct(d.doc_name, d.doc_type, d.text);
           }
+          chronologicalHistory.push({
+            date_str: formatShortDate(d.date_str),
+            description: desc,
+            doc_id: d.doc_id
+          });
         }
       });
 
@@ -2448,7 +2830,7 @@
           }
         }
       } else if (advsCapa.length > 0) {
-        const privateAdvs = advsCapa.filter(a => !/defensoria|defensor|procuradoria|estado|tribunal/.test(a.toLowerCase()));
+        const privateAdvs = advsCapa.filter(a => !/defensoria|defensor|procuradoria|estado|tribunal/i.test(a));
         if (privateAdvs.length > 0) {
           const names = privateAdvs.map(a => `Dr. ${a.toLowerCase().replace(/(?:^|\s)\S/g, x => x.toUpperCase())}`);
           defenseCounsel = `Representado por advogado particular, ${names.join(', ')}`;
@@ -2493,11 +2875,12 @@
     function extractCleanNarrative(rawText) {
       if (!rawText) return [];
 
-      // Line reflow for hyphenated line breaks
-      rawText = rawText.replace(/(\b[a-zA-ZáàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]+)-\s*\n\s*([a-zA-ZáàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]+\b)/g, '$1$2');
+      // Line reflow for hyphenated words across line breaks
+      rawText = rawText.replace(/(\b[a-zA-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ]+)-\s*\n\s*([a-zA-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ]+\b)/g, '$1$2');
 
-      const stopRegex = /(?:(?:^|\n)\s*Termos\s+em\s+que[,\s]+pede|(?:^|\n)\s*pede\s+e\s+aguarda\s+deferimento|(?:^|\n)\s*pede\s+deferimento|(?:^|\n)\s*Nestes\s+termos|(?:^|\n)\s*Pede\s+deferimento|(?:^|\n)\s*ROL\s+DE\s+TESTEMUNHAS|(?:^|\n)\s*ROL\s+TESTEMUNHAL|(?:^|\n)\s*TESTEMUNHAS\s*:|(?:^|\n)\s*COTA\s*(?:[ÀA]\s*DENÚNCIA|DE\s*OFERECIMENTO)?|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?(?:DOS\s+)?PEDIDOS?\b|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?REQUERIMENTOS?\b|(?:Ante|Diante)\s+[^\n]*exposto[^\n]*requer|Requer\s+o\s+Minist[eé]rio\s+P[uú]blico|(?:^|\n)\s*Assinaturas?\s+do\s+Documento)/i;
-      const startRegex = /(?:pelos?\s+fatos\s+e\s+fundamentos\s+que\s+passa\s+a\s+expor[^\n]*\n|pela\s+pr[aá]tica\s+dos\s+fatos\s+delituosos\s+a\s+seguir\s+narrados[^\n]*\n|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+FATOS|NARRATIVA\s+F[AÁ]TICA(?:\s+CRIMINOSA)?|CONTEXTUALIZA[CÇ][AÃ]O\s+DA\s+INVESTIGA[CÇ][AÃ]O)[^\n]*\n|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?(?:1\)?\s*[-–.]?\s*)?(Consta\s+(?:[nd][oe]s|[nd]as)\s+(?:inclus[oa]s|referidos)\s+autos[^\n]*\n))/i;
+      const stopRegex = /(?:(?:^|\n)\s*Termos\s+em\s+que[,\s]+pede|(?:^|\n)\s*pede\s+e\s+aguarda\s+deferimento|(?:^|\n)\s*pede\s+deferimento|(?:^|\n)\s*Nestes\s+termos|(?:^|\n)\s*Pede\s+deferimento|(?:^|\n)\s*ROL\s+DE\s+TESTEMUNHAS|(?:^|\n)\s*ROL\s+TESTEMUNHAL|(?:^|\n)\s*TESTEMUNHAS\s*:|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?ROL\s+DE\s+TESTEMUNHAS\/DECLARANTES|(?:^|\n)\s*COTA\s*(?:[ÀA]\s*DENÚNCIA|DE\s*OFERECIMENTO)?|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+)?PEDIDOS?\b|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?REQUERIMENTOS?\b|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DA\s+)?TIPICIDADE\b|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DO\s+)?DIREITO\b|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+)?FUNDAMENTOS\s+JUR[IÍ]DICOS\b|(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DA\s+)?COMPET[EÊ]NCIA\b|(?:Ante|Diante)\s+[^\n]*exposto[^\n]*requer|Requer\s+o\s+Minist[eé]rio\s+P[uú]blico|(?:^|\n)\s*Assinaturas?\s+do\s+Documento)/i;
+
+      const startRegex = /(?:(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+FATOS|FATOS(?:\s+NARRADOS)?|NARRATIVA\s+F[AÁ]TICA(?:\s+CRIMINOSA)?|(?:DA\s+)?CONTEXTUALIZA[CÇ][AÃ]O(?:\s+DA\s+INVESTIGA[CÇ][AÃ]O)?|HIST[OÓ]RICO\s+D[OE]S\s+FATOS)[^\n]*\n|pelos?\s+fatos\s+e\s+fundamentos(?:\s+de\s+direito)?(?:\s+(?:que\s+passa\s+a\s+expor|a\s+seguir(?:\s+(?:expostos?|narrados?))?|adiante\s+delineados?))?[^\n]*\n|(?:em\s+raz[aã]o|por\s+motivo|diante)\s+d[oae]s\s+(?:motivos|fatos)\s+f[aá]ticos(?:\s+que\s+passa\s+a\s+expor)?[^\n]*\n|passa\s+a\s+expor:?[^\n]*\n|pela\s+pr[aá]tica\s+dos\s+fatos\s+delituosos\s+a\s+seguir\s+narrados[^\n]*\n|(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?(?:1\)?\s*[-–.]?\s*)?(Consta\s+(?:[nd][oe]s|[nd]as)\s+(?:inclus[oa]s|referidos)\s+autos[^\n]*\n))/i;
 
       let factsText = rawText;
       const mStart = rawText.match(startRegex);
@@ -2508,6 +2891,11 @@
           factsText = rawText.substring(mStart.index + constaPos);
         } else {
           factsText = rawText.substring(mStart.index + mTxt.length);
+        }
+      } else {
+        const mAfterQual = rawText.match(/(?:em\s+face\s+de|em\s+desfavor\s+de|contra|denunciad[oa]s?:?)\s+[\s\S]+?(?:pelos\s+fatos\s+e\s+fundamentos[^\n]*|(?:em\s+raz[aã]o|por\s+motivo|diante)\s+d[oae]s\s+(?:motivos|fatos)\s+f[aá]ticos[^\n]*|seguintes:?\s*|adiante:\s*|passa\s+a\s+expor:?\s*)\n/i);
+        if (mAfterQual) {
+          factsText = rawText.substring(mAfterQual.index + mAfterQual[0].length);
         }
       }
 
@@ -2520,10 +2908,14 @@
 
       const lines = factsText.split('\n');
       const headerPatterns = [
+        /^\s*[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\s*$/i,
         /^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO/i, /PROMOTORIA\s+DE\s+JUSTI[CÇ]A/i, /Defesa\s+dos\s+Direitos/i,
         /^\s*Rua\s+(?:Promotor|Milit[aã]o|Doutor|Serid[oó]|Alameda)/i, /Telefone\(s\):/i, /E-mail:/i,
         /www\./i, /^\s*AO\s+JU[IÍ]ZO/i, /^\s*Excelent[ií]ssimo/i, /^\s*Ilustr[ií]ssimo/i, /^\s*Merit[ií]ssimo/i,
-        /^\s*Vossa\s+Excelência/i, /^\s*Inqu[eé]rito\s+Policial\s+n[ºo]/i, /^\s*Autos\s+n[ºo]/i, /^\s*TCO\s+n[ºo]/i,
+        /^\s*Vossa\s+Excelência/i, /^\s*DAS\s+VARAS\s+CRIMINAIS/i, /^\s*COMARCA\s+DE\s+NATAL/i,
+        /^\s*Ref\.:\s*Processo/i, /^\s*Origem:\s*DELEGACIA/i, /GABINETE\s+\d+/i, /N[UÚ]CLEO\s+REGIONAL/i,
+        /-\s*\d+\s+de\s+\d+\s+laudas\s*-/i, /GRUPO\s+DE\s+ATUA[CÇ][AÃ]O\s+ESPECIAL/i, /^\s*ADVOGADO\b/i, /^\s*OAB\//i,
+        /^\s*Inqu[eé]rito\s+Policial\s+n[ºo]/i, /^\s*Autos\s+n[ºo]/i, /^\s*TCO\s+n[ºo]/i,
         /Num\.\s*\d+/i, /P[aá]g\.\s*Total/i, /P[aá]g\.\s*\d+\s*de\s*\d+/i, /Documento\s+n[ºo]/i,
         /Valida[cç][aã]o\s+em/i, /Assinado\s+eletronicamente/i, /N[uú]mero\s+do\s+documento/i,
         /https?:\/\//i, /^={3,}\s*PAGE/i, /^\s*_{5,}\s*$/, /^\d+\s*$/, /^\d+\s*Em\s*\d{4}:/i
@@ -2533,10 +2925,11 @@
       for (const l of lines) {
         const lS = l.trim();
         if (!lS || headerPatterns.some(rx => rx.test(lS))) continue;
+        if (/\b(?:inscrit[oa]\s+na\s+OAB|portador[oa]\s+da\s+c[eé]dula\s+de\s+identidade|filh[oa]\s+de\s+Rita|residente\s+e\s+domiciliad[oa]\s+na\s+Avenida)\b/i.test(lS)) continue;
         cleanedLines.push(lS);
       }
 
-      // JEV / Leya System One Line-Level Noise Filtering
+      // JEV Noise Filtering
       const jevStampRe = /(?:Num\.\s*\d+\s*-\s*P[aáAÁ]g\.\s*\d+|Assinado\s+eletronicamente\s+por|C[oó]digo\s+de\s+valida[cç][aã]o|Valide\s+a\s+autenticidade|Tribunal\s+de\s+Justi[cç]a\s+do\s+Rio\s+Grande\s+do\s+Norte\s*-\s*DJe|Identificador\s*:\s*\d+)/i;
       const jevBankRe = /(?:comprovante\s+de\s+(?:pagamento|transfer[eê]ncia|agendamento|dep[oó]sito)|autentica[cç][aã]o\s+mec[aâ]nica|linha\s+digit[aá]vel|\b\d{5}\.\d{5}\s+\d{5}\.\d{6}\b|guia\s+de\s+recolhimento|tarifa\s+banc[aá]ria)/i;
 
@@ -2577,7 +2970,6 @@
       return paragraphs;
     }
 
-    // UI Binding & Preview
     function loadDataIntoUI(data) {
       activeData = data;
       document.getElementById('case_number').value = data.case_number || '';
@@ -2727,11 +3119,24 @@
       html += `<div class="doc-resumo-call">Segue o resumo da audiência:</div>`;
       html += '<div style="margin-bottom: 0.85rem;"></div>';
 
-      if ((activeData.act_type || '').includes('ANPP')) {
-        const timePart = (activeData.hearing_datetime || '').includes('às')
-          ? activeData.hearing_datetime.split('às').pop().trim()
-          : activeData.hearing_datetime || '';
-        html += `<div class="doc-callout"><span class="hl-yellow">${timePart} - ${activeData.case_number || ''} - ${activeData.act_type || ''}</span></div>`;
+      const actTypeUpper = (activeData.act_type || '').toUpperCase();
+      let calloutLabel = null;
+      const timePart = (activeData.hearing_datetime || '').includes('às')
+        ? activeData.hearing_datetime.split('às').pop().trim()
+        : activeData.hearing_datetime || '';
+
+      if (actTypeUpper.includes('ANPP')) {
+        calloutLabel = `${timePart} - ${activeData.case_number || ''} - ${activeData.act_type || ''}`;
+      } else if (actTypeUpper.includes('PANP') || actTypeUpper.includes('PRODUÇÃO ANTECIPADA')) {
+        calloutLabel = `${timePart} - ${activeData.case_number || ''} - Audiência de produção antecipada de provas orais`;
+      } else if (actTypeUpper.includes('IDOSO')) {
+        calloutLabel = `${timePart} - ${activeData.case_number || ''} - AIJ (IDOSO)`;
+      } else if (activeData.hearing_callout_text) {
+        calloutLabel = activeData.hearing_callout_text;
+      }
+
+      if (calloutLabel) {
+        html += `<div class="doc-callout"><span class="hl-yellow">${calloutLabel}</span></div>`;
         html += '<div style="margin-bottom: 0.85rem;"></div>';
       }
 
@@ -2747,9 +3152,10 @@
         html += `<div class="doc-reus"><span class="hl-green">${genderPrefix} ${d.name} - ${d.status}${idText}</span></div>`;
       } else if (activeData.defendants && activeData.defendants.length > 1) {
         html += '<div class="doc-reus"><span class="hl-green">Réus:</span></div>';
-        activeData.defendants.forEach(d => {
+        activeData.defendants.forEach((d, idx) => {
+          const prefix = /^\d+[\s.)-]/.test(d.name.trim()) ? '' : `${String(idx+1).padStart(2, '0')}) `;
           const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
-          html += `<div class="doc-reus-item">${d.name} - ${d.status}${idText}</div>`;
+          html += `<div class="doc-reus-item"><span class="hl-green">${prefix}${d.name} - ${d.status}${idText}</span></div>`;
         });
       }
 
@@ -2817,7 +3223,8 @@
         }
 
         if (activeData.defense_witnesses && activeData.defense_witnesses.length > 0) {
-          html += '<div class="doc-section-header"><span class="hl-yellow">TESTEMUNHAS DE DEFESA:</span></div>';
+          const defHdr = activeData.defense_witnesses.length === 1 ? 'TESTEMUNHA DE DEFESA:' : 'TESTEMUNHAS DE DEFESA:';
+          html += `<div class="doc-section-header"><span class="hl-yellow">${defHdr}</span></div>`;
           activeData.defense_witnesses.forEach(w => {
             const num = String(w.number).padStart(2, '0');
             let st = w.status_id ? ` - ${w.status_id}` : '';
@@ -2931,13 +3338,24 @@
         bodyXml += pXml('');
 
         const isAnpp = (activeData.act_type || '').includes('ANPP');
+        const actTypeUpper = (activeData.act_type || '').toUpperCase();
+        let calloutLabel = null;
+        const timePart = (activeData.hearing_datetime || '').includes('às')
+          ? activeData.hearing_datetime.split('às').pop().trim()
+          : activeData.hearing_datetime || '';
 
-        // ANPP Callout line
-        if (isAnpp) {
-          const timePart = (activeData.hearing_datetime || '').includes('às')
-            ? activeData.hearing_datetime.split('às').pop().trim()
-            : activeData.hearing_datetime || '';
-          bodyXml += pXml(runXml(`${timePart} - ${activeData.case_number} - ${activeData.act_type}`, { bold: true, highlight: "yellow" }));
+        if (actTypeUpper.includes('ANPP')) {
+          calloutLabel = `${timePart} - ${activeData.case_number || ''} - ${activeData.act_type || ''}`;
+        } else if (actTypeUpper.includes('PANP') || actTypeUpper.includes('PRODUÇÃO ANTECIPADA')) {
+          calloutLabel = `${timePart} - ${activeData.case_number || ''} - Audiência de produção antecipada de provas orais`;
+        } else if (actTypeUpper.includes('IDOSO')) {
+          calloutLabel = `${timePart} - ${activeData.case_number || ''} - AIJ (IDOSO)`;
+        } else if (activeData.hearing_callout_text) {
+          calloutLabel = activeData.hearing_callout_text;
+        }
+
+        if (calloutLabel) {
+          bodyXml += pXml(runXml(calloutLabel, { bold: true, highlight: "yellow" }));
           bodyXml += pXml('');
         }
 
@@ -2957,11 +3375,12 @@
           bodyXml += pXml(runsWithIdLinks(reuStr, { bold: true, highlight: "green" }));
         } else if (activeData.defendants && activeData.defendants.length > 1) {
           bodyXml += pXml(runXml("Réus:", { bold: true, highlight: "green" }));
-          activeData.defendants.forEach(d => {
-            let reuStr = `${d.name} - ${d.status}`;
+          activeData.defendants.forEach((d, idx) => {
+            const prefix = /^\d+[\s.)-]/.test(d.name.trim()) ? '' : `${String(idx+1).padStart(2, '0')}) `;
+            let reuStr = `${prefix}${d.name} - ${d.status}`;
             if (d.subpoena_id) reuStr += ` - Intimado ID ${d.subpoena_id}`;
             else if (d.citation_id) reuStr += ` - Citado ID ${d.citation_id}`;
-            bodyXml += pXml(runsWithIdLinks(reuStr, { bold: false, highlight: null }), { left: 720, hanging: 360 });
+            bodyXml += pXml(runsWithIdLinks(reuStr, { bold: false, highlight: "green" }), { left: 720, hanging: 360 });
           });
         }
 
@@ -3049,7 +3468,8 @@
           }
 
           if (activeData.defense_witnesses && activeData.defense_witnesses.length > 0) {
-            bodyXml += pXml(runXml("TESTEMUNHAS DE DEFESA:", { bold: true, highlight: "yellow" }));
+            const defHdr = activeData.defense_witnesses.length === 1 ? 'TESTEMUNHA DE DEFESA:' : 'TESTEMUNHAS DE DEFESA:';
+            bodyXml += pXml(runXml(defHdr, { bold: true, highlight: "yellow" }));
             activeData.defense_witnesses.forEach(w => {
               const num = String(w.number).padStart(2, '0');
               const st = w.status_id ? ` - ${w.status_id}` : '';
@@ -3116,6 +3536,7 @@
       container.appendChild(t);
       setTimeout(() => t.remove(), 4000);
     }
+
   </script>
 </body>
 </html>

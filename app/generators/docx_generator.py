@@ -217,11 +217,29 @@ def generate_docx_summary(
     # Blank line separator
     _add_p(doc)
 
-    # Callout line for ANPP or specific scheduled hearings (Yellow highlight + Bold)
-    if "ANPP" in data.act_type:
+    # Callout line for specific hearing types (ANPP, PAnP, IDOSO) or custom callouts (Yellow highlight + Bold)
+    time_part = data.hearing_datetime.split("às")[-1].strip() if "às" in data.hearing_datetime else data.hearing_datetime
+    callout_label = None
+    act_type_upper = (data.act_type or "").upper()
+    
+    if "ANPP" in act_type_upper:
+        callout_label = f"{time_part} - {data.case_number} - {data.act_type}"
+    elif "PANP" in act_type_upper or "PRODUÇÃO ANTECIPADA" in act_type_upper:
+        callout_label = f"{time_part} - {data.case_number} - Audiência de produção antecipada de provas orais"
+    elif "JÚRI" in act_type_upper or "JURI" in act_type_upper:
+        callout_label = f"{time_part} - {data.case_number} - Sessão Plenária do Tribunal do Júri"
+    elif "CUSTÓDIA" in act_type_upper or "CUSTODIA" in act_type_upper:
+        callout_label = f"{time_part} - {data.case_number} - Audiência de Custódia"
+    elif "PROTETIVA" in act_type_upper or "JUSTIFICAÇÃO" in act_type_upper:
+        callout_label = f"{time_part} - {data.case_number} - Audiência de Justificação (Lei Maria da Penha)"
+    elif "IDOSO" in act_type_upper:
+        callout_label = f"{time_part} - {data.case_number} - AIJ (IDOSO)"
+    elif getattr(data, "hearing_callout_text", None):
+        callout_label = data.hearing_callout_text
+
+    if callout_label:
         p_call = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-        time_part = data.hearing_datetime.split("às")[-1].strip() if "às" in data.hearing_datetime else data.hearing_datetime
-        _add_run(p_call, f"{time_part} - {data.case_number} - {data.act_type}", bold=True, highlight="yellow")
+        _add_run(p_call, callout_label, bold=True, highlight="yellow")
         _add_p(doc)
 
     # PROMOTOR line: BOLD + BRIGHT GREEN HIGHLIGHT
@@ -246,14 +264,15 @@ def generate_docx_summary(
     elif len(data.defendants) > 1:
         p_reus_hdr = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
         _add_run(p_reus_hdr, "Réus:", bold=True, highlight="green")
-        for d in data.defendants:
+        for i, d in enumerate(data.defendants):
             p_d = _add_p(doc, left=720, hanging=360, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-            d_line = f"{d.name} - {d.status}"
+            prefix = f"{i+1:02d}) " if not re.match(r"^\d+[\s.)-]", d.name.strip()) else ""
+            d_line = f"{prefix}{d.name} - {d.status}"
             if d.subpoena_id:
                 d_line += f" - Intimado ID {d.subpoena_id}"
             elif d.citation_id:
                 d_line += f" - Citado ID {d.citation_id}"
-            _append_text_with_id_links(p_d, d_line, bold=False, highlight=None)
+            _append_text_with_id_links(p_d, d_line, bold=False, highlight="green")
 
     # DEFESA line: BOLD + BRIGHT GREEN HIGHLIGHT
     if data.defense_counsel:
@@ -370,7 +389,8 @@ def generate_docx_summary(
         # Defense witnesses
         if data.defense_witnesses:
             p_def_hdr = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-            _add_run(p_def_hdr, "TESTEMUNHAS DE DEFESA:", bold=True, highlight="yellow")
+            hdr_title = "TESTEMUNHA DE DEFESA:" if len(data.defense_witnesses) == 1 else "TESTEMUNHAS DE DEFESA:"
+            _add_run(p_def_hdr, hdr_title, bold=True, highlight="yellow")
             for w in data.defense_witnesses:
                 p_dw = _add_p(doc, after=283, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
                 dw_str = f"{w.number:02d}) {w.name}"

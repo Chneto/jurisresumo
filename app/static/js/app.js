@@ -511,12 +511,25 @@ document.addEventListener('DOMContentLoaded', () => {
     html += `<div class="doc-resumo-call">Segue o resumo da audiência:</div>`;
     html += '<div style="margin-bottom: 1.2rem;"></div>';
 
-    // Callout line if ANPP
-    if ((activeData.act_type || '').includes('ANPP')) {
-      const timePart = (activeData.hearing_datetime || '').includes('às')
-        ? activeData.hearing_datetime.split('às').pop().trim()
-        : activeData.hearing_datetime || '';
-      html += `<div class="doc-callout"><span class="hl-yellow">${timePart} - ${activeData.case_number || ''} - ${activeData.act_type || ''}</span></div>`;
+    // Callout line if ANPP, PAnP, IDOSO, or specific scheduled hearings
+    const actTypeUpper = (activeData.act_type || '').toUpperCase();
+    let calloutLabel = null;
+    const timePart = (activeData.hearing_datetime || '').includes('às')
+      ? activeData.hearing_datetime.split('às').pop().trim()
+      : activeData.hearing_datetime || '';
+
+    if (actTypeUpper.includes('ANPP')) {
+      calloutLabel = `${timePart} - ${activeData.case_number || ''} - ${activeData.act_type || ''}`;
+    } else if (actTypeUpper.includes('PANP') || actTypeUpper.includes('PRODUÇÃO ANTECIPADA')) {
+      calloutLabel = `${timePart} - ${activeData.case_number || ''} - Audiência de produção antecipada de provas orais`;
+    } else if (actTypeUpper.includes('IDOSO')) {
+      calloutLabel = `${timePart} - ${activeData.case_number || ''} - AIJ (IDOSO)`;
+    } else if (activeData.hearing_callout_text) {
+      calloutLabel = activeData.hearing_callout_text;
+    }
+
+    if (calloutLabel) {
+      html += `<div class="doc-callout"><span class="hl-yellow">${calloutLabel}</span></div>`;
       html += '<div style="margin-bottom: 1.2rem;"></div>';
     }
 
@@ -534,9 +547,10 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `<div class="doc-reus"><span class="hl-green">${genderPrefix} ${d.name} - ${d.status}${idText}</span></div>`;
     } else if (activeData.defendants && activeData.defendants.length > 1) {
       html += '<div class="doc-reus"><span class="hl-green">Réus:</span></div>';
-      activeData.defendants.forEach((d) => {
+      activeData.defendants.forEach((d, idx) => {
+        const prefix = /^\d+[\s.)-]/.test(d.name.trim()) ? '' : `${String(idx+1).padStart(2, '0')}) `;
         const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
-        html += `<div class="doc-reus" style="padding-left: 1.27cm;">${d.name} - ${d.status}${idText}</div>`;
+        html += `<div class="doc-reus" style="padding-left: 1.27cm;"><span class="hl-green">${prefix}${d.name} - ${d.status}${idText}</span></div>`;
       });
     }
 
@@ -615,7 +629,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (activeData.defense_witnesses && activeData.defense_witnesses.length > 0) {
-        html += '<div class="doc-section-header"><span class="hl-yellow">TESTEMUNHAS DE DEFESA:</span></div>';
+        const defHdr = activeData.defense_witnesses.length === 1 ? 'TESTEMUNHA DE DEFESA:' : 'TESTEMUNHAS DE DEFESA:';
+        html += `<div class="doc-section-header"><span class="hl-yellow">${defHdr}</span></div>`;
         activeData.defense_witnesses.forEach((w) => {
           const num = String(w.number).padStart(2, '0');
           let status = w.status_id ? ` - ${w.status_id}` : '';

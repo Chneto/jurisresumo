@@ -47,11 +47,13 @@ CNJ_REGEX = re.compile(r"\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b")
 
 # Videoconference links
 TEAMS_REGEX = re.compile(
-    r"(https://teams\.microsoft\.com/meet/[^\s\"'>)]+|https://teams\.live\.com/meet/[^\s\"'>)]+)",
+    r"(?:https?://)?(?:[a-z0-9-]+\.)?teams\.(?:microsoft|live)\.com/(?:meet|l/meetup-join|dl/launcher)/[^\s\"'>)]+|"
+    r"(?:https?://)?(?:[a-z0-9-]+\.)?teams\.(?:microsoft|live)\.com/[^\s\"'>)]+|"
+    r"(?:https?://)?lnk\.tjrn\.jus\.br/[a-zA-Z0-9_-]+",
     re.IGNORECASE,
 )
 MEET_REGEX = re.compile(
-    r"(https://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3})",
+    r"(https?://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3})",
     re.IGNORECASE,
 )
 
@@ -103,9 +105,45 @@ ANPP_NEGATION_REGEX = re.compile(
 
 # Regex to detect state organs mistakenly placed in the passive pole (system errors to be discarded)
 STATE_ORGANS_BLACKLIST_REGEX = re.compile(
-    r"^(?:delegacia|estado(?:\s+d[oae]s?)?|defensoria|minist[eé]rio\s+p[uú]blico|pol[ií]cia|secretaria|comando|tribunal|juizado|vara\s+criminal|procuradoria|instituto|banco|central\s+de\s+flagrantes|dp\s+de|dpc\b|plant[aã]o\s+da\s+pol[ií]cia|departamento|munic[ií]pio|uni[aã]o)\b",
+    r"^(?:(?:\d+[ªa°º]?\s+)?(?:delegacia|dp\b|dpc\b|distrito\s+policial|defensoria|vara\s+criminal|promotoria)|"
+    r"delegacia|estado(?:\s+d[oae]s?)?|defensoria|minist[eé]rio\s+p[uú]blico|pol[ií]cia|"
+    r"secretaria|comando|tribunal|juizado|vara\s+criminal|procuradoria|instituto|banco|"
+    r"central\s+de\s+(?:flagrantes|recebimento|cust[oó]dia)|dp\s+de|dpc\b|plant[aã]o\s+(?:da\s+)?pol[ií]cia|"
+    r"departamento|munic[ií]pio|uni[aã]o|"
+    r"deicot|deicor|denarc|dhpp|dea\b|deprov|dapr)\b",
     re.IGNORECASE,
 )
+
+
+def _make_accent_tolerant_regex(text: str) -> str:
+    """Creates a regex pattern that matches Portuguese accented or unaccented variations of the text."""
+    vowel_map = {
+        'a': r'[aáàãâäAÁÀÃÂÄ]', 'á': r'[aáàãâäAÁÀÃÂÄ]', 'à': r'[aáàãâäAÁÀÃÂÄ]', 'ã': r'[aáàãâäAÁÀÃÂÄ]', 'â': r'[aáàãâäAÁÀÃÂÄ]',
+        'e': r'[eéêëEÉÊË]', 'é': r'[eéêëEÉÊË]', 'ê': r'[eéêëEÉÊË]',
+        'i': r'[iíîïIÍÎÏ]', 'í': r'[iíîïIÍÎÏ]',
+        'o': r'[oóôõöOÓÔÕÖ]', 'ó': r'[oóôõöOÓÔÕÖ]', 'ô': r'[oóôõöOÓÔÕÖ]', 'õ': r'[oóôõöOÓÔÕÖ]',
+        'u': r'[uúûüUÚÛÜ]', 'ú': r'[uúûüUÚÛÜ]',
+        'c': r'[cçCÇ]', 'ç': r'[cçCÇ]',
+    }
+    pattern_parts = []
+    for char in text:
+        lower_c = char.lower()
+        if lower_c in vowel_map:
+            pattern_parts.append(vowel_map[lower_c])
+        else:
+            pattern_parts.append(re.escape(char))
+    return "".join(pattern_parts)
+
+
+def _normalize_witness_name(name: str) -> str:
+    """Strips military/police titles, ranks, and judicial prefixes before comparison."""
+    clean = re.sub(
+        r"^(?:pm\s+|policial(?:\s+militar|\s+civil)?\s+|cabo\s+|cb\s+|sgt\s+|sargento\s+|sd\s+|soldado\s+|subtenente\s+|tenente\s+|capit[aã]o\s+|dr(?:a|\(a\))?\.?\s+)+",
+        "",
+        name.strip(),
+        flags=re.IGNORECASE,
+    )
+    return clean.strip()
 
 
 def _format_date_short(date_str: str) -> str:
@@ -138,6 +176,9 @@ def _parse_date_sort_key(date_str: str, doc_id: str = "") -> Tuple[int, int, int
 
 def _clean_legal_text(text: str) -> str:
     """Removes PJe stamps, signature blocks, page numbers, and validation URLs from extracted text."""
+    if not text:
+        return ""
+    text = text.replace("\u200b", " ").replace("\ufeff", "")
     lines = text.split("\n")
     clean_lines = []
     for line in lines:
@@ -145,7 +186,9 @@ def _clean_legal_text(text: str) -> str:
         if not l_s:
             clean_lines.append("")
             continue
-        # Drop PJe marginal stamp lines
+        # Drop PJe marginal stamp lines and header stamps
+        if re.search(r"-\s*\d+\s+de\s+\d+\s+laudas\s*-", l_s, re.I):
+            continue
         if re.search(r"Num\.\s*\d+\s*-\s*P[aáAÁ]g\.", l_s, re.I):
             continue
         if re.search(r"P[aá]g\.\s*Total\s*-\s*\d+", l_s, re.I):
@@ -212,29 +255,40 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         resposta_doc = None
         mandados_docs: List[PJeDocument] = []
 
-        # Find Denúncia (reverse search prioritizing official complaint from MP)
-        for p_doc in reversed(pje_catalog):
+        # Find Denúncia (reverse search prioritizing official complaint from MP, concatenating multi-part segments)
+        matching_denuncias: List[PJeDocument] = []
+        for p_doc in pje_catalog:
             name_c = p_doc.doc_name.lower().strip()
             type_c = p_doc.doc_type.lower().strip()
             if any(ex in name_c for ex in ["cota", "requerimento", "recebimento", "aditamento", "certidão"]):
                 continue
             if name_c.startswith("denún") or name_c.startswith("denun") or type_c.startswith("denún") or type_c.startswith("denun") or "queixa" in name_c:
-                denuncia_doc = p_doc
-                break
+                matching_denuncias.append(p_doc)
 
-        if not denuncia_doc:
+        if not matching_denuncias:
             for p_doc in reversed(pje_catalog):
                 comb = f"{p_doc.doc_name} {p_doc.doc_type}".lower()
                 if ("denún" in comb or "denun" in comb or "queixa" in comb) and "cota" not in comb:
-                    denuncia_doc = p_doc
+                    matching_denuncias.append(p_doc)
                     break
 
-        if not denuncia_doc:
+        if not matching_denuncias:
             for p_doc in pje_catalog:
                 comb = f"{p_doc.doc_name} {p_doc.doc_type}".lower()
                 if "petição inicial" in comb:
-                    denuncia_doc = p_doc
+                    matching_denuncias.append(p_doc)
                     break
+
+        denuncia_docs: List[PJeDocument] = []
+        if matching_denuncias:
+            latest = matching_denuncias[-1]
+            denuncia_docs = [latest]
+            for prev in reversed(matching_denuncias[:-1]):
+                if prev.end_page + 1 == denuncia_docs[0].start_page or prev.doc_name == latest.doc_name:
+                    denuncia_docs.insert(0, prev)
+                else:
+                    break
+            denuncia_doc = denuncia_docs[0]
 
         # Find Resposta à Acusação (and all defense petitions)
         defense_docs = self._find_all_defense_documents(pje_catalog, doc, reus_capa, advs_capa)
@@ -275,7 +329,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                     break
 
         # Extract text from Denúncia and Resposta
-        denuncia_text = self._extract_doc_text(doc, denuncia_doc) if denuncia_doc else ""
+        denuncia_text = "\n\n".join(self._extract_doc_text(doc, d) for d in denuncia_docs) if denuncia_docs else (self._extract_doc_text(doc, denuncia_doc) if denuncia_doc else "")
         resposta_text = self._extract_doc_text(doc, resposta_doc) if resposta_doc else ""
 
         # 4. Determine Act Type (AIJ, ANPP, PAnP, Custódia, Sursis)
@@ -317,7 +371,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
 
         # 11. Witnesses (Prosecution & Defense) with Unified Deduplication & Labeling
         pros_witnesses, def_witnesses, def_note = self._extract_witnesses(
-            denuncia_text, resposta_text, vitimas_capa, testemunhas_capa, mandados_docs, doc, defense_docs
+            denuncia_text, resposta_text, vitimas_capa, testemunhas_capa, mandados_docs, doc, defense_docs, reus_capa
         )
 
         # 12. Defense Counsel
@@ -373,7 +427,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
     def _parse_capa_parties(
         self, doc: pymupdf.Document
     ) -> Tuple[List[str], List[str], List[str], List[str], Optional[str]]:
-        """Extracts parties and roles from Page 1 Capa."""
+        """Extracts parties and roles from Page 1 Capa with multi-line buffering and state organ exclusion."""
         reus: List[str] = []
         advs: List[str] = []
         vitimas: List[str] = []
@@ -384,52 +438,108 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             return reus, advs, vitimas, testemunhas, prom
 
         page1_lines = doc[0].get_text().split("\n")
-        prev_line = ""
+        in_parties = False
+        pending_lines: List[str] = []
 
-        for line in page1_lines:
-            l = line.strip()
-            l_upper = l.upper()
+        def process_entry(combined: str):
+            nonlocal prom
+            c = combined.strip()
+            if not c:
+                return
+            c_upper = c.upper()
 
-            if any(k in l_upper for k in ["(REU)", "(RÉU)", "(INVESTIGADO)", "(INVESTIGADA)", "(INDICIADO)", "(INDICIADA)", "(ACUSADO)", "(ACUSADA)"]):
-                name = re.sub(r"\((?:R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA])\)", "", l, flags=re.I).strip()
-                if not name and prev_line:
-                    name = prev_line
-                name = re.sub(r"^[A-Z]+:\s*", "", name).strip()
-                if name and len(name) > 3 and not STATE_ORGANS_BLACKLIST_REGEX.search(name) and name not in reus:
-                    reus.append(name.strip())
+            # Find role tag
+            m_role = re.search(
+                r"\((AUTOR(?:A)?|R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA]|QUERELAD[OA]|QUERELANTE|AUTOR(?:A)?\s+DO\s+FATO|ADVOGAD[OA]|DEFENSOR(?:IA)?(?:\s*\([^)]*\))?|V[IÍ]TIMA|TESTEMUNHA|TERCEIRO\s+INTERESSADO|CUSTOS\s+LEGIS)\)",
+                c,
+                re.I,
+            )
+            role_type = m_role.group(1).upper() if m_role else ""
 
-            elif "(ADVOGADO)" in l_upper or "(DEFENSOR" in l_upper:
-                name = re.sub(r"\(ADVOGADO\w*\)|\(DEFENSOR\w*\)", "", l, flags=re.I).strip()
-                if not name and prev_line:
-                    name = prev_line
-                name = re.sub(r"^[A-Z]+:\s*", "", name)
-                if name and len(name) > 3 and name not in advs:
-                    advs.append(name.strip())
+            # Extract name
+            if "registrado" in c.lower() and "civilmente como" in c.lower():
+                m_civ = re.split(r"registrado(?:\(a\))?\s+civilmente\s+como\s+", c, flags=re.I)
+                raw_name = m_civ[0].strip()
+                if not raw_name and len(m_civ) > 1:
+                    raw_name = re.sub(r"\(.*?\)", "", m_civ[1]).strip()
+            else:
+                raw_name = re.sub(r"\([^)]*\([^)]*\)[^)]*\)|\([^)]*\)", "", c).strip()
 
-            elif "(VÍTIMA)" in l_upper or "(VITIMA)" in l_upper:
-                name = re.sub(r"\(V[IÍ]TIMA\)", "", l, flags=re.I).strip()
-                if not name and prev_line:
-                    name = prev_line
-                name = re.sub(r"^[A-Z]+:\s*", "", name)
-                if name and len(name) > 3 and name not in vitimas:
-                    vitimas.append(name.strip())
+            raw_name = re.sub(r"^[A-Z]+:\s*", "", raw_name).strip()
+            raw_name = re.sub(r"\s+", " ", raw_name).strip().rstrip(" )")
 
-            elif "(TESTEMUNHA)" in l_upper:
-                name = re.sub(r"\(TESTEMUNHA\)", "", l, flags=re.I).strip()
-                if not name and prev_line:
-                    name = prev_line
-                name = re.sub(r"^[A-Z]+:\s*", "", name)
-                if name and len(name) > 3 and name not in testemunhas:
-                    testemunhas.append(name.strip())
-
-            elif "(AUTOR)" in l_upper and ("PROMOTORIA" in l_upper or "MINISTÉRIO" in l_upper):
-                prom_m = re.search(r"(\d+ª?\s+Promotoria[^\n)]+)", l, re.I)
+            if any(r in role_type or r in c_upper for r in ["(REU)", "(RÉU)", "(INVESTIGADO)", "(INVESTIGADA)", "(INDICIADO)", "(INDICIADA)", "(ACUSADO)", "(ACUSADA)", "(QUERELADO)", "(QUERELADA)", "(AUTOR DO FATO)", "(AUTORA DO FATO)"]):
+                if raw_name and len(raw_name) > 3 and not STATE_ORGANS_BLACKLIST_REGEX.search(raw_name) and raw_name not in reus:
+                    reus.append(raw_name)
+            elif "(ADVOGADO)" in c_upper or "(DEFENSOR" in c_upper or "DEFENSORIA" in role_type:
+                if raw_name and len(raw_name) > 3 and raw_name not in advs:
+                    advs.append(raw_name)
+            elif "(VÍTIMA)" in c_upper or "(VITIMA)" in c_upper:
+                if raw_name and len(raw_name) > 3 and raw_name not in vitimas:
+                    vitimas.append(raw_name)
+            elif "(TESTEMUNHA)" in c_upper:
+                if raw_name and len(raw_name) > 3 and raw_name not in testemunhas:
+                    testemunhas.append(raw_name)
+            elif "(AUTOR)" in c_upper and ("PROMOTORIA" in c_upper or "MINISTÉRIO" in c_upper):
+                prom_m = re.search(r"(\d+ª?\s+Promotoria[^\n)]+)", c, re.I)
                 if prom_m:
                     prom = f"Dr. Promotor de Justiça ({prom_m.group(1).strip()})"
                 else:
                     prom = "Dr. Promotor de Justiça"
 
-            prev_line = l
+        for line in page1_lines:
+            l = line.strip()
+            if not l:
+                continue
+            l_upper = l.upper()
+
+            if "PARTES" in l_upper:
+                in_parties = True
+                continue
+            if in_parties and any(k in l_upper for k in ["DOCUMENTOS", "ID.", "DATA\tDOCUMENTO", "TABELA DE DOCUMENTOS"]):
+                if pending_lines:
+                    process_entry(" ".join(pending_lines))
+                    pending_lines = []
+                in_parties = False
+                break
+            if not in_parties:
+                continue
+            if "PROCURADOR/TERCEIRO VINCULADO" in l_upper:
+                continue
+
+            pending_lines.append(l)
+            comb = " ".join(pending_lines)
+
+            # Check if this closes a role parenthesis
+            m_role = re.search(
+                r"\((?:AUTOR(?:A)?|R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA]|QUERELAD[OA]|QUERELANTE|AUTOR(?:A)?\s+DO\s+FATO|ADVOGAD[OA]|DEFENSOR(?:IA)?(?:\s*\([^)]*\))?|V[IÍ]TIMA|TESTEMUNHA|TERCEIRO\s+INTERESSADO|CUSTOS\s+LEGIS)\)",
+                comb,
+                re.I,
+            )
+            if m_role:
+                process_entry(comb)
+                pending_lines = []
+            elif len(pending_lines) >= 3:
+                process_entry(comb)
+                pending_lines = []
+
+        if pending_lines:
+            process_entry(" ".join(pending_lines))
+
+        # Fallback if no reus found via structured parsing
+        if not reus:
+            prev_line = ""
+            for line in page1_lines:
+                l = line.strip()
+                l_upper = l.upper()
+                if any(k in l_upper for k in ["(REU)", "(RÉU)", "(INVESTIGADO)", "(INVESTIGADA)", "(INDICIADO)", "(INDICIADA)", "(ACUSADO)", "(ACUSADA)", "(QUERELADO)", "(QUERELADA)", "(AUTOR DO FATO)", "(AUTORA DO FATO)"]):
+                    name = re.sub(r"\((?:R[EÉ]U|INVESTIGAD[OA]|INDICIAD[OA]|ACUSAD[OA]|QUERELAD[OA]|AUTOR(?:A)?\s+DO\s+FATO)\)", "", l, flags=re.I).strip()
+                    if not name and prev_line:
+                        name = prev_line
+                    name = re.sub(r"^[A-Z]+:\s*", "", name).strip()
+                    if name and len(name) > 3 and not STATE_ORGANS_BLACKLIST_REGEX.search(name) and name not in reus:
+                        reus.append(name.strip())
+                prev_line = l
 
         return reus, advs, vitimas, testemunhas, prom
 
@@ -490,7 +600,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         has_aij_mention = False
         has_anpp_rejection = False
 
-        if pje_catalog:
+        if pje_catalog and doc is not None:
             for p_doc in pje_catalog:
                 comb = f"{p_doc.doc_name} {p_doc.doc_type}".lower()
                 if any(k in comb for k in ["decis", "despacho", "ato ordinat", "termo", "audiência"]):
@@ -502,70 +612,31 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                     if ANPP_NEGATION_REGEX.search(txt) or "não sendo caso de anpp" in txt or "afasto o anpp" in txt or "recusa do anpp" in txt or "anpp recusado" in txt or "deixo de propor anpp" in txt:
                         has_anpp_rejection = True
 
-        # Check 0: Revocation of ANPP or PSCP (mandatory AIJ - retomada da marcha penal)
-        if pje_catalog:
+        # Check for revocation documents in catalog
+        anpp_rev_doc = None
+        pscp_rev_doc = None
+        if pje_catalog and doc is not None:
             for p_doc in pje_catalog:
                 comb = f"{p_doc.doc_name} {p_doc.doc_type}".lower()
                 if any(k in comb for k in ["decis", "despacho", "ato ordinat", "termo"]):
                     txt = self._extract_doc_text(doc, p_doc)
-                    if ANPP_REVOCATION_REGEX.search(txt) or PSCP_REVOCATION_REGEX.search(txt):
-                        return "AIJ"
+                    if ANPP_REVOCATION_REGEX.search(txt):
+                        anpp_rev_doc = p_doc
+                    if PSCP_REVOCATION_REGEX.search(txt):
+                        pscp_rev_doc = p_doc
 
-        # Check 1: PAnP (Produção Antecipada de Provas - Art. 366 CPP)
-        if re.search(r"\b(produ[cç][aã]o\s+antecipada|panp|art\.?\s*366)\b", h_comb, re.I):
-            return "PAnP"
-        if re.search(r"\bPANP\b", fn_upper):
-            return "PAnP"
-
-        # Check 2: Explicit ANPP in the active designated hearing text (Decision/Intimation)
-        is_anpp_in_hearing = bool(
-            re.search(
-                r"(?:homologa[cç][aã]o\s+d[eo]\s+(?:acordo(?:\s+de\s+n[aã]o\s+persecu[cç][aã]o(?:\s+penal)?)?|anpp)|audi[eê]ncia\s+(?:de\s+anpp|para\s+fins\s+do\s+art\.?\s*28-a|para\s+homologa[cç][aã]o\s+d[eo]\s+acordo))",
-                h_comb,
-                re.I,
-            )
+        # Delegate directly to canonical JEV Classification Hierarchy
+        return JEVDecisionEngine.get_instance().classify_act_hierarchy(
+            h_comb=h_comb,
+            fn_upper=fn_upper,
+            pje_catalog=pje_catalog or [],
+            anpp_rev_doc=anpp_rev_doc,
+            pscp_rev_doc=pscp_rev_doc,
+            has_received_denuncia=has_received_denuncia,
+            has_aij_mention=has_aij_mention,
+            has_anpp_rejection=has_anpp_rejection,
+            has_denuncia=has_denuncia,
         )
-        if is_anpp_in_hearing and not ANPP_NEGATION_REGEX.search(h_comb):
-            return "ANPP"
-
-        # Check 3: Explicit AIJ in the designated hearing text
-        if re.search(r"\b(instru[cç][aã]o(?:\s+e\s+julgamento)?|aij|oitiva\s+d[ae]s?\s+testemunhas?|inquirir\s+testemunhas?|inquiridas?\s+as\s+testemunhas|interrogat[oó]rio\s+d[eo]\s+(?:acusad[oa]|r[eé]u))\b", h_comb, re.I):
-            return "AIJ"
-
-        # Check 4: Custódia in hearing text
-        if re.search(r"\b(audi[eê]ncia\s+de\s+cust[oó]dia|termo\s+de\s+audi[eê]ncia\s+de\s+cust[oó]dia)\b", h_comb, re.I) and not has_denuncia:
-            return "Custódia"
-
-        # Check 5: General received denúncia + AIJ mention in the case
-        if has_received_denuncia and has_aij_mention:
-            return "AIJ"
-
-        # Check 6: Sursis Processual (Art. 89 Lei 9.099/95)
-        if re.search(r"\b(audi[eê]ncia\s+de\s+suspens[aã]o|sursis\s+processual|admonit[oó]ria)\b", h_comb, re.I):
-            return "Sursis"
-
-        # Check 7: Scan backwards across ALL pages of the entire document (never capped)
-        total_p = len(doc)
-        for p in range(total_p - 1, -1, -1):
-            p_txt = doc[p].get_text()
-            if re.search(r"\b(produ[cç][aã]o\s+antecipada|panp|art\.?\s*366)\b", p_txt, re.I):
-                return "PAnP"
-            if re.search(r"(?:homologa[cç][aã]o\s+d[eo]\s+(?:acordo(?:\s+de\s+n[aã]o\s+persecu[cç][aã]o(?:\s+penal)?)?|anpp)|audi[eê]ncia\s+(?:de\s+anpp|para\s+fins\s+do\s+art\.?\s*28-a|para\s+homologa[cç][aã]o\s+d[eo]\s+acordo))", p_txt, re.I):
-                if not ANPP_NEGATION_REGEX.search(p_txt) and not has_anpp_rejection:
-                    return "ANPP"
-            if re.search(r"\b(instru[cç][aã]o(?:\s+e\s+julgamento)?|aij|oitiva\s+d[ae]s?\s+testemunhas?|inquirir\s+testemunhas?)\b", p_txt, re.I):
-                return "AIJ"
-
-        # Check 8: Filename fallback
-        if "ANPP" in fn_upper and not has_anpp_rejection:
-            return "ANPP"
-        if "AIJ" in fn_upper:
-            return "AIJ"
-        if "CUSTÓDIA" in fn_upper or "CUSTODIA" in fn_upper:
-            return "Custódia"
-
-        # Standard Default for criminal proceedings
-        return "AIJ"
 
     def _extract_hearing_details(
         self,
@@ -581,52 +652,73 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         if hearing_text:
             m = TEAMS_REGEX.search(hearing_text) or MEET_REGEX.search(hearing_text)
             if m:
-                meeting_link = m.group(1).rstrip(">)]., \r\n")
+                meeting_link = m.group(0).rstrip(">)]., \r\n")
 
         # 2. Search subsequent notifications / intimations in catalog
         if not meeting_link:
             for p_doc in reversed(pje_catalog):
                 comb = f"{p_doc.doc_name} {p_doc.doc_type}".lower()
-                if any(k in comb for k in ["intimação", "mandado", "certidão", "diligência", "audiência", "despacho", "decisão"]):
+                if any(k in comb for k in ["intimação", "mandado", "certidão", "diligência", "audiência", "despacho", "decisão", "link"]):
                     d_txt = self._extract_doc_text(doc, p_doc)
                     m = TEAMS_REGEX.search(d_txt) or MEET_REGEX.search(d_txt)
                     if m:
-                        meeting_link = m.group(1).rstrip(">)]., \r\n")
+                        meeting_link = m.group(0).rstrip(">)]., \r\n")
                         break
 
-        # 3. Fallback scan across ALL pages of the entire document (never capped)
+        # 3. Fallback scan annotations and text in the last 25 pages
         if not meeting_link:
             total_p = len(doc)
-            for p in range(total_p - 1, -1, -1):
-                txt = doc[p].get_text()
+            for p in range(total_p - 1, max(-1, total_p - 25), -1):
+                page = doc[p]
+                for link in page.get_links():
+                    uri = link.get("uri", "")
+                    if uri and (TEAMS_REGEX.search(uri) or MEET_REGEX.search(uri)):
+                        m_u = TEAMS_REGEX.search(uri) or MEET_REGEX.search(uri)
+                        meeting_link = m_u.group(0).rstrip(">)]., \r\n")
+                        break
+                if meeting_link:
+                    break
+                txt = page.get_text()
                 m = TEAMS_REGEX.search(txt) or MEET_REGEX.search(txt)
                 if m:
-                    meeting_link = m.group(1).rstrip(">)]., \r\n")
+                    meeting_link = m.group(0).rstrip(">)]., \r\n")
                     break
+
+        if meeting_link and not meeting_link.startswith("http"):
+            meeting_link = "https://" + meeting_link
 
         is_in_person = meeting_link is None
 
         # Date & Time Extraction:
-        # Step 1: Check filename first
-        m_inv = re.search(r"(\d{1,2}h(?:\d{2})?)\s*[-–]\s*(\d{1,2})[./](\d{1,2})[./](\d{2,4})", filename, re.I)
+        # Step 1: Check filename first (strip CNJ numbers to prevent false date matches)
+        fn_clean = re.sub(r"\b\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}(?:-\d+)?\b", "", filename)
+        fn_clean = re.sub(r"\b\d\.\d{2}\.\d{4}(?:-\d+)?\b", "", fn_clean)
+
+        m_inv = re.search(r"(\d{1,2}h(?:\d{2})?)\s*[-–]\s*(\d{1,2})[./](\d{1,2})[./](\d{2,4})", fn_clean, re.I)
         if m_inv:
             t_str, d, m, y = m_inv.groups()
-            yr = y[-2:] if len(y) == 4 else y
-            tm = t_str if "min" in t_str else (t_str + "00min" if len(t_str) <= 3 else t_str)
-            return f"{int(d):02d}.{int(m):02d}.{yr} às {tm}", meeting_link, is_in_person
+            d_i, m_i = int(d), int(m)
+            if 1 <= d_i <= 31 and 1 <= m_i <= 12:
+                yr = y[-2:] if len(y) == 4 else y
+                tm = t_str if "min" in t_str else (t_str + "00min" if len(t_str) <= 3 else t_str)
+                return f"{d_i:02d}.{m_i:02d}.{yr} às {tm}", meeting_link, is_in_person
 
         m_fn = re.search(
             r"(\d{1,2})[./](\d{1,2})[./](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
-            filename,
+            fn_clean,
             re.I,
         )
         if m_fn:
             d, m, y, h, mn_col, mn_h = m_fn.groups()
-            yr = y[-2:] if len(y) == 4 else y
-            mn = mn_col or mn_h or "00"
-            if not mn:
-                mn = "00"
-            return f"{int(d):02d}.{int(m):02d}.{yr} às {int(h):02d}h{mn}min", meeting_link, is_in_person
+            d_i, m_i, h_i = int(d), int(m), int(h)
+            y_i = int(y)
+            y_valid = (2020 <= y_i <= 2035) if len(y) == 4 else (20 <= y_i <= 35)
+            if 1 <= d_i <= 31 and 1 <= m_i <= 12 and 0 <= h_i <= 23 and y_valid:
+                yr = y[-2:] if len(y) == 4 else y
+                mn = mn_col or mn_h or "00"
+                if not mn:
+                    mn = "00"
+                return f"{d_i:02d}.{m_i:02d}.{yr} às {h_i:02d}h{mn}min", meeting_link, is_in_person
 
         # Step 2: Search in hearing_text
         if hearing_text:
@@ -634,9 +726,18 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             if dt_h:
                 return dt_h, meeting_link, is_in_person
 
-        # Step 3: Scan ALL pages backwards from the end of the document (never capped)
+        # Step 3: Search relevant hearing/mandado/intimação documents in catalog
+        for p_doc in reversed(pje_catalog):
+            comb = f"{p_doc.doc_name} {p_doc.doc_type}".lower()
+            if any(k in comb for k in ["audiência", "audiencia", "intimação", "mandado", "despacho", "decisão"]):
+                d_txt = self._extract_doc_text(doc, p_doc)
+                dt_d = self._parse_datetime_from_text(d_txt)
+                if dt_d:
+                    return dt_d, meeting_link, is_in_person
+
+        # Step 4: Fallback scan ONLY the last 5 pages of the document
         total_p = len(doc)
-        for p in range(total_p - 1, -1, -1):
+        for p in range(total_p - 1, max(-1, total_p - 6), -1):
             txt = doc[p].get_text()
             dt_p = self._parse_datetime_from_text(txt)
             if dt_p:
@@ -657,12 +758,14 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         )
         if m_pt:
             d, m_name, y, h, mn_col, mn_h = m_pt.groups()
-            m_num = MONTH_MAP.get(m_name.lower().strip(), "07")
-            yr = y[-2:] if len(y) == 4 else y
-            mn = mn_col or mn_h or "00"
-            if not mn:
-                mn = "00"
-            return f"{int(d):02d}.{m_num}.{yr} às {int(h):02d}h{mn}min"
+            d_i, h_i = int(d), int(h)
+            if 1 <= d_i <= 31 and 0 <= h_i <= 23:
+                m_num = MONTH_MAP.get(m_name.lower().strip(), "07")
+                yr = y[-2:] if len(y) == 4 else y
+                mn = mn_col or mn_h or "00"
+                if not mn:
+                    mn = "00"
+                return f"{d_i:02d}.{m_num}.{yr} às {h_i:02d}h{mn}min"
 
         # 2. Numeric date format:
         # e.g. "no dia 31/07/2026 às 11:00 horas" or "em 23/07/26 às 13h"
@@ -673,25 +776,33 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         )
         if m_num:
             d, m, y, h, mn_col, mn_h = m_num.groups()
-            yr = y[-2:] if len(y) == 4 else y
-            mn = mn_col or mn_h or "00"
-            if not mn:
-                mn = "00"
-            return f"{int(d):02d}.{int(m):02d}.{yr} às {int(h):02d}h{mn}min"
+            d_i, m_i, h_i = int(d), int(m), int(h)
+            y_i = int(y)
+            y_valid = (2020 <= y_i <= 2035) if len(y) == 4 else (20 <= y_i <= 35)
+            if 1 <= d_i <= 31 and 1 <= m_i <= 12 and 0 <= h_i <= 23 and y_valid:
+                yr = y[-2:] if len(y) == 4 else y
+                mn = mn_col or mn_h or "00"
+                if not mn:
+                    mn = "00"
+                return f"{d_i:02d}.{m_i:02d}.{yr} às {h_i:02d}h{mn}min"
 
         # 3. General scheduling phrase fallback
         m_gen = re.search(
-            r"(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+em)\s+(\d{1,2}[./]\d{1,2}[./]\d{2,4})\s*(?:,|às|as)\s*(\d{1,2}(?::\d{2}|h\d{0,2}))",
+            r"(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+em)\s+(\d{1,2})[./](\d{1,2})[./](\d{2,4})\s*(?:,|às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2}))",
             txt,
             re.IGNORECASE,
         )
         if m_gen:
-            d_str, t_str = m_gen.groups()
-            d_clean = _format_date_short(d_str).replace("/", ".")
-            t_clean = t_str.replace(":", "h")
-            if not t_clean.endswith("min") and "h" in t_clean and len(t_clean) <= 3:
-                t_clean += "00min"
-            return f"{d_clean} às {t_clean}"
+            d, m, y, h, mn_col, mn_h = m_gen.groups()
+            d_i, m_i, h_i = int(d), int(m), int(h)
+            y_i = int(y)
+            y_valid = (2020 <= y_i <= 2035) if len(y) == 4 else (20 <= y_i <= 35)
+            if 1 <= d_i <= 31 and 1 <= m_i <= 12 and 0 <= h_i <= 23 and y_valid:
+                yr = y[-2:] if len(y) == 4 else y
+                mn = mn_col or mn_h or "00"
+                if not mn:
+                    mn = "00"
+                return f"{d_i:02d}.{m_i:02d}.{yr} às {h_i:02d}h{mn}min"
 
         return None
 
@@ -758,20 +869,22 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             if not STATE_ORGANS_BLACKLIST_REGEX.search(n.strip())
         ]
 
-        # Find qualification block in Denúncia
+        # Find qualification block in Denúncia / Queixa-Crime
         qual_pattern = re.compile(
             r"(?:"
             r"(?:(?:III|II|I)\)?\s*(?:Acusad[oa]s?|Denunciad[oa]s?))|"
             r"DENUNCIADO\(?A?\)?:?|"
             r"DOS\s+DENUNCIADOS:?|"
             r"DA\s+QUALIFICA[CÇ][AÃ]O(?:\s+D[OE]S\s+DENUNCIAD[OA]S)?|"
-            r"oferecer\s+den[uú]ncia\s+(?:em\s+desfavor\s+de|contra)[:\s]*|"
-            r"oferece\s+den[uú]ncia\s+(?:em\s+desfavor\s+de|contra)[:\s]*|"
-            r"vem\s+perante\s+V\.\s*Exa\.?[^\n]*denunciar[:\s]*"
+            r"oferecer\s+(?:a\s+presente:?\s*)?(?:queixa(?:-crime)?\s+)?(?:em\s+desfavor\s+de|contra|em\s+face\s+de)[:\s]*|"
+            r"oferece\s+(?:a\s+presente:?\s*)?(?:queixa(?:-crime)?\s+)?(?:em\s+desfavor\s+de|contra|em\s+face\s+de)[:\s]*|"
+            r"em\s+face\s+de[:\s]*|"
+            r"queixa(?:-crime)?\s+(?:em\s+face\s+de|contra)[:\s]*|"
+            r"vem\s+perante\s+V\.\s*Exa\.?[^\n]*(?:denunciar|oferecer\s+queixa)[:\s]*"
             r")"
             r"(.*?)"
             r"(?:"
-            r"(?:^|\n)\s*(?:(?:IV|V|VI)\)\s*Narrativa|(?:IV|V|VI)\)|DOS\s+FATOS|I\s*[-–.]\s*DOS\s+FATOS|\n\s*Consta\s+d[oe]s\s+(?:inclus[oa]s|referidos)|pela\s+pr[aá]tica\s+dos\s+fatos|pelos\s+fatos\s+a\s+seguir|pelos\s+fatos\s+e\s+fundamentos)"
+            r"(?:^|\n)\s*(?:(?:IV|V|VI)\)\s*Narrativa|(?:IV|V|VI)\)|DOS\s+FATOS|FATOS|I\s*[-–.]\s*DOS\s+FATOS|\n\s*Consta\s+d[oe]s\s+(?:inclus[oa]s|referidos)|pela\s+pr[aá]tica\s+dos\s+fatos|pelos\s+fatos\s+a\s+seguir|pelos\s+fatos\s+e\s+fundamentos|DELIMITA[CÇ][AÃ]O)"
             r")",
             re.IGNORECASE | re.DOTALL,
         )
@@ -782,13 +895,25 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             raw_qual = re.sub(r"[ \t]+", " ", raw_qual)
 
         if not names:
-            # Fallback extraction from raw qualification
-            all_caps_names = re.findall(r"\b([A-ZÁÉÍÓÚÂÊÔÃÕ]{3,}(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕ]{2,}){1,5})\b", raw_qual)
-            names = [
-                n for n in all_caps_names
-                if not any(ex in n for ex in ["MINISTÉRIO", "ESTADO", "TRIBUNAL", "PODER", "VARA", "PROMOTORIA", "DENÚNCIA", "JUSTIÇA"])
-                and not STATE_ORGANS_BLACKLIST_REGEX.search(n.strip())
-            ]
+            # Fallback 1: Extract defendant directly from complaint text (queixa-crime / denúncia)
+            m_face = re.search(
+                r"(?:em\s+face\s+de|contra|denunciar|oferecer\s+den[uú]ncia\s+contra)\s+([A-ZÁÉÍÓÚÂÊÔÃÕ][A-ZÁÉÍÓÚÂÊÔÃÕ\s]{3,60}?)(?:,\s*(?:brasileir|casad|solteir|divorciad|nascid|filh|portador|advogad|inscrit))",
+                denuncia_text,
+                re.IGNORECASE,
+            )
+            if m_face:
+                cand = m_face.group(1).strip()
+                if not STATE_ORGANS_BLACKLIST_REGEX.search(cand):
+                    names.append(cand.title())
+
+            # Fallback 2: extraction from raw qualification
+            if not names and raw_qual:
+                all_caps_names = re.findall(r"\b([A-ZÁÉÍÓÚÂÊÔÃÕ]{3,}(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕ]{2,}){1,5})\b", raw_qual)
+                names = [
+                    n.title() for n in all_caps_names
+                    if not any(ex in n for ex in ["MINISTÉRIO", "ESTADO", "TRIBUNAL", "PODER", "VARA", "PROMOTORIA", "DENÚNCIA", "JUSTIÇA", "OAB"])
+                    and not STATE_ORGANS_BLACKLIST_REGEX.search(n.strip())
+                ]
 
         # Extract text from Inquérito Policial / APF if needed for detailed qualification
         ip_text = ""
@@ -873,6 +998,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                     status=status,
                     citation_id=citation_id,
                     subpoena_id=subpoena_id,
+                    qualification=d_qual,
                 )
             )
 
@@ -886,15 +1012,23 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         name_clean = name.strip()
         if not name_clean:
             return ""
+        esc_name = _make_accent_tolerant_regex(name_clean)
         first_name = name_clean.split()[0] if name_clean.split() else ""
-        esc_name = re.escape(name_clean)
+        esc_first_surname = ""
+        if len(name_clean.split()) >= 2:
+            esc_first_surname = rf"{_make_accent_tolerant_regex(first_name)}[^\n,;]+?{_make_accent_tolerant_regex(name_clean.split()[-1])}"
+
+        name_rx = rf"(?:{esc_name}|{esc_first_surname})" if esc_first_surname else esc_name
 
         # 1. Capture multiline qualification block without premature stopping at ; or \n or blank lines
+        lookahead = (
+            r"(?=(?:\n\s*(?:(?:[I|V|X]+\)?\s*[-–.]?\s*)?(?:DOS\s+FATOS|FATOS|DA\s+IMPUTA[CÇ][AÃ]O|DELIMITA[CÇ][AÃ]O|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL\s+DE\s+TESTEMUNHAS|DA\s+QUALIFICA[CÇ][AÃ]O|DA\s+CONTEXTUALIZA[CÇ][AÃ]O|CONTEXTUALIZA[CÇ][AÃ]O|HIST[OÓ]RICO)|Vem\s+perante|pela\s+pr[aá]tica|oferecer\s+den[uú]ncia)|"
+            r"(?:,\s*|[;.]\s*|\n\s*)(?:pelos?\s+fatos\s+e\s+fundamentos|(?:em\s+raz[aã]o|por\s+motivo|diante)\s+d[oae]s\s+(?:motivos|fatos)\s+f[aá]ticos|passa\s+a\s+expor)|"
+            r"\n\s*(?:\d+[\.\)]\s*)?[A-ZÁÉÍÓÚ]{3,}(?:\s+[A-ZÁÉÍÓÚ]{2,}){1,4},?\s*(?:brasileir|solteir|casad|divorciad|nascid|filh|portador|residente|rg\b|cpf\b|vulgo)|"
+            r"$))"
+        )
         qual_pattern = re.compile(
-            rf"(?:^|\n|[;.]\s*)\b({esc_name}[\s\S]{{1,1200}}?)"
-            rf"(?=(?:\n\s*(?:(?:[I|V|X]+\)?\s*)?(?:DOS\s+FATOS|DA\s+IMPUTA[CÇ][AÃ]O|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL\s+DE\s+TESTEMUNHAS|DA\s+QUALIFICA[CÇ][AÃ]O)|Vem\s+perante|pela\s+pr[aá]tica|oferecer\s+den[uú]ncia)|"
-            rf"\n\s*(?:\d+[\.\)]\s*)?[A-ZÁÉÍÓÚ]{{3,}}(?:\s+[A-ZÁÉÍÓÚ]{{2,}}){{1,4}},?\s*(?:brasileir|solteir|casad|divorciad|nascid|filh|portador|residente|rg\b|cpf\b|vulgo)|"
-            rf"$))",
+            rf"(?:^|\n|[;.]\s*|em\s+face\s+de\s+)\b({name_rx}[\s\S]{{1,1200}}?)" + lookahead,
             re.IGNORECASE,
         )
 
@@ -908,6 +1042,12 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             m2 = qual_pattern.search(denuncia_text)
             if m2:
                 chunk = _clean_legal_text(m2.group(1)).strip(" ;.\n")
+
+        if chunk:
+            chunk = re.sub(r"-\s*\d+\s+de\s+\d+\s+laudas\s*-", "", chunk, flags=re.I)
+            chunk = re.sub(r"GRUPO\s+DE\s+ATUA[CÇ][AÃ]O\s+ESPECIAL\s+DE\s+COMBATE\s+AO\s+CRIME\s+ORGANIZADO[^\n]*", "", chunk, flags=re.I)
+            chunk = re.sub(r"\d+ª\s+PROMOTORIA\s+DE\s+JUSTI[CÇ]A[^\n]*", "", chunk, flags=re.I)
+            chunk = _clean_legal_text(chunk).strip(" ;.\n")
 
         # Check completeness of qualification: filiação, RG, CPF
         has_filiacao = bool(re.search(r"\bfilh[oa]\b|\bm[aã]e\b|\bpai\b|\bgenitor", chunk, re.I))
@@ -946,6 +1086,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                             chunk = f"{chunk.rstrip(' ,;.')}, {', '.join(supplements)}"
 
         if chunk:
+            chunk = re.sub(r"[,;.]\s*pelos?\s+fatos\s+e\s+fundamentos.*$", "", chunk, flags=re.I | re.DOTALL).strip(" ;.\n")
             chunk = re.sub(r"[ \t]+", " ", chunk)
             return chunk
 
@@ -965,31 +1106,39 @@ class OfflineExtractionEngine(BaseExtractionEngine):
 
         # 1. Search for explicit section header (e.g. 'VI) Imputação legal' or 'DA IMPUTAÇÃO')
         m_sec = re.search(
-            r"(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL)\b)[^\n]+)?)",
+            r"(?:(?:VI|V|IV|III|II|I)\)?\s*Imputa[cç][aã]o(?:\s*legal)?|DA\s+IMPUTA[CÇ][AÃ]O|Tipifica[cç][aã]o\s*legal|Tipifica[cç][aã]o)[:\s\n]+([A-ZÁÉÍÓÚ][^\n]+(?:\n(?!\b(?:VII|VI|V|IV|III|II|I\)|DOS\s+PEDIDOS|DO\s+PEDIDO|ROL|FATOS)\b)[^\n]+)?)",
             denuncia_text,
             re.IGNORECASE,
         )
         if m_sec:
             raw_imp = m_sec.group(1).strip()
-            raw_imp = _clean_legal_text(raw_imp)
-            raw_imp = re.sub(r"\s+", " ", raw_imp).strip()
-            if len(raw_imp) > 10:
-                base_imputation = raw_imp
-
-        # 2. Search for standard closing phrase in Denúncia
-        if not base_imputation:
-            m_crime = re.search(
-                r"(?:pr[aá]tica\s+do\s+crime\s+de|como\s+incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]|condena[cç][aã]o\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao])\s*([^\n.]+?(?:art(?:igo)?\.?\s*\d+[^\n.]+))",
-                denuncia_text,
-                re.IGNORECASE,
-            )
-            if m_crime:
-                raw_imp = m_crime.group(1).strip()
+            is_narrative = any(k in raw_imp.lower() for k in ["imputa à querelada", "imputa ao querelado", "consta dos autos", "o ministério público", "fatos criminosos autônomos"])
+            has_penal_article = bool(re.search(r"\bart(?:igo)?s?\b\.?\s*\d+", raw_imp, re.I))
+            if has_penal_article and not is_narrative and len(raw_imp) <= 250:
                 raw_imp = _clean_legal_text(raw_imp)
                 raw_imp = re.sub(r"\s+", " ", raw_imp).strip()
                 base_imputation = raw_imp
 
-        # 3. Global scan for ALL penal articles, paragraphs, incisos, special laws (ECA, Drogas, Armamento, Maria da Penha) and concurso (69, 70, 71)
+        # 2. Search for standard closing / pedidos phrase in Denúncia or Queixa-Crime
+        if not base_imputation:
+            pat_crime = re.compile(
+                r"(?:condena[cç][aã]o\s+(?:d[oa]\s+(?:querelad[oa]|acusad[oa]|denunciad[oa]|r[eé]u)[a-z]*|d[eo]s?\s+(?:acusad[oa]s?|denunciad[oa]s?|r[eé]us?))?\s*)?"
+                r"(?:como\s+incurs[oa]\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]\s*|incurso\s+n[ao]s?\s+(?:penas|san[cç][oõ]es|disposi[cç][oõ]es)\s+d[ao]\s*|"
+                r"condena[cç][aã]o\s+(?:d[oa]\s+querelad[oa]\s+)?pela\s+pr[aá]tica[,\s]+|"
+                r"(?:em\s+raz[aã]o\s+d[oe]|pelo)\s+(?:cometimento\s+do\s+)?crime\s+previsto\s+n[ao]\s+)"
+                r"([\s\S]*?(?:art(?:igo)?\.?\s*\d+[\s\S]*?))"
+                r"(?=[;.]\s*(?:\n\s*[a-zA-ZÁÉÍÓÚ\d\-]|\n\s*\n|$)|$)",
+                re.IGNORECASE,
+            )
+            m_crime = pat_crime.search(_clean_legal_text(denuncia_text))
+            if m_crime:
+                raw_imp = m_crime.group(1).strip()
+                raw_imp = _clean_legal_text(raw_imp)
+                raw_imp = re.sub(r"\s+", " ", raw_imp).strip()
+                if len(raw_imp) > 5:
+                    base_imputation = raw_imp
+
+        # 3. Global scan for substantive penal articles, paragraphs, incisos, special laws and concurrence
         all_articles: List[str] = []
 
         # Penal articles with paragraphs (§), incisos, alíneas, e.g., "art. 157, § 2º, II, e § 2º-A, I, do CP"
@@ -1015,40 +1164,38 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         )
         for l in law_rx.findall(denuncia_text):
             l_clean = l.strip(" ,.;")
-            if l_clean and l_clean not in all_articles:
+            if l_clean and l_clean not in all_articles and not is_procedural_or_constitutional(l_clean, denuncia_text):
                 all_articles.append(l_clean)
 
-        # Crime concurrence (arts. 69, 70, 71 do CP)
+        # Crime concurrence (arts. 69, 70, 71 do CP - only substantive CP, NEVER CPP!)
         concurso_rx = re.compile(
-            r"\bart[s]?\.?\s*(?:69|70|71)[^\n,.;]*(?:do\s+CP|do\s+C[oó]digo\s+Penal)?",
+            r"\bart[s]?\.?\s*(?:69|70|71)\b[^\n,.;)]*(?:do\s+CP|do\s+C[oó]digo\s+Penal)?",
             re.IGNORECASE,
         )
         for c in concurso_rx.findall(denuncia_text):
-            c_clean = c.strip(" ,.;")
-            if c_clean and c_clean not in all_articles:
+            c_clean = c.strip(" ,.;)")
+            if c_clean and c_clean not in all_articles and not is_procedural_or_constitutional(c_clean, denuncia_text):
                 all_articles.append(c_clean)
 
         if base_imputation:
+            base_imputation = re.sub(r"^[:\s\d\.\)\-]+", "", base_imputation).strip()
             final_imp = base_imputation
-            missing = []
+            # Supplement key missing substantive elements (e.g. corruption of minors / ECA)
             for art in all_articles:
-                art_nums = re.findall(r"\d+", art)
-                if art_nums:
-                    num_found = any(n in final_imp for n in art_nums)
-                    has_paragraph_in_art = "§" in art
-                    has_paragraph_in_imp = "§" in final_imp
-                    has_eca_in_art = "244" in art or "ECA" in art
-                    has_eca_in_imp = "244" in final_imp or "ECA" in final_imp
-
-                    if not num_found or (has_paragraph_in_art and not has_paragraph_in_imp) or (has_eca_in_art and not has_eca_in_imp):
-                        if art not in final_imp:
-                            missing.append(art)
-            if missing:
-                final_imp += " c/c " + " c/c ".join(missing)
+                if ("244" in art or "eca" in art.lower()) and ("244" not in final_imp and "eca" not in final_imp.lower()):
+                    final_imp += f" c/c {art}"
             return annotate_imputation_text(final_imp)
 
         if all_articles:
-            return annotate_imputation_text(f"Imputação penal ({', '.join(all_articles)})")
+            unique_articles = []
+            seen_clean = set()
+            for art in all_articles:
+                norm = re.sub(r"\s+", " ", art).replace("§ ", "§").strip().lower()
+                if norm not in seen_clean:
+                    seen_clean.add(norm)
+                    unique_articles.append(art)
+            joined = " c/c ".join(unique_articles) if len(unique_articles) <= 4 else ", ".join(unique_articles)
+            return annotate_imputation_text(joined)
 
         return "Artigo de lei a ser apurado"
 
@@ -1236,7 +1383,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         if not raw_text:
             return []
 
-        # 1. Stop delimiters (procedural requests, witness lists, cotas)
+        # 1. Stop delimiters (procedural requests, witness lists, tipicidade, cotas)
         stop_regex = re.compile(
             r"(?:"
             r"(?:^|\n)\s*Termos\s+em\s+que[,\s]+pede|"
@@ -1247,9 +1394,14 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             r"(?:^|\n)\s*ROL\s+DE\s+TESTEMUNHAS|"
             r"(?:^|\n)\s*ROL\s+TESTEMUNHAL|"
             r"(?:^|\n)\s*TESTEMUNHAS\s*:|"
+            r"(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?ROL\s+DE\s+TESTEMUNHAS/DECLARANTES|"
             r"(?:^|\n)\s*COTA\s*(?:[ÀA]\s*DENÚNCIA|DE\s*OFERECIMENTO)?|"
-            r"(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?(?:DOS\s+)?PEDIDOS?\b|"
-            r"(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?REQUERIMENTOS?\b|"
+            r"(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+)?PEDIDOS?\b|"
+            r"(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?REQUERIMENTOS?\b|"
+            r"(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DA\s+)?TIPICIDADE\b|"
+            r"(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DO\s+)?DIREITO\b|"
+            r"(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+)?FUNDAMENTOS\s+JUR[IÍ]DICOS\b|"
+            r"(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DA\s+)?COMPET[EÊ]NCIA\b|"
             r"(?:Ante|Diante)\s+[^\n]*exposto[^\n]*requer|"
             r"Requer\s+o\s+Minist[eé]rio\s+P[uú]blico|"
             r"(?:^|\n)\s*Assinaturas?\s+do\s+Documento"
@@ -1260,9 +1412,11 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         # 2. Start delimiters
         start_regex = re.compile(
             r"(?:"
-            r"pelos?\s+fatos\s+e\s+fundamentos\s+que\s+passa\s+a\s+expor[^\n]*\n|"
+            r"(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+FATOS|FATOS(?:\s+NARRADOS)?|NARRATIVA\s+F[AÁ]TICA(?:\s+CRIMINOSA)?|(?:DA\s+)?CONTEXTUALIZA[CÇ][AÃ]O(?:\s+DA\s+INVESTIGA[CÇ][AÃ]O)?|HIST[OÓ]RICO\s+D[OE]S\s+FATOS)[^\n]*\n|"
+            r"pelos?\s+fatos\s+e\s+fundamentos(?:\s+de\s+direito)?(?:\s+(?:que\s+passa\s+a\s+expor|a\s+seguir(?:\s+(?:expostos?|narrados?))?|adiante\s+delineados?))?[^\n]*\n|"
+            r"(?:em\s+raz[aã]o|por\s+motivo|diante)\s+d[oae]s\s+(?:motivos|fatos)\s+f[aá]ticos(?:\s+que\s+passa\s+a\s+expor)?[^\n]*\n|"
+            r"passa\s+a\s+expor:?[^\n]*\n|"
             r"pela\s+pr[aá]tica\s+dos\s+fatos\s+delituosos\s+a\s+seguir\s+narrados[^\n]*\n|"
-            r"(?:^|\n)\s*(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+FATOS|NARRATIVA\s+F[AÁ]TICA(?:\s+CRIMINOSA)?|CONTEXTUALIZA[CÇ][AÃ]O\s+DA\s+INVESTIGA[CÇ][AÃ]O)[^\n]*\n|"
             r"(?:^|\n)\s*(?:[IVXLCDM]+\)?\s*)?(?:1\)?\s*[-–.]?\s*)?(Consta\s+(?:[nd][oe]s|[nd]as)\s+(?:inclus[oa]s|referidos)\s+autos[^\n]*\n)"
             r")",
             re.IGNORECASE,
@@ -1277,7 +1431,16 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             else:
                 facts_text = raw_text[m_start.end():]
         else:
-            facts_text = raw_text
+            # Fallback: search for boundary after defendant qualification
+            m_after_qual = re.search(
+                r"(?:em\s+face\s+de|em\s+desfavor\s+de|contra|denunciad[oa]s?:?)\s+[\s\S]+?(?:pelos\s+fatos\s+e\s+fundamentos[^\n]*|(?:em\s+raz[aã]o|por\s+motivo|diante)\s+d[oae]s\s+(?:motivos|fatos)\s+f[aá]ticos[^\n]*|seguintes:?\s*|adiante:\s*|passa\s+a\s+expor:?\s*)\n",
+                raw_text,
+                re.IGNORECASE,
+            )
+            if m_after_qual:
+                facts_text = raw_text[m_after_qual.end():]
+            else:
+                facts_text = raw_text
 
         facts_text = re.sub(r"^(?:[IVXLCDM]+\)?\s*)?Narrativa\s+f[aá]tica(?:\s+criminosa)?\s*", "", facts_text, flags=re.I).strip()
 
@@ -1289,6 +1452,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         cleaned_lines: List[str] = []
 
         header_patterns = [
+            r"^\s*[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\s*$",
             r"^\s*MINIST[EÉ]RIO\s+P[UÚ]BLICO",
             r"PROMOTORIA\s+DE\s+JUSTI[CÇ]A",
             r"Defesa\s+dos\s+Direitos",
@@ -1301,6 +1465,16 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             r"^\s*Ilustr[ií]ssimo",
             r"^\s*Merit[ií]ssimo",
             r"^\s*Vossa\s+Excelência",
+            r"^\s*DAS\s+VARAS\s+CRIMINAIS",
+            r"^\s*COMARCA\s+DE\s+NATAL",
+            r"^\s*Ref\.:\s*Processo",
+            r"^\s*Origem:\s*DELEGACIA",
+            r"GABINETE\s+\d+",
+            r"N[UÚ]CLEO\s+REGIONAL",
+            r"-\s*\d+\s+de\s+\d+\s+laudas\s*-",
+            r"GRUPO\s+DE\s+ATUA[CÇ][AÃ]O\s+ESPECIAL",
+            r"^\s*ADVOGADO\b",
+            r"^\s*OAB/",
             r"^\s*Inqu[eé]rito\s+Policial\s+n[ºo]",
             r"^\s*Autos\s+n[ºo]",
             r"^\s*TCO\s+n[ºo]",
@@ -1322,6 +1496,9 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         for l in lines:
             l_s = l.strip()
             if not l_s or header_re.search(l_s):
+                continue
+            # Remove party qualification lines that accidentally slip in
+            if re.search(r"\b(?:inscrit[oa]\s+na\s+OAB|portador[oa]\s+da\s+c[eé]dula\s+de\s+identidade|filh[oa]\s+de\s+Rita|residente\s+e\s+domiciliad[oa]\s+na\s+Avenida)\b", l_s, re.I):
                 continue
             cleaned_lines.append(l_s)
 
@@ -1390,8 +1567,12 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             type_c = p_doc.doc_type.lower().strip()
             comb = f"{name_c} {type_c}"
 
-            # Filter out non-defense pieces (denúncias, decisões, despachos, mandados, bulk)
-            if any(ex in comb for ex in ["denúncia", "denuncia", "decisão", "decisao", "despacho", "mandado", "extrato", "dados telef", "laudo", "inquérito", "certidão de triagem"]):
+            # Filter out non-defense pieces (denúncias, decisões, despachos, mandados, bulk, police, MP)
+            if any(ex in comb for ex in [
+                "denúncia", "denuncia", "decisão", "decisao", "despacho", "mandado", "extrato",
+                "dados telef", "laudo", "inquérito", "inquerito", "certidão de triagem",
+                "delegacia", "polícia", "policia", "policial", "do mp para o juízo", "da delegacia para o juízo"
+            ]) or re.search(r"\b(?:ip|apf)\s+\d+", comb) or "mprn" in comb or type_c.startswith("do mp"):
                 continue
 
             # Candidate if named Resposta à Acusação / Defesa Prévia OR generic petition/manifestação
@@ -1599,13 +1780,18 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             re.IGNORECASE,
         )
         m_stop = stop_pat.search(sub)
-        rol_body = sub[:m_stop.start()] if m_stop else sub
+        rol_body = sub[:m_stop.start()] if m_stop else "\n".join(sub.split("\n")[:30])
 
         blacklist_rx = re.compile(
             r"\b(?:"
             r"rua|avenida|travessa|alameda|telefone|e-mail|whatsapp|cpf|rg|cep|"
             r"residente|domiciliado|bairro|natal|termos|requer|pede|defensoria|advogado|"
-            r"mesmas\s+testemunhas|reitera|protesta|apresenta|oab|comarca"
+            r"mesmas\s+testemunhas|reitera|protesta|apresenta|oab|comarca|inicialmente|"
+            r"ministério\s+público|acusatória|exordial|oitiva|audiência|instrução|intimação|"
+            r"pessoal|todas\s+as\s+testemunhas|todas|declarantes|mesmo\s+rol|adota\s+o\s+rol|"
+            r"de\s+todas|seguintes\s+testemunhas|inclui\s+as\s+seguintes|arrola\s+as\s+mesmas|"
+            r"abaixo\s+arroladas|abaixo\s+indicadas|respeitosamente|procurador|direito|"
+            r"documento|assinatura|assinado"
             r")\b",
             re.IGNORECASE,
         )
@@ -1613,13 +1799,22 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         names = []
         lines = [l.strip() for l in rol_body.split("\n") if l.strip()]
         for line in lines:
+            clean_line = re.sub(r"^[\s\u2022\uf0b7•*\-–—]+", "", line).strip()
+            if not clean_line or blacklist_rx.search(clean_line.lower()):
+                continue
             m = re.match(
-                r"^(?:\d+[\s.)-]+)?([A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ\s.]{3,60}?)(?:[-–,]\s*|\s*\((.*?)\)|\s+[-–]\s*(.*)|$)",
-                line,
+                r"^(?:\d+[\s.)-]+)?([A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-záàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ\s.]{3,60}?)(?:[:;,–-]\s*|\s*\((.*?)\)|\s+[-–]\s*(.*)|$)",
+                clean_line,
             )
             if m:
                 w_name = m.group(1).strip()
-                if len(w_name) > 3 and not blacklist_rx.search(w_name.lower()):
+                words = w_name.split()
+                if (
+                    len(words) >= 2
+                    and len(w_name) > 5
+                    and not blacklist_rx.search(w_name.lower())
+                    and not re.search(r"\b(?:n[º°]|apt|casa|lote|bloco|quadra)\b", clean_line, re.I)
+                ):
                     names.append(w_name.title())
 
         return names
@@ -1705,13 +1900,18 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             txt += p_txt + "\n"
         txt_l = txt.lower()
 
-        # 1. Denúncia
+        # 1. Denúncia / Queixa-Crime / Petição Inicial
         if "denúncia" in name_l or "denuncia" in name_l:
             if "não foi proposto anpp" in txt_l or "deixo de propor anpp" in txt_l:
                 return "Denúncia. Consta cota afirmando que não foi proposto ANPP em face dos denunciados"
             elif "suspensão condicional" in txt_l or "sursis" in txt_l:
                 return "Denúncia oferecida com proposta de Suspensão Condicional do Processo"
             return "Denúncia oferecida pelo Ministério Público"
+
+        if "petição inicial" in name_l or "peticao inicial" in name_l:
+            if "queixa" in txt_l or "querelante" in txt_l or "querelada" in txt_l:
+                return "Queixa-crime oferecida pelo querelante"
+            return "Petição inicial protocolada"
 
         # 2. Revogação de ANPP ou PSCP em qualquer ato judicial decisório (Decisão, Despacho, Termo, Ata)
         has_anpp_rev = bool(ANPP_REVOCATION_REGEX.search(txt_l))
@@ -1739,29 +1939,100 @@ class OfflineExtractionEngine(BaseExtractionEngine):
 
         # 4. Despacho
         if "despacho" in name_l:
+            if "conciliação" in txt_l or "conciliacao" in txt_l:
+                dt_m = re.search(r"(\d{1,2}/\d{1,2}/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})", txt)
+                if dt_m:
+                    return f"Despacho incluindo o feito em pauta de audiência de conciliação para {dt_m.group(1)}, às {dt_m.group(2)}"
+                return "Despacho incluindo o feito em pauta de audiência de conciliação"
             if "pauta" in txt_l or "designo" in txt_l or "instrução" in txt_l:
+                dt_m = re.search(r"(\d{1,2}/\d{1,2}/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})", txt)
+                if dt_m:
+                    return f"Despacho incluindo o feito em pauta de audiência de instrução e julgamento para {dt_m.group(1)}, às {dt_m.group(2)}"
                 return "Despacho incluindo o feito em pauta de audiência de instrução e julgamento"
             if "reaprazo" in txt_l or "redesigno" in txt_l:
                 return "Despacho redesignando a audiência"
             if "homologação de anpp" in txt_l or "homologar" in txt_l:
                 return "Despacho designando audiência de homologação de ANPP"
+            if "admissibilidade" in txt_l or "requisitos" in txt_l:
+                return "Despacho para análise de admissibilidade da queixa-crime"
+            if "aguarde-se o inquérito" in txt_l or "aguarde-se o inqu" in txt_l:
+                return "Despacho tomando ciência do APF e determinando aguardo do inquérito policial"
             return "Despacho judicial"
 
-        # 4. Resposta à acusação / Defesa prévia
+        # 5. Resposta à acusação / Defesa prévia
         if "resposta" in name_l or "defesa prévia" in name_l or "defesa previa" in name_l:
             return "Resposta à acusação pugnando pela absolvição sumária do acusado"
 
-        # 5. Citação / Edital / Mandados
+        # 6. Manifestação / Devolução de inquérito
+        if any(k in name_l for k in ["manifesta", "promo", "cota", "devolu"]):
+            if "devolu" in name_l or "devolu" in txt_l:
+                m_dp = re.search(r"(\d+ª?\s*DP[^\n,;.]+)", txt, re.I)
+                dp_str = f" à {m_dp.group(1).strip()}" if m_dp else ""
+                if "dilig" in txt_l or "dilig" in name_l:
+                    return f"Manifestação ministerial devolvendo os autos{dp_str} para realização de diligências"
+                return f"Manifestação ministerial devolvendo os autos{dp_str}"
+            if "laudo" in txt_l and "pericial" in txt_l:
+                return "Manifestação ministerial requerendo juntada de Laudo Pericial"
+            if "cota" in txt_l or "denúncia" in txt_l:
+                return "Manifestação ministerial (cota da denúncia)"
+            return "Manifestação ministerial"
+
+        # 7. APF e Inquérito Policial
+        if "apf" in name_l:
+            m_apf = re.search(r"APF\s+(\d+/\d+)", raw_name, re.I)
+            if m_apf:
+                return f"Auto de Prisão em Flagrante (APF {m_apf.group(1)})"
+            return "Auto de Prisão em Flagrante (APF)"
+
+        if "inquérito" in name_l or "inquerito" in name_l or re.search(r"\bip\s+\d+/\d+", name_l):
+            m_ip = re.search(r"IP\s+(\d+/\d+)", raw_name, re.I)
+            if m_ip:
+                return f"Inquérito Policial (IP {m_ip.group(1)})"
+            return "Inquérito Policial"
+
+        # 8. Alvará de Soltura
+        if "alvará de soltura" in name_l or "alvara de soltura" in name_l:
+            clean = re.sub(r"_\d+$", "", raw_name).replace("_", " ")
+            clean = re.sub(r"^alvar[aá]\s+de\s+soltura\s*", "", clean, flags=re.I).strip()
+            if clean:
+                return f"Alvará de soltura expedido em favor de {clean.title()}"
+            return "Alvará de soltura expedido"
+
+        # 9. Link de Audiência
+        if "link" in name_l and "audi" in name_l:
+            return "Expedição de link de acesso para a audiência"
+
+        # 10. Devolução de Mandado / Certidões
+        if "devolução de mandado" in name_l or ("certidão" in name_l and "mandado" in name_l):
+            if any(k in txt_l for k in ["contrafé negativa", "contrafe negativa", "não localizado", "deixei de citar", "deixei de intimar"]):
+                return "Certidão do Oficial de Justiça - contrafé negativa (não localizado)"
+            if "alvará" in txt_l or "alvara" in txt_l:
+                return "Certidão de cumprimento de alvará de soltura"
+            if any(k in txt_l for k in ["positivo", "cumprido", "citei", "intimei"]):
+                return "Certidão do Oficial de Justiça informando cumprimento de mandado"
+            return "Certidão do Oficial de Justiça devolvendo mandado"
+
+        # 11. Citação / Edital / Mandados / Atos Ordinatórios
         if "edital" in name_l:
             return "Citação por edital do acusado"
         if "mandado" in name_l and "citação" in name_l:
             return "Mandado de citação"
         if "mandado" in name_l and "intimação" in name_l:
             return "Mandado de intimação de audiência"
-        if "intimação de audiência" in name_l or "intimação de audiência" in type_l:
+        if "intimação de audiência" in name_l or "intimação de audiência" in type_l or "mandado de intimação audiência" in txt_l:
             return "Intimação de audiência expedida"
 
-        # 6. Audiências anteriores / Atas
+        if "ato ordinat" in name_l or ("intima" in name_l and "audi" not in name_l):
+            if any(k in txt_l for k in ["vistas ao mp", "abro vistas", "vistas ao ministério"]):
+                return "Ato ordinatório abrindo vistas ao Ministério Público"
+            if "autoridade policial" in txt_l and "tramitação direta" in txt_l:
+                return "Intimação da Autoridade Policial para diligências (tramitação direta)"
+            if "ministério público" in txt_l and "tramitação direta" in txt_l:
+                return "Intimação do Ministério Público (tramitação direta)"
+            if "intima" in name_l:
+                return "Intimação expedida"
+
+        # 12. Audiências anteriores / Atas
         if "ata da audiência" in name_l or "termo de audiência" in name_l:
             if "custódia" in txt_l:
                 return "Audiência de Custódia realizada"
@@ -1771,8 +2042,10 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                 return "Ata de audiência de instrução realizada"
             return "Ata da audiência"
 
-        # Fallback to cleaned document name
-        return raw_name
+        # Clean trailing system IDs or hashes from fallback name
+        cleaned_fallback = re.sub(r"_\d{10,}$", "", raw_name)
+        cleaned_fallback = re.sub(r"\.pdf$", "", cleaned_fallback, flags=re.I).strip(" _-")
+        return cleaned_fallback
 
     def _extract_witnesses(
         self,
@@ -1783,11 +2056,13 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         mandados_docs: List[PJeDocument],
         doc: pymupdf.Document,
         defense_docs: Optional[List[Dict]] = None,
+        reus_capa: Optional[List[str]] = None,
     ) -> Tuple[List[Witness], List[Witness], Optional[str]]:
         """Extracts prosecution and defense witness lists with mandado ID matching and unified deduplication."""
         pros_witnesses: List[Witness] = []
         def_witnesses: List[Witness] = []
         def_note = "A defesa requereu a oitiva de todas as testemunhas arroladas na denúncia."
+        reus_normalized = {_normalize_witness_name(r).lower() for r in (reus_capa or [])}
 
         if defense_docs is None:
             defense_docs = []
@@ -1801,14 +2076,15 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         # Helper to find subpoena / notification ID
         def find_subpoena_status(name: str, is_pm: bool) -> str:
             name_lower = name.lower()
-            first_name = name.split()[0].lower() if name.split() else ""
-            surname = name.split()[-1].lower() if len(name.split()) > 1 else ""
+            clean_n = _normalize_witness_name(name_lower)
+            first_name = clean_n.split()[0].lower() if clean_n.split() else ""
+            surname = clean_n.split()[-1].lower() if len(clean_n.split()) > 1 else ""
 
             matched_ids = []
             negative_ids = []
 
             for doc_id, m_text in mandado_texts.items():
-                if name_lower in m_text or (len(first_name) > 3 and len(surname) > 3 and first_name in m_text and surname in m_text):
+                if clean_n in m_text or (len(first_name) > 3 and len(surname) > 3 and first_name in m_text and surname in m_text):
                     if "contrafé negativa" in m_text or "não localizado" in m_text or "deixei de citar" in m_text or "deixei de intimar" in m_text:
                         negative_ids.append(doc_id)
                     else:
@@ -1819,7 +2095,7 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             if matched_ids:
                 if is_pm:
                     return f"Ofício enviado ID {matched_ids[0]}"
-                return f"Intimada ID {matched_ids[0]}" if any(fem in name_lower for fem in ["maria", "ana", "julia", "samara", "dra", "sra"]) else f"Intimado ID {matched_ids[0]}"
+                return f"Intimada ID {matched_ids[0]}" if any(fem in clean_n for fem in ["maria", "ana", "julia", "samara", "dra", "sra", "nelisse", "michele", "jacilene"]) else f"Intimado ID {matched_ids[0]}"
 
             if is_pm:
                 for m_doc in mandados_docs:
@@ -1832,17 +2108,17 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         num = 1
         seen_names = set()
 
-        # 1. Parse Denúncia ROL DE TESTEMUNHAS (primary source in criminal process)
+        # 1. Parse Denúncia / Queixa ROL DE TESTEMUNHAS (primary source in criminal process)
         cleaned_denuncia = _clean_legal_text(denuncia_text)
         start_pat = re.compile(
-            r"(?:(?:^|\n)\s*(?:[IVXLCDM]+\)?\.?\s*)?(?:ROL\s+(?:DE\s+)?(?:DECLARANTES?\s*(?:\([^)]*\))?\s*(?:E\s*)?)?TESTEMUNHAS?\s*(?:\([^)]*\))?(?:\s*E\s*DECLARANTES?)?|ROL\s+TESTEMUNHAL|TESTEMUNHAS\s*:))",
+            r"(?:(?:^|\n)\s*(?:[IVXLCDM]+\)?\.?\s*)?(?:ROL\s+(?:DE\s+)?(?:DECLARANTES?\s*(?:\([^)]*\))?\s*(?:[/\sE]+)?)?TESTEMUNHAS?\s*(?:\([^)]*\))?(?:\s*[/\sE]+\s*DECLARANTES?)?|ROL\s+TESTEMUNHAL|TESTEMUNHAS\s*:))",
             re.IGNORECASE,
         )
         m_start = start_pat.search(cleaned_denuncia)
         if m_start:
             sub = cleaned_denuncia[m_start.end():]
             stop_pat = re.compile(
-                r"(?:^|\n)\s*(?:COTA\b|Termos\s+em\s+que|Nestes\s+termos|Pede\s+(?:e\s+espera\s+)?deferimento|Pede\s+deferimento)",
+                r"(?:^|\n)\s*(?:COTA\b|Termos\s+em\s+que|Nestes\s+termos|Pede\s+(?:e\s+espera\s+)?deferimento|Pede\s+deferimento|DOCUMENTOS\s+QUE\s+INSTRUEM)",
                 re.IGNORECASE,
             )
             m_stop = stop_pat.search(sub)
@@ -1871,8 +2147,8 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                 )
                 if m:
                     w_name = m.group(1).strip()
-                    name_lower = w_name.lower()
-                    if len(w_name) <= 3 or blacklist_rx.search(name_lower):
+                    norm_k = _normalize_witness_name(w_name).lower()
+                    if len(w_name) <= 3 or blacklist_rx.search(norm_k) or (reus_normalized and norm_k in reus_normalized):
                         continue
 
                     ext1 = m.group(2) or ""
@@ -1880,23 +2156,47 @@ class OfflineExtractionEngine(BaseExtractionEngine):
                     extra = (line[len(m.group(0)):].lower() + " " + ext1.lower() + " " + ext2.lower()).strip()
                     is_pm = bool(
                         re.search(r"\b(?:pm|policial|militar|civil|cabo|sgt|sargento|soldado)\b", extra)
-                        or re.search(r"\b(?:pm|policial)\b", name_lower)
+                        or re.search(r"\b(?:pm|policial)\b", norm_k)
                     )
                     is_vitima = any(v in extra for v in ["vítima", "vitima", "declarante"])
                     role = "vítima" if is_vitima else ("PM" if is_pm else "Testemunha")
                     status_id = find_subpoena_status(w_name, is_pm)
 
-                    if name_lower not in seen_names:
-                        seen_names.add(name_lower)
+                    if norm_k not in seen_names:
+                        seen_names.add(norm_k)
+                        w_disp = re.sub(r"\bPm\b", "PM", w_name.title())
                         pros_witnesses.append(
-                            Witness(number=num, name=w_name.title(), role=role, status_id=status_id)
+                            Witness(number=num, name=w_disp, role=role, status_id=status_id)
                         )
                         num += 1
 
+        # Fallback for numbered witness lists (e.g. in Queixa-Crime or atypical Denúncia)
+        if not pros_witnesses and ("testemunha" in denuncia_text.lower() or "declarantes" in denuncia_text.lower()):
+            rx_num = re.compile(
+                r"^\s*(\d+)[\.\)]\s+([A-ZÁÉÍÓÚÂÊÔÃÕ][A-ZÁÉÍÓÚÂÊÔÃÕ\s]{3,60}?)(?:,\s*(?:brasileir|advogad|casad|solteir|contador|servidor|funcion|portador|inscrit)|\[|\s*$)",
+                re.M,
+            )
+            for m_w in rx_num.finditer(cleaned_denuncia):
+                w_name = m_w.group(2).strip()
+                norm_k = _normalize_witness_name(w_name).lower()
+                if (
+                    norm_k not in seen_names
+                    and len(w_name) > 3
+                    and (not reus_normalized or norm_k not in reus_normalized)
+                    and not any(ex in norm_k for ex in ["denúncia", "queixa", "promotoria", "ministério"])
+                ):
+                    seen_names.add(norm_k)
+                    status_id = find_subpoena_status(w_name, is_pm=False)
+                    pros_witnesses.append(
+                        Witness(number=num, name=w_name.title(), role="Testemunha", status_id=status_id)
+                    )
+                    num += 1
+
         # 2. Add victims from Capa if not already listed
         for v in vitimas_capa:
-            if v.lower() not in seen_names:
-                seen_names.add(v.lower())
+            v_norm = _normalize_witness_name(v).lower()
+            if v_norm not in seen_names and (not reus_normalized or v_norm not in reus_normalized):
+                seen_names.add(v_norm)
                 status_id = find_subpoena_status(v, is_pm=False)
                 pros_witnesses.append(
                     Witness(number=num, name=v.title(), role="vítima", status_id=status_id)
@@ -1905,13 +2205,22 @@ class OfflineExtractionEngine(BaseExtractionEngine):
 
         # 3. Add witnesses from Capa if not already listed
         for t in testemunhas_capa:
-            if t.lower() not in seen_names:
-                seen_names.add(t.lower())
+            t_norm = _normalize_witness_name(t).lower()
+            if reus_normalized and t_norm in reus_normalized:
+                continue
+            if t_norm in seen_names:
+                for ex_w in pros_witnesses:
+                    if _normalize_witness_name(ex_w.name).lower() == t_norm and not ex_w.status_id:
+                        is_pm = ex_w.role == "PM"
+                        ex_w.status_id = find_subpoena_status(t, is_pm=is_pm)
+            else:
+                seen_names.add(t_norm)
                 is_pm = any(pm_term in t.lower() for pm_term in ["policial", "pm", "cabo", "sargento", "militar"])
                 role = "PM" if is_pm else "Testemunha"
                 status_id = find_subpoena_status(t, is_pm=is_pm)
+                t_disp = re.sub(r"\bPm\b", "PM", t.title())
                 pros_witnesses.append(
-                    Witness(number=num, name=t.title(), role=role, status_id=status_id)
+                    Witness(number=num, name=t_disp, role=role, status_id=status_id)
                 )
                 num += 1
 
@@ -1961,6 +2270,9 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             def_num = 1
             for d_info in defense_docs:
                 for ex_w in d_info.get("explicit_witnesses", []):
+                    norm_ex = _normalize_witness_name(ex_w).lower()
+                    if reus_normalized and norm_ex in reus_normalized:
+                        continue
                     if not any(ex_w.lower() in pn or pn in ex_w.lower() for pn in pros_names):
                         pros_names.add(ex_w.lower())
                         status_id = find_subpoena_status(ex_w, is_pm=False)
