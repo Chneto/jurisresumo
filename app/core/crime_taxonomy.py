@@ -49,6 +49,18 @@ CRIME_TAXONOMY: Dict[str, Dict] = {
         "morte": "lesão corporal seguida de morte",
         "padrao": "lesão corporal",
     },
+    "138": {
+        "padrao": "calúnia",
+    },
+    "139": {
+        "padrao": "difamação",
+    },
+    "140": {
+        "padrao": "injúria",
+    },
+    "141": {
+        "padrao": "causa de aumento de pena dos crimes contra a honra",
+    },
     "147": {
         "padrao": "ameaça",
     },

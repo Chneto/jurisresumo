@@ -38,6 +38,8 @@ def test_state_organs_blacklist():
         "Vara Criminal de Natal",
         "Central de Flagrantes",
         "DP de Macaíba",
+        "12ª Delegacia de Polícia Civil Natal/RN",
+        "DEICOR",
     ]
     for organ in test_organs:
         assert STATE_ORGANS_BLACKLIST_REGEX.search(organ) is not None, f"Failed to match state organ: {organ}"

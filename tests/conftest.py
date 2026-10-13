@@ -28,10 +28,14 @@ from app.core.models import (
     Witness,
 )
 
+import sys
+
 # Project root directory
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if not any(PROJECT_ROOT.glob("Proc.*")) and any(PROJECT_ROOT.parent.glob("Proc.*")):
+if PROJECT_ROOT.name == "versao_python":
     PROJECT_ROOT = PROJECT_ROOT.parent
+sys.path.insert(0, str(PROJECT_ROOT / "versao_python"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
 
 # XML Namespaces for OpenXML inspection

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "author": "FChNeto",
-  "last_updated": "2026-09-30T17:52:17.244631",
+  "last_updated": "2026-10-02T12:18:09.039698",
   "penalized_terms": {
     "extrato": 0.8,
     "conta": 0.8,
@@ -211,6 +211,90 @@
     },
     {
       "timestamp": "2026-09-30T17:52:17.244289",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-01T14:31:17.786871",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-01T14:52:44.291188",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-01T14:53:44.172485",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-01T14:54:45.404992",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-01T15:15:22.571721",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-02T10:49:48.575627",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-02T11:15:53.425139",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-02T11:28:22.466878",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-02T11:35:44.314903",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-02T11:38:16.142700",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-02T12:16:37.548346",
+      "action": "removal",
+      "source": "history",
+      "sample_snippet": "Extrato de conta corrente inútil",
+      "keywords_count": 7
+    },
+    {
+      "timestamp": "2026-10-02T12:18:09.038784",
       "action": "removal",
       "source": "history",
       "sample_snippet": "Extrato de conta corrente inútil",

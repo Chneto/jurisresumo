@@ -34,5 +34,7 @@ test_output_*.docx
 scratch/
 *user_feedback_rules.json
 backup_versao_*/
+modelos de resumos/
+modelos*/
 
 

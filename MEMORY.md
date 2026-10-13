@@ -2,7 +2,7 @@
 
 > **Documento Vivo de Memória e Conhecimento Técnico**  
 > **Finalidade:** Orientar desenvolvedores e subagentes em futuras modificações, manutenções, refatorações e auditorias da aplicação.  
-> **Última Atualização:** 30/09/26 (Versão 3.2 — Taxonomia Penal com Colchetes + Revogação de ANPP/PSCP como AIJ + Isolamento Estrito da Denúncia + 228 Pytests)
+> **Última Atualização:** 02/10/26 (Versão 3.5 — Paridade Total do Motor JavaScript com Padrão Python Congelado + Sincronização dos 8 HTMLs + 195 Pytests Aprovados)
 > **Autor e Desenvolvedor:** FChNeto
 
 ---
@@ -826,4 +826,102 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
   5. **Paridade Física e Bit-for-Bit dos 4 Arquivos HTML:** Validada paridade exata com mesmo hash SHA-256 entre `index.html`, `ABRIR_APLICATIVO_DIRETO.html`, `versao_javascript/index.html` e `versao_javascript/ABRIR_APLICATIVO_DIRETO.html`.
   6. **Expansão da Suíte Pytest para 232 Testes:** 190 aprovados com 100% de sucesso e 42 skipped (sanitização LGPD).
 * **Checkpoint de Recovery:** `20260930_175228_v3_2_taxonomia_e_revogacao_anpp_final`.
+
+### Ato 7: Calibração e Harmonização dos Motores PY, JS e JEV com os 8 Modelos Reais do TJRN (01/10/26)
+* **Mapeamento e Calibração dos 8 Modelos Reais:**
+  1. **Linha de Chamada / Horário em Amarelo:** Suporte a destaque amarelo (`w:highlight w:val="yellow"`, bold) em audiências com marcação específica (`11h - ... - AIJ (IDOSO)`, `13h - ... - Audiência de produção antecipada de provas orais`, `11h25min - ... - ANPP`).
+  2. **Multi-réus em Marcatexto Verde:** Header `Réus:` em verde, itens numerados `01) Nome - status - ID`, `02)...` em verde com hiperlinks azuis sublinhados, e defesa técnica em verde.
+  3. **Adaptação Dinâmica de Testemunhas da Defesa:** `TESTEMUNHA DE DEFESA:` quando houver 1 testemunha; `TESTEMUNHAS DE DEFESA:` quando houver múltiplas; notas defensivas (`"A defesa requereu a oitiva..."` e `"Não há testemunhas..."`) em negrito com realce amarelo.
+  4. **Blindagem LGPD & Sigilo Processual:** Inclusão explícita de `modelos de resumos/` no `.gitignore`, isolamento dos autos reais no ambiente local do usuário e testes com dados sintéticos.
+  5. **Suíte Pytest Expandida para 237 Testes:** 195 aprovados com 100% de sucesso e 42 skipped (sanitização LGPD).
+* **Checkpoints de Recovery:** `20261001_144502_pre_calibracao_modelos_tjrn` e `20261001_145414_v3_2_modelos_tjrn_calibrados`.
+
+### Ato 8: Resolução Integral dos 9 Problemas Críticos de Extração e Validação nos 4 Processos Reais de Produção (02/10/26)
+* **Diagnóstico e Correção de Causa Raiz:**
+  1. **P1 — Eliminação de Órgãos Estatais do Polo Passivo:** Regex `STATE_ORGANS_BLACKLIST_REGEX` enriquecido com prefixo numérico/ordinal (`(?:\d+[ªa°]?\s+)?`), eliminando menções espúrias a delegacias (ex.: "12ª Delegacia de Polícia Civil") como réus.
+  2. **P2 — Validação e Blindagem de Data/Hora de Audiência:** O parser `_parse_datetime_from_text` agora impõe limites estritos de calendário (`1 <= dia <= 31`, `1 <= mes <= 12`, `0 <= hora <= 23`), erradicando datas absurdas causadas por números de processo ou carimbos de página (ex.: `08.20.01`).
+  3. **P3 & P6 — Suporte Robusto a Queixa-Crime e Denúncias Multipartes:**
+     - Inclusão das tags `(QUERELADO)`, `(QUERELADA)`, `(AUTOR DO FATO)` e fallback inteligente para peças privadas de Queixa-Crime.
+     - Implementação da montagem contígua de peças acusatórias multipartes (`_locate_denuncia`), garantindo que denúncias cindidas em dois ou mais arquivos consecutivos (ex.: autos volumosos de 314 MB) sejam lidas integralmente, capturando todos os réus.
+  4. **P4 — Purificação da Imputação Penal:** Isolamento estrito de artigos do CP substantivo vs normas do CPP e da CF; exclusão de efeitos secundários da condenação (art. 92 CP) e circunstâncias agravantes genéricas (arts. 61 e 62 CP) da concatenação principal.
+  5. **P5 — Descontaminação dos Fatos:** Exclusão de cabeçalhos institucionais do Judiciário e do GAECO, e-mails, telefones e vocativos; os fatos agora iniciam imediatamente na descrição temporal do evento criminoso.
+  6. **P7 — Enriquecimento do Histórico Processual:** Mapeamento substantivo de inquéritos policiais (`IP \d+/\d+`), decisões e despachos no histórico cronológico.
+  7. **P8 — Limpeza e Deduplicação de Testemunhas:**
+     - Normalização das patentes militares (`PM`, `Cabo`, `Sargento`, `Soldado`) prevenindo nomes duplicados.
+     - Filtro explícito impedindo que réus sejam inseridos como testemunhas no caso de quebra de OCR com caracteres unicode invisíveis (`\u200b`, `\ufeff`).
+     - Descarte de documentos policiais erroneamente classificados como peças defensivas.
+  8. **P9 — Captura Ampliada de Links de Audiência:** Suporte estendido ao encurtador oficial `https://lnk.tjrn.jus.br/...` e URLs do Microsoft Teams.
+* **Validação Operacional em 4 Processos Reais:**
+  - `0802090-84.2024.8.20.5300.pdf` (15,9 MB, 1,14s): Réu único, 12ª DP descartada, link capturado, fatos limpos, sem duplicação de PM.
+  - `0869911-95.2025.8.20.5001.pdf` (26,8 MB, 1,83s): Ambos os réus qualificados, fatos limpos sem cabeçalho judicial, IP 12320/2024 mapeado.
+  - `0885264-44.2026.8.20.5001-1.pdf` (9,0 MB, 1,21s): Querelada identificada com qualificação completa, data exata da audiência (02.10.26 às 11h30min), imputação correta de difamação.
+  - `0910980-10.2025.8.20.5001-1.pdf` (314,9 MB, 17,27s): Denúncia contígua montada, ambos os réus capturados, 18 testemunhas sem inclusão de réu, 93 atos no histórico com IP 26010/2025.
+* **Integridade dos Testes:** 195 aprovados, 42 skipped (LGPD), 0 falhas no Pytest. 100% de paridade física entre `app/` e `versao_python/app/`.
+* **Checkpoints de Recovery:** `pre_fix_9_problemas` e `v3_3_fix_9_problemas_extracao`.
+
+### Ato 9: Paridade Total do Motor JavaScript, Congelamento da Versão Python e Sincronização Bit-for-Bit dos 8 Arquivos HTML (02/10/26)
+* **Congelamento da Versão Python (Golden Standard):**
+  1. A versão Python foi declarada homologada, perfeita e imutável pelo magistrado (`/learn`).
+  2. Backup independente e autocontido criado em `c:\Users\f201503\Documents\resumo para audiência - PYTHON` contendo todos os scripts (`ABRIR_VERSAO_PYTHON.vbs`, `Iniciar_JURISRESUMO.vbs`, `run.py`, `run_eel.py`, `app/`, `requirements.txt`).
+  3. `versao_python/` mantida estritamente inviolável.
+* **Modernização e Resolução de Erros no Motor JavaScript (`versao_javascript/`):**
+  1. **Correção de ReferenceErrors Críticos:** Declaração e escopo restabelecidos para `extractSingleDefendantQualification`, `processPdfFile` e `extractCleanNarrative`.
+  2. **Validação de Imputação Penal:** Correção de `isProceduralOrConstJs` para escaneamento local em janela móvel de contexto (eliminando descarte falso-positivo em razão de "art. 41 do CPP" citado no cabeçalho/fecho) e exclusão de artigos substantivos (69, 70, 71, 129) da lista de exclusão procedural.
+  3. **Correção de SyntaxError no V8/Edge:** Ajustada a sintaxe regex `lookahead` e `ipPattern` com `(?:[IVXLCDM]+[).]?\s*[-–.]?\s*)?`, eliminando erro de grupo não terminado na compilação do motor V8 do Microsoft Edge.
+  4. **Contaminação de Testemunhas da Defesa:** Adicionado bloqueio `reusNormalized.has(exWNorm)` para expurgar corréus da lista de testemunhas defensivas.
+  5. **Paridade Bit-for-Bit nos 8 Espelhos HTML:** Hash SHA-256 rigorosamente idêntico (`2adb17bd...`) compartilhado entre `index.html`, `ABRIR_APLICATIVO_DIRETO.html`, `versao_javascript/index.html`, `versao_javascript/ABRIR_APLICATIVO_DIRETO.html` e seus respectivos pares em `gitpost/`.
+* **Validação Operacional e Testes:**
+  - Verificação profunda via `msedge.exe --headless --dump-dom` nos PDFs reais: 100% de paridade substantiva com a versão Python nos Casos 1, 2 e 3.
+  - `pytest tests/test_js_engine_parity.py`: 8 aprovados com 100% de sucesso.
+  - `pytest`: 195 aprovados, 42 skipped (LGPD), 0 falhas.
+* **Checkpoints de Recovery:** `20261002_140851_v3_4_js_engine_complete` e `20261002_143707_v3_5_js_engine_fixed_and_verified`.
+
+### Ato 10: Implementação do UC-1 — Ground-Truth & Citation Guardrail (JEV/LAYA Verification Layer) (08/10/26)
+* **Objetivo:** Blindar o retorno do modelo generativo (Google Gemini) contra alucinações de IDs, artigos de lei inexistentes e datas/horas absurdas, garantindo conformidade matemática com a verdade processual dos autos (Ground-Truth).
+* **Componentes Implementados:**
+  1. **Método `audit_llm_ground_truth` em `JEVDecisionEngine` (`app/core/jev_decision_engine.py`):**
+     - Mapeamento O(1) de todos os documentos legítimos do PJe via catálogo do `pje_indexer.py`.
+     - Auditoria de IDs no Histórico Processual (`chronological_history`) e no Rol de Testemunhas (`witnesses`): expurgação de IDs espúrios e remapeamento inteligente para o ato autêntico correspondente.
+     - Auditoria da Imputação Penal vs. Denúncia: confronto dos artigos gerados pelo LLM com o texto da peça acusatória ministerial; restauração automática do baseline determinístico caso haja artigos inventados.
+     - Validação de Limites de Calendário: verificação de dias, meses e horas factíveis na data da audiência.
+     - Regra de Fallback Estrita: se a saída da IA registrar mais de 3 inconsistências graves, a resposta é integralmente descartada em favor do extrator offline local (`offline_engine.py`).
+  2. **Invocação Transparente em `app/engines/gemini_engine.py`:**
+     - Injeção da auditoria imediatamente após a desserialização do JSON da API do Gemini, garantindo que o objeto `HearingSummaryData` entregue ao exportador DOCX esteja 100% saneado.
+  3. **Nova Suíte de Testes Automatizados (`tests/test_llm_ground_truth_guardrail.py`):**
+     - 6 testes unitários cobrindo preservação de dados legítimos, erradicação de IDs falsos em histórico/testemunhas, restauração de artigos alucinados, correção de datas impossíveis e acionamento do fallback completo em tolerância excedida (>3 erros).
+* **Validação Operacional:**
+  - `pytest tests/test_llm_ground_truth_guardrail.py -v`: 6 aprovados com 100% de sucesso.
+  - `pytest tests/test_js_engine_parity.py -v`: 8 aprovados com 100% de sucesso.
+  - `pytest`: 201 aprovados, 42 skipped (LGPD), 0 falhas (suíte expandida de 195 para 201 testes).
+* **Checkpoints de Recovery:** `20261008_124721_pre_uc1_ground_truth_guardrail` e `20261008_125312_v3_6_uc1_ground_truth_guardrail_implemented`.
+
+### Ato 11: Implementação do UC-2 — Hierarquia Processual Estendida CPP (Júri, Custódia, Protetivas) (08/10/26)
+* **Objetivo:** Expandir a taxonomia decisória do `JEVDecisionEngine` e do `offline_engine.py` para classificar com precisão processual Sessões Plenárias do Tribunal do Júri, Audiências de Custódia e Audiências de Justificação da Lei Maria da Penha (art. 16 da Lei 11.340/06), com suporte a cabeçalhos e callouts específicos no DOCX.
+* **Componentes Implementados:**
+  1. **Novos Tipos e Categorias em `app/core/models.py`:**
+     - Inclusão das constantes `SESSAO_JURI = "SESSAO_JURI"`, `AUDIENCIA_CUSTODIA = "AUDIENCIA_CUSTODIA"` e `AUDIENCIA_PROTETIVA = "AUDIENCIA_PROTETIVA"` em `DocumentCategory`.
+  2. **Hierarquia Canônica de Precedência em `ClassificationHierarchyCPP` (`app/core/jev_decision_engine.py`):**
+     - Prioridade 1: Sessão Plenária do Tribunal do Júri (se houver Decisão de Pronúncia ou pauta de júri) -> `"JÚRI"`
+     - Prioridade 2: Audiência de Custódia (se houver Auto de Prisão em Flagrante recente sem denúncia recebida) -> `"CUSTÓDIA"`
+     - Prioridade 3: Revogação de ANPP ou PSCP (retomada da marcha processual) -> `"AIJ"` (Obrigatória)
+     - Prioridade 4: Produção Antecipada de Provas (Art. 366 do CPP) -> `"PAnP"`
+     - Prioridade 5: Homologação de Acordo de Não Persecução Penal (Art. 28-A do CPP) -> `"ANPP"`
+     - Prioridade 6: Instrução e Julgamento ordinária/sumária -> `"AIJ"`
+     - Prioridade 7: Medida Protetiva de Urgência / Justificação (Lei 11.340/06, art. 16) -> `"JUSTIFICAÇÃO / PROTETIVA"`
+     - Prioridade 8: Sursis Processual (art. 89 Lei 9.099/95) -> `"Sursis"`
+  3. **Integração e Delegação em `offline_engine.py`:**
+     - O método `_determine_act_type` delega unificadamente para `JEVDecisionEngine.get_instance().classify_act_hierarchy(...)`, com blindagem de segurança para verificação de documentos no catálogo mesmo com mocks.
+  4. **Callouts de Cabeçalho em `docx_generator.py`:**
+     - Renderização de callouts em destaque amarelo (`w:highlight w:val="yellow"`, bold) correspondentes:
+       - `"Sessão Plenária do Tribunal do Júri"` para `act_type="JÚRI"`
+       - `"Audiência de Custódia"` para `act_type="CUSTÓDIA"`
+       - `"Audiência de Justificação (Lei Maria da Penha)"` para `act_type="JUSTIFICAÇÃO / PROTETIVA"`
+  5. **Nova Suíte de Testes Automatizados (`tests/test_extended_hierarchy.py`):**
+     - 12 testes unitários cobrindo as 7 prioridades processuais, bloqueio de custódia pós-recebimento de denúncia, classificação semântica de blocos de texto no JEV, callouts no DOCX gerado e integração determinística no `offline_engine`.
+* **Validação Operacional:**
+  - `pytest tests/test_extended_hierarchy.py -v`: 12 aprovados com 100% de sucesso.
+  - `pytest versao_python/tests/test_extended_hierarchy.py -v`: 12 aprovados com 100% de sucesso.
+  - `pytest tests/test_js_engine_parity.py -v`: 8 aprovados com 100% de sucesso.
+  - `pytest`: 213 aprovados, 42 skipped (LGPD), 0 falhas (suíte expandida de 201 para 213 testes).
+* **Checkpoints de Recovery:** `20261008_130923_v3_7_uc2_extended_hierarchy_implemented`.
 

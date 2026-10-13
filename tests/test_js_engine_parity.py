@@ -10,12 +10,13 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if not any(PROJECT_ROOT.glob("Proc.*")) and any(PROJECT_ROOT.parent.glob("Proc.*")):
+if PROJECT_ROOT.name == "versao_python":
     PROJECT_ROOT = PROJECT_ROOT.parent
 
 JS_DIR = PROJECT_ROOT / "versao_javascript"
 PY_DIR = PROJECT_ROOT / "versao_python"
 ROOT_DIR = PROJECT_ROOT
+
 
 
 def test_directory_separation_exists():
@@ -74,9 +75,19 @@ def test_javascript_analytical_engine_features():
 
     # Key analytical functions
     assert "analyzePjeRecords" in content
+    assert "function analyzePjeRecords" in content
     assert "summarizeHistoryAct" in content
+    assert "function summarizeHistoryAct" in content
     assert "parsePtDateTime" in content
+    assert "function parsePtDateTime" in content
     assert "extractCleanNarrative" in content
+    assert "function extractCleanNarrative" in content
+    assert "extractSingleDefendantQualification" in content
+    assert "function extractSingleDefendantQualification" in content
+    assert "processPdfFile" in content
+    assert "function processPdfFile" in content
+    assert "extractImputationFromDenuncia" in content
+    assert "function extractImputationFromDenuncia" in content
     assert "findSubpoenaStatus" in content
 
     # TOC and footer stamp detection
@@ -310,7 +321,10 @@ def validate_javascript_syntax(js_code: str) -> list[str]:
 
 def test_html_javascript_syntax_and_bracket_balance():
     """Verifies that all <script> blocks across all HTML files have 100% valid bracket/brace balance and zero syntax errors."""
-    html_files = [p for p in ROOT_DIR.rglob("*.html") if ".git" not in str(p)]
+    html_files = [
+        p for p in ROOT_DIR.rglob("*.html")
+        if ".git" not in str(p) and ".recovery" not in str(p) and "backup" not in str(p)
+    ]
     assert len(html_files) >= 6, f"Expected at least 6 HTML files in project, found {len(html_files)}"
 
     total_scripts_checked = 0

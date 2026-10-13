@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JURISRESUMO — Dashboard Estratégico JEV / LAYA</title>
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-surface: #111827;
+      --bg-card: #162032;
+      --bg-card-hover: #1e2c45;
+      --border-color: #24324a;
+      --border-highlight: #3b82f6;
+      --text-title: #f8fafc;
+      --text-body: #cbd5e1;
+      --text-muted: #8494ab;
+      --accent-gold: #facc15;
+      --accent-green: #10b981;
+      --accent-green-bg: rgba(16, 185, 129, 0.15);
+      --accent-blue: #38bdf8;
+      --accent-amber: #f59e0b;
+      --accent-amber-bg: rgba(245, 158, 11, 0.15);
+      --accent-red: #ef4444;
+      --accent-red-bg: rgba(239, 68, 68, 0.15);
+      --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-body);
+      font-family: var(--font-family);
+      line-height: 1.5;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(180deg, #131c2e 0%, var(--bg-main) 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: 32px 0 24px;
+      margin-bottom: 32px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-title);
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-gold {
+      background: var(--accent-gold);
+      color: #000;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .meta-badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .meta-pill {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta-pill strong {
+      color: var(--text-title);
+    }
+
+    /* KPI METRICS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .kpi-card.green::before { background: var(--accent-green); }
+    .kpi-card.amber::before { background: var(--accent-amber); }
+    .kpi-card.red::before { background: var(--accent-red); }
+    .kpi-card.blue::before { background: var(--accent-blue); }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-title);
+      line-height: 1.1;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .kpi-desc {
+      font-size: 12px;
+      color: var(--text-body);
+      margin-top: 8px;
+    }
+
+    /* SECTION TITLES */
+    .section-header {
+      margin: 40px 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-title);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title span {
+      color: var(--accent-gold);
+    }
+
+    /* ARCHITECTURE DIAGRAM */
+    .arch-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 36px;
+    }
+
+    .arch-flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      position: relative;
+    }
+
+    .arch-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .arch-block.active-jev {
+      border-color: var(--accent-gold);
+      background: linear-gradient(145deg, rgba(250, 204, 21, 0.05) 0%, var(--bg-card) 100%);
+    }
+
+    .arch-block.new-point {
+      border-color: var(--accent-green);
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, var(--bg-card) 100%);
+    }
+
+    .arch-block.anti-point {
+      border-color: var(--accent-red);
+      background: linear-gradient(145deg, rgba(239, 68, 68, 0.05) 0%, var(--bg-card) 100%);
+    }
+
+    .arch-tag {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    .tag-current { background: var(--border-color); color: var(--text-title); }
+    .tag-jev { background: rgba(250, 204, 21, 0.2); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+    .tag-laya { background: var(--accent-green-bg); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .tag-anti { background: var(--accent-red-bg); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+    .arch-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-title);
+      margin-bottom: 6px;
+    }
+
+    .arch-desc {
+      font-size: 13px;
+      color: var(--text-body);
+    }
+
+    /* FILTERS & SEARCH */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 14px 20px;
+      border-radius: 10px;
+      margin-bottom: 24px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-body);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-title);
+    }
+
+    .filter-btn.active {
+      background: var(--border-highlight);
+      border-color: var(--border-highlight);
+      color: #fff;
+    }
+
+    .search-input {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-title);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      min-width: 260px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    /* MATRIX VIEW */
+    .matrix-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 36px;
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .matrix-grid { grid-template-columns: 1fr; }
+    }
+
+    .matrix-quadrant {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .quad-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .quad-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .q1 { border-top: 3px solid var(--accent-green); }
+    .q1 .quad-title { color: var(--accent-green); }
+    .q2 { border-top: 3px solid var(--accent-amber); }
+    .q2 .quad-title { color: var(--accent-amber); }
+    .q3 { border-top: 3px solid var(--text-muted); }
+    .q3 .quad-title { color: var(--text-muted); }
+    .q4 { border-top: 3px solid var(--accent-red); }
+    .q4 .quad-title { color: var(--accent-red); }
+
+    .quad-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-grow: 1;
+    }
+
+    .quad-item {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 2px solid transparent;
+    }
+
+    .quad-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    /* CARDS GRID */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+
+    .usecase-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .usecase-card:hover {
+      border-color: var(--border-highlight);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-title-group {
+      flex: 1;
+    }
+
+    .card-domain {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-title);
+      line-height: 1.3;
+    }
+
+    .badge-status {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .badge-agora {
+      background: var(--accent-green-bg);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+    }
+
+    .badge-depois {
+      background: var(--accent-amber-bg);
+      color: var(--accent-amber);
+      border: 1px solid var(--accent-amber);
+    }
+
+    .badge-nao-usar {
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+    }
+
+    /* SCORE BAR */
+    .score-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .score-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .score-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+
+    .score-number {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-title);
+      white-space: nowrap;
+    }
+
+    /* CARD DETAILS */
+    .card-detail-item {
+      margin-bottom: 12px;
+    }
+
+    .detail-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .detail-text {
+      font-size: 13px;
+      color: var(--text-body);
+    }
+
+    .pros-cons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .pro-box {
+      background: rgba(16, 185, 129, 0.06);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .con-box {
+      background: rgba(239, 68, 68, 0.06);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .box-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .pro-box .box-title { color: var(--accent-green); }
+    .con-box .box-title { color: var(--accent-red); }
+
+    .risk-alert {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 3px solid var(--accent-amber);
+      padding: 8px 12px;
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      margin-bottom: 16px;
+      color: #fde68a;
+    }
+
+    /* CARD FOOTER */
+    .card-footer {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .scale-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .btn-action {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-title);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-action:hover {
+      background: var(--border-highlight);
+      border-color: var(--border-highlight);
+      color: #fff;
+    }
+
+    .btn-copy {
+      background: #1d4ed8;
+      border-color: #2563eb;
+      color: #fff;
+    }
+
+    .btn-copy:hover {
+      background: #2563eb;
+    }
+
+    /* PROMPT MODAL / DRAWER */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 850px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-title);
+    }
+
+    .btn-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .btn-close:hover {
+      color: #fff;
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .prompt-box {
+      background: #0b101b;
+      border: 1px solid #1f2d42;
+      border-radius: 8px;
+      padding: 16px;
+      color: #e2e8f0;
+      font-family: Consolas, Monaco, 'Courier New', Courier, monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: all;
+    }
+
+    .modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--accent-green);
+      color: #000;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <div class="header-top">
+        <div>
+          <div class="brand-title">
+            JURISRESUMO
+            <span class="badge-gold">ESTUDO TÉCNICO</span>
+          </div>
+          <div class="brand-subtitle">
+            Análise Estratégica de Ganho REAL: Onde o Motor JEV / LAYA Gera Valor vs. Onde NÃO Deve Ser Utilizado
+          </div>
+        </div>
+        <div class="meta-badges">
+          <div class="meta-pill">Sistema: <strong>JURISRESUMO v3.5</strong></div>
+          <div class="meta-pill">Tribunal: <strong>TJRN / PJe</strong></div>
+          <div class="meta-pill">Autor: <strong>FChNeto</strong></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card green">
+          <div class="kpi-value">3</div>
+          <div class="kpi-label">Implementar AGORA</div>
+          <div class="kpi-desc">Alto ROI, zero alucinação, compliance estrito LGPD e ritos do CPP.</div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-value">2</div>
+          <div class="kpi-label">Implementar DEPOIS</div>
+          <div class="kpi-desc">Copilot RAG ao vivo e minutas pré-audiência (depende de escala de uso).</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-value">3</div>
+          <div class="kpi-label">NÃO USAR (Anti-patterns)</div>
+          <div class="kpi-desc">Fraude financeira, moderação e autenticação: over-engineering danoso.</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="kpi-value">8.9 / 10</div>
+          <div class="kpi-label">Score Médio dos Casos Válidos</div>
+          <div class="kpi-desc">Foco cirúrgico em determinismo jurídico, latência zero e offline-first.</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ARQUITETURA ATUAL E PONTOS DE INJEÇÃO JEV/LAYA -->
+    <section>
+      <div class="section-header">
+        <div class="section-title">
+          <span>01.</span> Arquitetura Atual & Pontos de Injeção Estratégicos JEV / LAYA
+        </div>
+      </div>
+
+      <div class="arch-container">
+        <div class="arch-flow">
+          <div class="arch-block">
+            <span class="arch-tag tag-current">1. Entrada</span>
+            <div class="arch-title">Autos em PDF (PJe)</div>
+            <div class="arch-desc">Ingestão de autos eletrônicos integrais com TOC, certidões e carimbos marginais.</div>
+          </div>
+
+          <div class="arch-block active-jev">
+            <span class="arch-tag tag-jev">2. JEV Atual (System One)</span>
+            <div class="arch-title">Filtro de Ruído & TOC</div>
+            <div class="arch-desc">Classificação determinística, poda de comprovantes bancários e carimbos do PJe.</div>
+          </div>
+
+          <div class="arch-block new-point">
+            <span class="arch-tag tag-laya">Ponto A • AGORA</span>
+            <div class="arch-title">LGPD & Privacy Guard</div>
+            <div class="arch-desc">Sanitização automática de vítimas menores (ECA) e proteção estrita de segredo de justiça.</div>
+          </div>
+
+          <div class="arch-block new-point">
+            <span class="arch-tag tag-laya">Ponto B • AGORA</span>
+            <div class="arch-title">Hierarquia Estendida do CPP</div>
+            <div class="arch-desc">Roteamento para Tribunal do Júri, Custódia Flagrancial e Medidas Protetivas.</div>
+          </div>
+
+          <div class="arch-block">
+            <span class="arch-tag tag-current">3. Motores de Síntese</span>
+            <div class="arch-title">Motor Offline + Gemini LLM</div>
+            <div class="arch-desc">Extração de fatos, réus, denúncia e histórico cronológico com IDs.</div>
+          </div>
+
+          <div class="arch-block new-point">
+            <span class="arch-tag tag-laya">Ponto C • AGORA</span>
+            <div class="arch-title">Ground-Truth Guardrail (LAYA)</div>
+            <div class="arch-desc">Auditoria cruzada da saída do LLM: validação de IDs e eliminação de alucinações.</div>
+          </div>
+
+          <div class="arch-block anti-point">
+            <span class="arch-tag tag-anti">Alerta • NÃO USAR</span>
+            <div class="arch-title">Anti-patterns Recusados</div>
+            <div class="arch-desc">Barrar filtros de toxicidade ingênuos, login multi-tenant e detecção de fraude financeira.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MATRIZ IMPACTO X COMPLEXIDADE -->
+    <section>
+      <div class="section-header">
+        <div class="section-title">
+          <span>02.</span> Matriz de Decisão: Impacto Judicial vs. Complexidade
+        </div>
+      </div>
+
+      <div class="matrix-box">
+        <div class="matrix-grid">
+          <!-- Q1: Quick Wins -->
+          <div class="matrix-quadrant q1">
+            <div class="quad-header">
+              <span class="quad-title">ALTO IMPACTO + BAIXA/MÉDIA COMPLEXIDADE</span>
+              <span class="badge-status badge-agora">AGORA</span>
+            </div>
+            <div class="quad-list">
+              <div class="quad-item">
+                <span><strong>UC-1:</strong> Ground-Truth & Hallucination Guardrail</span>
+                <span class="badge-gold">9.6 / 10</span>
+              </div>
+              <div class="quad-item">
+                <span><strong>UC-2:</strong> Classificação Hierárquica Estendida CPP</span>
+                <span class="badge-gold">8.8 / 10</span>
+              </div>
+              <div class="quad-item">
+                <span><strong>UC-3:</strong> LGPD Privacy & Segredo de Justiça Guard</span>
+                <span class="badge-gold">8.4 / 10</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Q2: Estratégicos -->
+          <div class="matrix-quadrant q2">
+            <div class="quad-header">
+              <span class="quad-title">MÉDIO/ALTO IMPACTO + ALTA COMPLEXIDADE</span>
+              <span class="badge-status badge-depois">DEPOIS</span>
+            </div>
+            <div class="quad-list">
+              <div class="quad-item">
+                <span><strong>UC-4:</strong> Copilot de Audiência em Tempo Real (RAG)</span>
+                <span class="badge-gold">6.8 / 10</span>
+              </div>
+              <div class="quad-item">
+                <span><strong>UC-5:</strong> Minutas Decisórias Pré-Audiência (Saneador)</span>
+                <span class="badge-gold">6.2 / 10</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Q3: Baixo Impacto Baixa Complexidade -->
+          <div class="matrix-quadrant q3">
+            <div class="quad-header">
+              <span class="quad-title">BAIXO IMPACTO + BAIXA COMPLEXIDADE</span>
+              <span class="badge-status" style="background:#24324a; color:#94a3b8;">IGNORAR</span>
+            </div>
+            <div class="quad-list">
+              <div class="quad-item" style="color:#64748b;">
+                <span>• Logs de Acesso Cosméticos e Auditoria Interna</span>
+                <span>ROI Nulo</span>
+              </div>
+              <div class="quad-item" style="color:#64748b;">
+                <span>• Moderação de Formulários de Suporte ao Juiz</span>
+                <span>Dispensável</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Q4: Anti-patterns -->
+          <div class="matrix-quadrant q4">
+            <div class="quad-header">
+              <span class="quad-title">BAIXO IMPACTO + ALTA COMPLEXIDADE (ANTI-PATTERNS)</span>
+              <span class="badge-status badge-nao-usar">NÃO USAR</span>
+            </div>
+            <div class="quad-list">
+              <div class="quad-item">
+                <span><strong>UC-6:</strong> Autenticação RBAC / Multi-tenant</span>
+                <span style="color:#ef4444; font-weight:700;">1.0 / 10</span>
+              </div>
+              <div class="quad-item">
+                <span><strong>UC-7:</strong> Detecção de Fraude Financeira Bancária</span>
+                <span style="color:#ef4444; font-weight:700;">0.5 / 10</span>
+              </div>
+              <div class="quad-item">
+                <span><strong>UC-8:</strong> Moderação de Conteúdo / Toxicidade Penal</span>
+                <span style="color:#ef4444; font-weight:700;">0.0 / 10</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARDS DOS CASOS DE USO -->
+    <section>
+      <div class="section-header">
+        <div class="section-title">
+          <span>03.</span> Avaliação Pormenorizada dos 8 Casos de Uso
+        </div>
+      </div>
+
+      <div class="controls-bar">
+        <div class="filter-tabs">
+          <button class="filter-btn active" onclick="filterCards('ALL')">Todos (8)</button>
+          <button class="filter-btn" onclick="filterCards('AGORA')">Implementar AGORA (3)</button>
+          <button class="filter-btn" onclick="filterCards('DEPOIS')">Implementar DEPOIS (2)</button>
+          <button class="filter-btn" onclick="filterCards('NAO_USAR')">NÃO USAR (3)</button>
+        </div>
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar caso de uso ou palavra-chave..." oninput="searchCards()">
+      </div>
+
+      <div class="cards-grid" id="cardsGrid">
+
+        <!-- CARD 1 -->
+        <div class="usecase-card" data-status="AGORA" data-title="ground truth verificacao citacoes llm guardrail alucinacao">
+          <div class="card-top">
+            <div class="card-title-group">
+              <div class="card-domain">Arquitetura / LLM / Integridade Judicial</div>
+              <div class="card-title">UC-1: Guardrail de Ground-Truth & Auditoria de Citações PJe (LLM Verification)</div>
+            </div>
+            <span class="badge-status badge-agora">AGORA</span>
+          </div>
+
+          <div class="score-container">
+            <span class="score-label">Utilidade:</span>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width: 96%; background: var(--accent-green);"></div>
+            </div>
+            <span class="score-number">9.6 / 10</span>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Onde o JEV/LAYA Entra no Fluxo:</div>
+            <div class="detail-text">Intermediário pós-LLM. Inspeciona o JSON gerado pelo Gemini e cruza cada número de ID citado, data e réu com o catálogo real de documentos do <code>pje_indexer.py</code>.</div>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Benefício Esperado:</div>
+            <div class="detail-text">Eliminação total (100%) de alucinações de números de documentos, IDs e tipificações inexistentes, garantindo que o magistrado nunca clique em link quebrado ou mencione ato falso em audiência.</div>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pro-box">
+              <div class="box-title">Prós</div>
+              Segurança matemática; fallback automático para extração offline caso o LLM invente fatos.
+            </div>
+            <div class="con-box">
+              <div class="box-title">Contras</div>
+              Adiciona ~40ms de validação em memória por processo no pipeline.
+            </div>
+          </div>
+
+          <div class="risk-alert">
+            <strong>▲ Limitações:</strong> Exige que o catálogo do PJe esteja corretamente indexado na página inicial.
+          </div>
+
+          <div class="card-footer">
+            <div class="scale-text"><strong>Gatilho:</strong> Qualquer uso do modo IA (Gemini) em processos reais.</div>
+            <button class="btn-action btn-copy" onclick="openPromptModal(1)">Copiar Prompt</button>
+          </div>
+        </div>
+
+        <!-- CARD 2 -->
+        <div class="usecase-card" data-status="AGORA" data-title="classificacao hierarquica ritos juri custodia medidas protetivas cpp">
+          <div class="card-top">
+            <div class="card-title-group">
+              <div class="card-domain">Classificação / Roteamento Processual</div>
+              <div class="card-title">UC-2: Classificação Hierárquica Estendida de Ritos Processuais (Júri, Custódia, Protetivas)</div>
+            </div>
+            <span class="badge-status badge-agora">AGORA</span>
+          </div>
+
+          <div class="score-container">
+            <span class="score-label">Utilidade:</span>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width: 88%; background: var(--accent-green);"></div>
+            </div>
+            <span class="score-number">8.8 / 10</span>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Onde o JEV/LAYA Entra no Fluxo:</div>
+            <div class="detail-text">No método <code>classify_act_hierarchy()</code> do JEV. Estende a cadeia canônica atual (ANPP -> PAnP -> AIJ) para cobrir Sessão do Júri, Audiência de Custódia e Audiência de Justificação da Lei Maria da Penha.</div>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Benefício Esperado:</div>
+            <div class="detail-text">Expansão da cobertura do Jurisresumo para varas privativas do Tribunal do Júri e plantões judiciários de Custódia, mantendo 100% de execução offline com latência zero.</div>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pro-box">
+              <div class="box-title">Prós</div>
+              Zero custo de API; regras determinísticas já respaldadas na legislação processual penal.
+            </div>
+            <div class="con-box">
+              <div class="box-title">Contras</div>
+              Requer mapear termos de pronúncia e autos de prisão em flagrante com testes específicos.
+            </div>
+          </div>
+
+          <div class="risk-alert">
+            <strong>▲ Limitações:</strong> Processos com decisões complexas de desclassificação exigem regexes bem delimitadas.
+          </div>
+
+          <div class="card-footer">
+            <div class="scale-text"><strong>Gatilho:</strong> Atuação em plantões de custódia ou varas com competência de Júri.</div>
+            <button class="btn-action btn-copy" onclick="openPromptModal(2)">Copiar Prompt</button>
+          </div>
+        </div>
+
+        <!-- CARD 3 -->
+        <div class="usecase-card" data-status="AGORA" data-title="seguranca lgpd privacidade menor eca segredo de justica">
+          <div class="card-top">
+            <div class="card-title-group">
+              <div class="card-domain">Segurança / LGPD / Compliance Judicial</div>
+              <div class="card-title">UC-3: LGPD Privacy Guard & Sanitização Preventiva de Sigilo Estrito (ECA e Dados Bancários)</div>
+            </div>
+            <span class="badge-status badge-agora">AGORA</span>
+          </div>
+
+          <div class="score-container">
+            <span class="score-label">Utilidade:</span>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width: 84%; background: var(--accent-green);"></div>
+            </div>
+            <span class="score-number">8.4 / 10</span>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Onde o JEV/LAYA Entra no Fluxo:</div>
+            <div class="detail-text">Filtro de borda antes de qualquer envio para o Gemini e antes da gravação do DOCX. Detecta segredo de justiça estrito e dados de menores (ECA art. 247).</div>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Benefício Esperado:</div>
+            <div class="detail-text">Conformidade irrestrita com a LGPD e resoluções do CNJ; bloqueio automático de envio externo caso os autos estejam sob sigilo absoluto, forçando o modo 100% offline local.</div>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pro-box">
+              <div class="box-title">Prós</div>
+              Blindagem jurídica do magistrado contra vazamentos e quebra de sigilo funcional.
+            </div>
+            <div class="con-box">
+              <div class="box-title">Contras</div>
+              Pode anonimizar nomes de menores que o juiz precise citar expressamente na ata (requer chave reversível).
+            </div>
+          </div>
+
+          <div class="risk-alert">
+            <strong>▲ Limitações:</strong> O magistrado pode necessitar do nome completo da vítima em casos de depoimento especial.
+          </div>
+
+          <div class="card-footer">
+            <div class="scale-text"><strong>Gatilho:</strong> Julgamento de crimes sexuais contra vulneráveis ou réus protegidos.</div>
+            <button class="btn-action btn-copy" onclick="openPromptModal(3)">Copiar Prompt</button>
+          </div>
+        </div>
+
+        <!-- CARD 4 -->
+        <div class="usecase-card" data-status="DEPOIS" data-title="copilot chatbot suporte audiencia tempo real rag pergunte aos autos">
+          <div class="card-top">
+            <div class="card-title-group">
+              <div class="card-domain">Chatbot / Suporte ao Magistrado em Audiência</div>
+              <div class="card-title">UC-4: Copilot de Audiência em Tempo Real ("Pergunte aos Autos" / RAG Interativo)</div>
+            </div>
+            <span class="badge-status badge-depois">DEPOIS</span>
+          </div>
+
+          <div class="score-container">
+            <span class="score-label">Utilidade:</span>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width: 68%; background: var(--accent-amber);"></div>
+            </div>
+            <span class="score-number">6.8 / 10</span>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Onde o JEV/LAYA Entra no Fluxo:</div>
+            <div class="detail-text">Novo endpoint <code>/api/copilot/ask</code> com widget no frontend. O magistrado faz perguntas durante o depoimento (ex.: <em>"O réu confessou no IP?"</em>) e o JEV busca a citação exata com número de ID e folha.</div>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Benefício Esperado:</div>
+            <div class="detail-text">Acesso instantâneo a trechos probatórios obscuros sem que o juiz precise parar a gravação da audiência para pesquisar manualmente no PDF de 400 páginas.</div>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pro-box">
+              <div class="box-title">Prós</div>
+              Agilidade no interrogatório judicial; respostas fundamentadas com número de ID clicável.
+            </div>
+            <div class="con-box">
+              <div class="box-title">Contras</div>
+              Exige indexação BM25/SQLite local pesada e pode gerar distração visual durante a sessão.
+            </div>
+          </div>
+
+          <div class="risk-alert">
+            <strong>▲ Limitações:</strong> Em processos de 300 MB, a busca vetorial em navegadores sem GPU pode apresentar lentidão.
+          </div>
+
+          <div class="card-footer">
+            <div class="scale-text"><strong>Gatilho:</strong> Quando a pauta diária contiver múltiplos processos volumosos (>300 páginas).</div>
+            <button class="btn-action btn-copy" onclick="openPromptModal(4)">Copiar Prompt</button>
+          </div>
+        </div>
+
+        <!-- CARD 5 -->
+        <div class="usecase-card" data-status="DEPOIS" data-title="automacao minutas despacho saneador falta intimacao diligencias">
+          <div class="card-top">
+            <div class="card-title-group">
+              <div class="card-domain">Automação de Cartório / Gestão de Pauta</div>
+              <div class="card-title">UC-5: Minutas de Saneamento Pré-Audiência (Diligências e Ausência de Intimação)</div>
+            </div>
+            <span class="badge-status badge-depois">DEPOIS</span>
+          </div>
+
+          <div class="score-container">
+            <span class="score-label">Utilidade:</span>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width: 62%; background: var(--accent-amber);"></div>
+            </div>
+            <span class="score-number">6.2 / 10</span>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Onde o JEV/LAYA Entra no Fluxo:</div>
+            <div class="detail-text">Ao auditar o rol de testemunhas e encontrar status <em>"Contrafé negativa"</em> ou <em>"Não localizado"</em>, o JEV gera automaticamente uma minuta de despacho judicial determinando renovação ou substituição de testemunha.</div>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Benefício Esperado:</div>
+            <div class="detail-text">Prevenção de audiências frustradas; identificação com 48h de antecedência de réus ou testemunhas pendentes de citação/intimação com minuta pronta para assinatura.</div>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pro-box">
+              <div class="box-title">Prós</div>
+              Reduz retrabalho de assessoria e cartório; reaproveita as regras de mandados já extraídas.
+            </div>
+            <div class="con-box">
+              <div class="box-title">Contras</div>
+              Foge ligeiramente do escopo do resumo da audiência, invadindo a gestão de expediente da vara.
+            </div>
+          </div>
+
+          <div class="risk-alert">
+            <strong>▲ Limitações:</strong> Depende da certidão do oficial de justiça já ter sido juntada no PJe.
+          </div>
+
+          <div class="card-footer">
+            <div class="scale-text"><strong>Gatilho:</strong> Integração com rotinas de triagem semanal de pauta do gabinete.</div>
+            <button class="btn-action btn-copy" onclick="openPromptModal(5)">Copiar Prompt</button>
+          </div>
+        </div>
+
+        <!-- CARD 6 -->
+        <div class="usecase-card" data-status="NAO_USAR" data-title="autenticacao rbac login controle acesso multi tenant sessao">
+          <div class="card-top">
+            <div class="card-title-group">
+              <div class="card-domain">Autenticação & Controle de Acesso</div>
+              <div class="card-title">UC-6: Autenticação Biométrica, RBAC e Gestão de Sessão Multi-tenant</div>
+            </div>
+            <span class="badge-status badge-nao-usar">NÃO USAR</span>
+          </div>
+
+          <div class="score-container">
+            <span class="score-label">Utilidade:</span>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width: 10%; background: var(--accent-red);"></div>
+            </div>
+            <span class="score-number">1.0 / 10</span>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Avaliação de Escopo:</div>
+            <div class="detail-text">O Jurisresumo é um aplicativo desktop local e portátil para Windows, operado diretamente na máquina física do magistrado ou assessor. Criar autenticação, login com senha ou multi-inquilino é puro desperdício.</div>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Por que NÃO USAR:</div>
+            <div class="detail-text">Adicionaria risco de bloqueio acidental (lockout) sem conexão, dependência de banco de dados e quebra da portabilidade da versão HTML autônoma zero-install. A autenticação já é provida pelo login do Windows do TJRN.</div>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pro-box">
+              <div class="box-title">Prós Supostos</div>
+              Controle de acesso granular teórico para múltiplos perfis.
+            </div>
+            <div class="con-box">
+              <div class="box-title">Contras Reais</div>
+              Over-engineering absurdo; destrói a inicialização instantânea do sistema.
+            </div>
+          </div>
+
+          <div class="risk-alert" style="border-left-color: var(--accent-red); color: #fca5a5;">
+            <strong>▲ Veredito:</strong> ANTI-PATTERN CATEGÓRICO. Manter o software 100% livre de barreiras de login.
+          </div>
+
+          <div class="card-footer">
+            <div class="scale-text"><strong>Recomendação:</strong> NUNCA IMPLEMENTAR neste projeto.</div>
+            <button class="btn-action btn-copy" onclick="openPromptModal(6)">Copiar Parecer</button>
+          </div>
+        </div>
+
+        <!-- CARD 7 -->
+        <div class="usecase-card" data-status="NAO_USAR" data-title="fraude transacoes bancarias analise financeira pix cartao">
+          <div class="card-top">
+            <div class="card-title-group">
+              <div class="card-domain">Fraude / Transações Bancárias</div>
+              <div class="card-title">UC-7: Detecção de Fraude e Análise Transacional Financeira em Tempo Real</div>
+            </div>
+            <span class="badge-status badge-nao-usar">NÃO USAR</span>
+          </div>
+
+          <div class="score-container">
+            <span class="score-label">Utilidade:</span>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width: 5%; background: var(--accent-red);"></div>
+            </div>
+            <span class="score-number">0.5 / 10</span>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Avaliação de Escopo:</div>
+            <div class="detail-text">O Jurisresumo sintetiza processos penais para pauta de audiência. O sistema não processa pagamentos, faturamento, PIX ou e-commerce. Não existe fluxo transacional para ser monitorado por antifraude.</div>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Por que NÃO USAR:</div>
+            <div class="detail-text">Comprovantes bancários e guias de custas já são sumariamente eliminados pelo JEV como lixo inútil (<code>BANKING_NOISE_REGEX</code>). Tentar analisar transações financeiras nos autos é competência de perícia contábil do ITEP, não do resumo.</div>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pro-box">
+              <div class="box-title">Prós Supostos</div>
+              Auditoria de lavagem de dinheiro em processos de crimes financeiros.
+            </div>
+            <div class="con-box">
+              <div class="box-title">Contras Reais</div>
+              Fora do escopo do Jurisresumo; risco gigantesco de alucinação de valores.
+            </div>
+          </div>
+
+          <div class="risk-alert" style="border-left-color: var(--accent-red); color: #fca5a5;">
+            <strong>▲ Veredito:</strong> ANTI-PATTERN CATEGÓRICO. Manter foco na síntese fática da acusação penal.
+          </div>
+
+          <div class="card-footer">
+            <div class="scale-text"><strong>Recomendação:</strong> NUNCA IMPLEMENTAR neste projeto.</div>
+            <button class="btn-action btn-copy" onclick="openPromptModal(7)">Copiar Parecer</button>
+          </div>
+        </div>
+
+        <!-- CARD 8 -->
+        <div class="usecase-card" data-status="NAO_USAR" data-title="moderacao conteudo toxicidade filtro palavras ofensivas profanidade">
+          <div class="card-top">
+            <div class="card-title-group">
+              <div class="card-domain">Moderação de Conteúdo / Filtros de Toxicidade</div>
+              <div class="card-title">UC-8: Moderação de Conteúdo e Filtros de Toxicidade Tradicionais</div>
+            </div>
+            <span class="badge-status badge-nao-usar">NÃO USAR</span>
+          </div>
+
+          <div class="score-container">
+            <span class="score-label">Utilidade:</span>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width: 2%; background: var(--accent-red);"></div>
+            </div>
+            <span class="score-number">0.0 / 10</span>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Avaliação de Escopo:</div>
+            <div class="detail-text">Filtros convencionais de toxicidade, profanidade ou moderação de linguagem de redes sociais são absolutamente DESTRUTIVOS quando aplicados a peças da justiça penal.</div>
+          </div>
+
+          <div class="card-detail-item">
+            <div class="detail-label">Por que NÃO USAR:</div>
+            <div class="detail-text">Denúncias criminais contêm termos explícitos: homicídio, estupro, sangue, drogas, armas e agressões. Um filtro ingênuo censuraria a narrativa ministerial e corromperia as provas necessárias para o magistrado conduzir a audiência.</div>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pro-box">
+              <div class="box-title">Prós Supostos</div>
+              Nenhum no âmbito judicial criminal.
+            </div>
+            <div class="con-box">
+              <div class="box-title">Contras Reais</div>
+              Censura indevida de autos judiciais; violação da literalidade da imputação penal.
+            </div>
+          </div>
+
+          <div class="risk-alert" style="border-left-color: var(--accent-red); color: #fca5a5;">
+            <strong>▲ Veredito:</strong> ANTI-PATTERN CATEGÓRICO E PERIGOSO. A linguagem dos autos deve ser preservada.
+          </div>
+
+          <div class="card-footer">
+            <div class="scale-text"><strong>Recomendação:</strong> NUNCA IMPLEMENTAR neste projeto.</div>
+            <button class="btn-action btn-copy" onclick="openPromptModal(8)">Copiar Parecer</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL PARA EXIBIÇÃO E CÓPIA DE PROMPT -->
+  <div class="modal-overlay" id="promptModal" onclick="closeModalOnOverlay(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Prompt de Implementação para Agente</div>
+        <button class="btn-close" onclick="closePromptModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="prompt-box" id="modalPromptText"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-action" onclick="closePromptModal()">Fechar</button>
+        <button class="btn-action btn-copy" id="btnModalCopy" onclick="copyCurrentPrompt()">Copiar Prompt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST FEEDBACK -->
+  <div class="toast" id="toastBox">
+    <span>Prompt copiado com sucesso para a área de transferência!</span>
+  </div>
+
+  <script>
+    // Armazém de Prompts Acionáveis por Caso de Uso
+    const PROMPTS_DATABASE = {
+      1: `# PROMPT DE IMPLEMENTAÇÃO: UC-1 — GROUND-TRUTH & CITATION GUARDRAIL (JEV/LAYA)
+# Destinado ao Agente Executor (BackendLegalNLP / QACivilCriminalAuditor)
+
+CONTEXTO DO PROJETO:
+Você está atuando no JURISRESUMO (TJRN), sistema de síntese de processos criminais para audiências desenvolvido por FChNeto.
+Seu objetivo é implementar o 'Ground-Truth & Citation Guardrail' (System One / LAYA Verification Layer) entre a resposta do LLM e a estrutura HearingSummaryData.
+
+ARQUIVOS AFETADOS:
+1. app/core/jev_decision_engine.py (Adicionar método audit_llm_ground_truth)
+2. app/engines/gemini_engine.py (Invocar a auditoria imediatamente após desserializar o JSON do Gemini)
+3. tests/test_llm_ground_truth_guardrail.py (Nova suíte de testes de integridade)
+
+FLUXO DE DADOS:
+PJe PDF -> pje_indexer.py (Cria TOC e Catalog de Documentos) -> gemini_engine.py -> [JEV/LAYA Guardrail] -> HearingSummaryData -> docx_generator.py
+
+REQUISITOS TÉCNICOS:
+1. Extrair todos os números de ID citados em 'chronological_history' e no rol de 'witnesses'.
+2. Conferir se cada número de ID existe no 'catalog' de documentos indexados do PJe.
+   - SE o ID não existir no catálogo: Substituir imediatamente pelo ID legítimo do ato localizado no pje_indexer ou remover o hiperlink espúrio, registrando log de advertência.
+3. Verificar a imputação penal: conferir se os artigos citados pelo LLM estão presentes no texto bruto da denúncia ministerial (denuncia_text). Se o LLM alucinou artigos adicionais, restaurar a imputação limpa extraída pelo offline_engine.py.
+4. Validar se a data e hora da audiência respeitam os limites de calendário (dia <= 31, mes <= 12, hora <= 23).
+
+CRITÉRIOS DE ACEITE:
+- 100% dos IDs no histórico e testemunhas devem corresponder a documentos reais dos autos.
+- Zero alucinações de artigos penais inexistentes na denúncia.
+- A suíte de testes 'pytest tests/test_llm_ground_truth_guardrail.py' deve ser criada e passar com 100% de sucesso.
+- Manter 195 testes anteriores do pytest íntegros e preservados.
+- Preservar a autoria: 'Desenvolvido por FChNeto'.
+
+FALLBACK:
+Se a validação do JEV/LAYA detectar mais de 3 incoerências graves no retorno do LLM, descartar a resposta da IA e assumir 100% da extração determinística do 'offline_engine.py'.`,
+
+      2: `# PROMPT DE IMPLEMENTAÇÃO: UC-2 — HIERARQUIA PROCESSUAL ESTENDIDA CPP (JÚRI, CUSTÓDIA, PROTETIVAS)
+# Destinado ao Agente Executor (BackendLegalNLP / QACivilCriminalAuditor)
+
+CONTEXTO DO PROJETO:
+Você está atuando no JURISRESUMO (TJRN), sistema de síntese de processos criminais para audiências desenvolvido por FChNeto.
+Seu objetivo é estender a hierarquia de classificação processual do JEVDecisionEngine para cobrir Sessão Plenária do Júri, Audiência de Custódia e Audiência de Justificação da Lei Maria da Penha.
+
+ARQUIVOS AFETADOS:
+1. app/core/models.py (Adicionar valores ao enum DocumentCategory e novos tipos de audiência: JURI, CUSTODIA, PROTETIVA_MARIA_PENHA)
+2. app/core/jev_decision_engine.py (Expandir método classify_act_hierarchy e DECISAO_POSITIVE_REGEX)
+3. app/engines/offline_engine.py (Atualizar _determine_act_type e mapeamento de títulos)
+4. tests/test_extended_hierarchy.py (Suíte de testes com peças judiciais simuladas)
+
+HIERARQUIA DE PRECEDÊNCIA PROCESSUAL ATUALIZADA:
+1. Sessão Plenária do Tribunal do Júri (se houver Decisão de Pronúncia transitada em julgado e pauta de júri) -> Tipo: "JÚRI"
+2. Audiência de Custódia (se houver Auto de Prisão em Flagrante recente sem recebimento de denúncia) -> Tipo: "CUSTÓDIA"
+3. Revogação de ANPP ou PSCP -> Tipo: "AIJ" (Imposição obrigatória)
+4. Produção Antecipada de Provas (Art. 366 do CPP) -> Tipo: "PAnP"
+5. Homologação de Acordo de Não Persecução Penal -> Tipo: "ANPP"
+6. Instrução e Julgamento ordinária/sumária -> Tipo: "AIJ"
+7. Medida Protetiva de Urgência (Lei 11.340/06, art. 16) -> Tipo: "JUSTIFICAÇÃO / PROTETIVA"
+
+CRITÉRIOS DE ACEITE:
+- Decisões com termo de pronúncia devem rotular o resumo com cabeçalho formatado para o Tribunal do Júri.
+- Autos de APF sem denúncia oferecida devem ser classificados como Custódia.
+- Zero quebra na classificação canônica existente dos 9 cenários criminais de referência.
+- Execução 100% offline, em memória, sem chamadas externas.
+- Todos os testes unitários novos e existentes passando com 100% de aprovação.
+- Preservar assinatura 'Desenvolvido por FChNeto'.`,
+
+      3: `# PROMPT DE IMPLEMENTAÇÃO: UC-3 — LGPD PRIVACY GUARD & REDACTION PREVENTIVO (JEV/LAYA)
+# Destinado ao Agente Executor (BackendLegalNLP / DevOpsReleaseManager)
+
+CONTEXTO DO PROJETO:
+Você está atuando no JURISRESUMO (TJRN), sistema de síntese de processos criminais para audiências desenvolvido por FChNeto.
+Seu objetivo é implementar o 'LGPD Privacy Guard' como filtro de borda e segurança de dados no pipeline de extração.
+
+ARQUIVOS AFETADOS:
+1. app/core/jev_decision_engine.py (Adicionar detector inspect_lgpd_and_secrecy)
+2. app/engines/gemini_engine.py (Bloqueio estrito de envio de autos com segredo absoluto para o Gemini)
+3. app/generators/docx_generator.py (Opção de anonimização reversível no DOCX)
+4. tests/test_lgpd_privacy_guard.py (Nova suíte de testes de conformidade)
+
+REQUISITOS TÉCNICOS:
+1. Detectar carimbos e marcadores de segredo de justiça estrito:
+   - "Segredo de Justiça", "Sigilo Absoluto", "Nível de Sigilo 4" ou "Nível de Sigilo 5".
+2. SE o processo estiver sob segredo absoluto:
+   - FORÇAR imediatamente o 'offline_engine.py' (Modo 2).
+   - Bloquear categoricamente qualquer requisição externa para a API do Google Gemini, mesmo que a chave de API esteja configurada.
+3. Detectar dados de menores de 18 anos em crimes sexuais ou infrações análogas (ECA, art. 247):
+   - Substituir nome de vítimas menores por pseudônimo seguro: '[VÍTIMA MENOR DE IDADE - PROTEGIDA PELO ECA]'.
+   - Mascarar números de CPF e contas bancárias que porventura estejam nos fatos narrados.
+
+CRITÉRIOS DE ACEITE:
+- Processos com segredo absoluto rejeitam chamadas de rede externas e registram log de auditoria LGPD.
+- Nomes de vítimas menores são protegidos na exportação se a flag de proteção de vulneráveis estiver ativa.
+- Zero quebra nos testes existentes da suíte pytest (195 aprovados mantidos).
+- Preservar autoria 'Desenvolvido por FChNeto'.`,
+
+      4: `# PROMPT DE IMPLEMENTAÇÃO: UC-4 — COPILOT DE AUDIÊNCIA EM TEMPO REAL ("PERGUNTE AOS AUTOS")
+# Destinado ao Agente Executor (FrontendUIUX / BackendLegalNLP)
+# RECOMENDAÇÃO: IMPLEMENTAR DEPOIS (PRIORIDADE MÉDIA / REQUER ESCALA)
+
+CONTEXTO DO PROJETO:
+Você está atuando no JURISRESUMO (TJRN), sistema de síntese de processos criminais para audiências desenvolvido por FChNeto.
+Seu objetivo é desenhar a arquitetura do Copilot Conversacional local para permitir consultas semânticas pelo magistrado durante a audiência.
+
+ARQUIVOS AFETADOS:
+1. app/core/rag_indexer.py (Novo indexador leve baseado em SQLite FTS5 / BM25 local, sem dependência de CUDA)
+2. app/api/routes.py (Novo endpoint POST /api/copilot/ask)
+3. app/static/index.html e app/static/js/app.js (Drawer retrátil lateral com atalho de teclado Alt+C)
+4. tests/test_copilot_rag.py (Testes de consulta rápida)
+
+REQUISITOS TÉCNICOS:
+1. O indexador deve fatiar o PDF em parágrafos de 300 palavras vinculados ao número de ID e número de página do PJe.
+2. Utilizar motor de busca local BM25/FTS5 em memória para responder em menos de 800ms.
+3. A resposta deve sempre citar o ID do documento e a página exata (ex.: "Conforme interrogatório no ID 1984723, Pág. 4, o réu declarou...").
+4. Se a informação não existir nos autos, responder objetivamente: "Informação não localizada nos autos indexados." (Proibição total de suposições).
+
+CRITÉRIOS DE ACEITE:
+- Tempo de resposta inferior a 1,5 segundos.
+- Citação auditável do documento do PJe em 100% das respostas.
+- Interface discreta para não atrapalhar a condução da audiência pelo juiz.
+- Suporte a execução 100% offline.`,
+
+      5: `# PROMPT DE IMPLEMENTAÇÃO: UC-5 — MINUTAS DE SANEAMENTO PRÉ-AUDIÊNCIA (DESPACHO DE PAUTA)
+# Destinado ao Agente Executor (OpenXMLEngine / BackendLegalNLP)
+# RECOMENDAÇÃO: IMPLEMENTAR DEPOIS (PRIORIDADE MÉDIA)
+
+CONTEXTO DO PROJETO:
+Você está atuando no JURISRESUMO (TJRN), sistema de síntese de processos criminais para audiências desenvolvido por FChNeto.
+Seu objetivo é implementar a geração automatizada de minutas de despacho saneador quando forem detectadas falhas prévias na citação de réus ou intimação de testemunhas.
+
+ARQUIVOS AFETADOS:
+1. app/engines/offline_engine.py (Identificar pendências de mandados e certidões negativas)
+2. app/generators/docx_generator.py (Adicionar template OpenXML para Despacho Saneador / Redesignação)
+3. app/api/routes.py (Endpoint GET /api/download-saneador/{case_id})
+4. tests/test_pre_hearing_orders.py (Testes com casos de contrafé negativa)
+
+REQUISITOS TÉCNICOS:
+1. Se o rol de testemunhas contiver itens com 'Certidão contrafé negativa' ou 'Não localizado':
+   - Disponibilizar botão secundário: "Baixar Minuta de Despacho Saneador (.docx)".
+2. O documento deve seguir o padrão tipográfico do TJRN (Verdana 12pt, entrelinhas 1.5, margens 2,0cm):
+   - Intimação da acusação para manifestação ou substituição de testemunha em 48h.
+   - Requisição ao comando da Polícia Militar se a testemunha ausente for PM.
+   - Renovação de mandado em endereço atualizado se houver nos autos.
+
+CRITÉRIOS DE ACEITE:
+- DOCX gerado sem corrupção OpenXML, validado com python-docx.
+- Identificação precisa de oficiais e testemunhas não intimadas.
+- Preservar autoria 'Desenvolvido por FChNeto'.`,
+
+      6: `# PARECER DE ARQUITETURA: UC-6 — AUTENTICAÇÃO E RBAC MULTI-TENANT (ANTI-PATTERN)
+# Destinado à Equipe de Governança e Arquitetura
+
+DECISÃO: NÃO IMPLEMENTAR (SCORE: 1.0 / 10)
+
+JUSTIFICATIVA TÉCNICA E PRAGMÁTICA:
+1. O JURISRESUMO foi desenhado sob o paradigma 'Zero-Install / Desktop Sobrevivente', rodando em modo standalone local nas estações do magistrado (TJRN).
+2. Introduzir login, senhas, tokens JWT ou autenticação biométrica viola o princípio da disponibilidade:
+   - Se o tribunal sofrer instabilidade de rede ou se a sessão do juiz expirar no meio da audiência, o magistrado seria impedido de abrir o resumo da pauta, gerando atraso e tumulto na sessão solene.
+3. A segurança física e de acesso à máquina já é garantida pelo login Windows institucional com cartão/token funcional do TJRN.
+4. Conclusão: Manter a aplicação 100% livre de formulários de autenticação. Nenhuma linha de código deve ser adicionada para controle de sessão web.`,
+
+      7: `# PARECER DE ARQUITETURA: UC-7 — DETECÇÃO DE FRAUDE FINANCEIRA (ANTI-PATTERN)
+# Destinado à Equipe de Governança e Arquitetura
+
+DECISÃO: NÃO IMPLEMENTAR (SCORE: 0.5 / 10)
+
+JUSTIFICATIVA TÉCNICA E PRAGMÁTICA:
+1. O propósito estrito do software é a síntese processual da acusação e instrução probatória para audiências criminais (AIJ, ANPP, PAnP).
+2. Não há fluxo transacional de pagamentos, gateway, PIX ou e-commerce no sistema.
+3. Comprovantes bancários e depósitos judiciais já são descartados pelo filtro de ruído do JEV (BANKING_NOISE_REGEX) porque poluem o histórico e o preview da audiência.
+4. A análise de fraudes em movimentações financeiras de réus pertence a laudos periciais e relatórios de inteligência financeira do COAF/ITEP, devendo o sistema apenas citar o laudo ministerial sem tentar recalcular ou auditar transações.`,
+
+      8: `# PARECER DE ARQUITETURA: UC-8 — MODERAÇÃO DE CONTEÚDO E TOXICIDADE PENAL (ANTI-PATTERN DANOSO)
+# Destinado à Equipe de Governança e Arquitetura
+
+DECISÃO: NÃO IMPLEMENTAR (SCORE: 0.0 / 10 — POTENCIALMENTE DESTRUTIVO)
+
+JUSTIFICATIVA TÉCNICA E PRAGMÁTICA:
+1. Filtros de toxicidade convencionais (utilizados em redes sociais e SACs) classificam termos como "matou", "golpeou", "arma", "estupro", "sangue" e "substância entorpecente" como conteúdo impróprio/tóxico.
+2. Na jurisdição criminal, esses termos constituem o núcleo do tipo penal e a descrição indispensável do fato criminoso (art. 41 do CPP).
+3. Aplicar moderação no texto da denúncia causaria censura indevida da narrativa fática ministerial, omitindo detalhes essenciais para a dosimetria da pena e perguntas do juiz.
+4. Conclusão: PROIBIDO qualquer filtro de linguagem ofensiva ou moderação de termos penais no pipeline de ingestão e síntese.`
+    };
+
+    let activeFilter = 'ALL';
+    let currentModalPrompt = '';
+
+    function filterCards(status) {
+      activeFilter = status;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      applyFilters();
+    }
+
+    function searchCards() {
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.usecase-card');
+
+      cards.forEach(card => {
+        const status = card.getAttribute('data-status');
+        const titleData = card.getAttribute('data-title').toLowerCase();
+        const cardText = card.innerText.toLowerCase();
+
+        const matchesStatus = (activeFilter === 'ALL') || (status === activeFilter);
+        const matchesQuery = !query || titleData.includes(query) || cardText.includes(query);
+
+        if (matchesStatus && matchesQuery) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function openPromptModal(id) {
+      const promptText = PROMPTS_DATABASE[id] || 'Prompt não encontrado.';
+      currentModalPrompt = promptText;
+      document.getElementById('modalPromptText').innerText = promptText;
+
+      const titles = {
+        1: 'Prompt para Agente: UC-1 (Ground-Truth & LLM Guardrail)',
+        2: 'Prompt para Agente: UC-2 (Hierarquia Estendida do CPP)',
+        3: 'Prompt para Agente: UC-3 (LGPD Privacy Guard)',
+        4: 'Prompt para Agente: UC-4 (Copilot RAG de Audiência)',
+        5: 'Prompt para Agente: UC-5 (Minutas de Saneamento Pré-Audiência)',
+        6: 'Parecer Técnico: UC-6 (Autenticação Multi-tenant - Anti-pattern)',
+        7: 'Parecer Técnico: UC-7 (Fraude Financeira - Anti-pattern)',
+        8: 'Parecer Técnico: UC-8 (Moderação de Conteúdo - Anti-pattern)'
+      };
+
+      document.getElementById('modalTitle').innerText = titles[id] || 'Prompt de Implementação';
+      document.getElementById('promptModal').classList.add('active');
+    }
+
+    function closePromptModal() {
+      document.getElementById('promptModal').classList.remove('active');
+    }
+
+    function closeModalOnOverlay(e) {
+      if (e.target.id === 'promptModal') {
+        closePromptModal();
+      }
+    }
+
+    function copyCurrentPrompt() {
+      if (!currentModalPrompt) return;
+      navigator.clipboard.writeText(currentModalPrompt).then(() => {
+        showToast('Prompt copiado para a área de transferência!');
+        const btn = document.getElementById('btnModalCopy');
+        const oldText = btn.innerText;
+        btn.innerText = 'Copiado!';
+        setTimeout(() => { btn.innerText = oldText; }, 2000);
+      }).catch(err => {
+        alert('Erro ao copiar: ' + err);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBox');
+      toast.querySelector('span').innerText = msg;
+      toast.style.display = 'flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
