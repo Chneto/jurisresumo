@@ -998,6 +998,19 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
   - 100% de aprovação na suíte de testes (235 passed, 42 skipped por LGPD).
   - Deploy sincronizado em `main` e `release/v3.1`.
 
+### Ato 16: Resolução do Exit Code 2 no CI do GitHub (20/10/26)
+* **Origem do Erro Identificada:**
+  - O pytest retornava `exit code 2` (erro de collection) no GitHub Actions devido a `ModuleNotFoundError: No module named 'app'` ao carregar `tests/conftest.py`, pois a adição do diretório raiz ao `sys.path` ocorria após o bloco `from app.core.models import ...`.
+  - Ausência de `pythonpath = . versao_python` no arquivo de configuração `pytest.ini`.
+* **Solução Implementada:**
+  - Reposicionamento da inicialização de `sys.path.insert(0, ...)` no topo absoluto de `tests/conftest.py` e `versao_python/tests/conftest.py`.
+  - Adição de `pythonpath = . versao_python` no `pytest.ini`.
+  - Ajuste de execução para `python -m pytest tests/ -v` com `env: PYTHONPATH: .` no workflow `.github/workflows/ci.yml`.
+* **Validação Operacional:**
+  - 100% de aprovação na suíte de testes (235 passed, 42 skipped por LGPD).
+  - Sincronização de todos os arquivos de configuração para `gitpost/`.
+
+
 
 
 
