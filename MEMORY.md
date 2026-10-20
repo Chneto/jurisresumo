@@ -957,3 +957,19 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
   - `pytest`: **235 aprovados**, 42 skipped (sanitização LGPD), 0 falhas (suíte expandida de 213 para 235 testes).
   - Sincronização e espelhamento completo para `versao_python/` e `gitpost/`.
 
+### Ato 13: Redimensionamento Bidirecional e Expansão das Caixas de Texto (Itens 3, 4 e 5) nas Interfaces Web e JS (20/10/26)
+* **Objetivo:** Corrigir a restrição das caixas de texto que estavam estreitas e permitiam apenas ampliação vertical, expandindo o dimensionamento inicial dos itens 3, 4 e 5 e habilitando o redimensionamento bidirecional (horizontal e vertical) com blindagem estrutural de layout.
+* **Melhorias Visuais e de Usabilidade:**
+  - **Item 3 (Qualificação Completa):** Linhas aumentadas de 3 para 6 (`rows="6"`), altura mínima configurada para `min-height: 120px;`.
+  - **Item 4 (Imputação Penal):** Linhas aumentadas de 2 para 4 (`rows="4"`), altura mínima configurada para `min-height: 95px;`.
+  - **Item 5 (Resumo dos Fatos da Denúncia):** Linhas aumentadas de 7 para 14 (`rows="14"`), altura mínima configurada para `min-height: 250px;`, com `special_notes` expandido para `rows="3"` e `min-height: 75px;`.
+* **Redimensionamento Bidirecional:**
+  - Aplicada a regra CSS canônica `resize: both;` em `textarea.form-control` combinada com `display: block; width: 100%; box-sizing: border-box; min-width: 250px;`.
+* **Blindagem Estrutural contra Rupturas:**
+  - Aplicação de `min-width: 0;` e `overflow-x: auto;` nas colunas de formulário (`.form-pane` / `.editor-pane`) e nos cartões (`.card`), garantindo que o alargamento horizontal do textarea nunca quebre o grid nem esprema a escrivaninha de visualização Word A4 (`.preview-pane`).
+* **Validação Operacional:**
+  - `pytest tests/test_js_engine_parity.py -v`: 8 aprovados com 100% de sucesso.
+  - `pytest`: 235 aprovados, 42 skipped (LGPD), 0 falhas.
+  - Paridade bit-a-bit integral entre os 4 arquivos HTML da versão JS e os arquivos da versão Python Web em `gitpost/`.
+
+
