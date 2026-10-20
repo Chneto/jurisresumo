@@ -922,6 +922,38 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
   - `pytest tests/test_extended_hierarchy.py -v`: 12 aprovados com 100% de sucesso.
   - `pytest versao_python/tests/test_extended_hierarchy.py -v`: 12 aprovados com 100% de sucesso.
   - `pytest tests/test_js_engine_parity.py -v`: 8 aprovados com 100% de sucesso.
-  - `pytest`: 213 aprovados, 42 skipped (LGPD), 0 falhas (suíte expandida de 201 para 213 testes).
-* **Checkpoints de Recovery:** `20261008_130923_v3_7_uc2_extended_hierarchy_implemented`.
+### Ato 12: Arquitetura Multi-Engine Especializada (10 Motores PY) e Motor de Corroboração e Consenso Cruzado (20/10/26)
+* **Objetivo:** Decompor a lógica monolítica de extração e análise processual em 10 motores Python especializados, cada qual com atribuição delimitada e estrita, cooperando e corroborando entre si para alcançar máxima fidelidade e precisão matemática na confecção dos resumos judiciais de audiência.
+* **Motores Implementados em `app/engines/specialized/`:**
+  1. `CapaPartiesEngine`: Leitura do número CNJ do processo, ingestão das partes do Polo Ativo, Polo Passivo, Vítimas, Testemunhas e Promotoria na Capa (página 1), expurgação de órgãos estatais (anti-delegacia/estado/defensoria) e tratamento de nomes civis vs sociais.
+  2. `HearingDetailsEngine`: Localização reversa do ato de designação no catálogo, extração estrita de data e hora (máscara DD.MM.AA às HHhMMmin), captura de salas virtuais (Microsoft Teams, Google Meet, lnk.tjrn.jus.br) e determinação de audiência presencial vs virtual.
+  3. `ClassificationHierarchyEngine`: Determinação da taxonomia do ato processual pela hierarquia do CPP (JÚRI -> CUSTÓDIA -> JUSTIFICAÇÃO / PROTETIVA -> ANPP -> AIJ -> PAnP -> SURSIS), detecção de recebimento de denúncia, recusa de ANPP e revogações de benefícios.
+  4. `ProsecutorEngine`: Identificação do Promotor de Justiça atuante via assinatura digital em denúncias/cotas e designação da respectiva Promotoria, com bloqueio estrito de nomes de ruas/avenidas.
+  5. `DefenseCounselEngine`: Varredura exaustiva de peças defensivas (respostas nomeadas e petições inominadas sob arts. 396/396-A do CPP), identificação de Defensoria Pública vs advogados constituídos com OAB, mapeamento de múltiplos patronos por réu e síntese dos pedidos defensivos.
+  6. `DefendantQualificationEngine`: Extração multilinea íntegra de qualificação (filiação, RG, CPF, nascimento, endereço), fallback automático no Inquérito Policial / APF quando a denúncia for omissa ("qualificado no IP"), rastreamento de estabelecimento prisional e vinculação a mandados de citação (IDs).
+  7. `ImputationTaxonomyEngine`: Extração de artigos penais, parágrafos (§), incisos, alíneas, legislação especial (ECA, Drogas, Armas, Maria da Penha) e concurso de crimes (arts. 69, 70, 71 do CP), com expurgação de artigos procedimentais (CPP) e anotação via taxonomia penal.
+  8. `FactsNarrativeEngine`: Purificação da narrativa fática da denúncia com eliminação de vocativos e ruídos de cabeçalho, delimitação em marcos procedimentais estritos e síntese canônica de ANPP em 6 parágrafos estruturados.
+  9. `ChronologicalHistoryEngine`: Reconstituição cronológica ascendente do histórico de atos com IDs do PJe, formatação de data DD/MM/AA e redação de resumos substantivos fiéis (denúncia, decisões, despachos, alvarás, perícias, revogações de ANPP/PSCP).
+  10. `WitnessSubpoenaEngine`: Mapeamento do rol acusatório e defensivo, classificação funcional (Vítima, PM, Testemunha), vinculação automática aos IDs de mandados, ofícios ou certidões de contrafé negativa, e rotulagem unificada de adoção defensiva ("(arrolada pelo Ministério Público e pela Defensoria Pública)").
+  11. `CorroborationConsensusEngine`: Motor transversal de validação cruzada e reconciliação consensual de dados entre todos os motores, garantindo que réus, imputação, histórico, tipo de ato e testemunhas estejam matematicamente coerentes entre si antes da geração final do resumo.
+* **Orquestração e Compatibilidade Total:**
+  - `OfflineExtractionEngine` foi refatorado para atuar como coordenador/orquestrador de alto nível dos 10 motores, delegando todas as chamadas de API pública e métodos internos, garantindo 100% de compatibilidade retroativa com os testes e módulos existentes.
+* **Nova Suíte de Testes Automatizados (`tests/test_specialized_multi_engines.py`):**
+  - 22 testes unitários e de integração cobrindo cada um dos 10 motores especializados individualmente, o motor de corroboração e consenso cruzado, além de testes profundos de borda (edge cases) e robustez.
+* **Revisão Criteriosa e Hardening dos Motores (Revisão Pós-Implementação):**
+  1. *Correção de Falso Positivo em Revogação de Prisão no ANPP:* `_corroborate_act_type` agora distingue revogação estrita de benefícios (ANPP/PSCP) de revogação de prisão preventiva/cautelar.
+  2. *Sincronização Fática e Observações Judiciais:* Na revogação autêntica de ANPP para AIJ, os fatos são restaurados a partir da denúncia e as observações judiciais (`special_notes`) são automaticamente geradas.
+  3. *Status Prisional Individualizado:* Em casos multirréus, a análise de detenção recai sobre a qualificação do réu individual (`d_qual`), eliminando falsos positivos cruzados.
+  4. *Reconciliação de Réus e Qualificação:* Réus presentes na Capa e omitidos no corpo são resgatados para `defendants` e sincronizados em `qualification_text`.
+  5. *Expurgo de Colisão Réu-Testemunha:* Qualquer réu cujo nome conste inadvertidamente no rol de testemunhas é eliminado pelo motor de consenso.
+  6. *Mapeamento Defensivo Completo:* Corréus não mencionados em respostas específicas são resguardados pela assistência da Defensoria Pública.
+  7. *Expurgo de Artigos Procedimentais na Imputação:* Artigos do CPP (396, 41, etc.) e CF (129, I, etc.) são expurgados da imputação penal antes e depois da auditoria JEV.
+  8. *Promotorias Não-Numeradas:* Mapeamento de comarcas de vara única sem numeração ordinal na Promotoria (ex.: Macaíba).
+  9. *Recuperação de Data/Hora:* Resgate de agendamentos no histórico cronológico caso a designação original esteja indefinida.
+  10. *Supressão de Nota Defensiva com Testemunhas Exclusivas:* `def_note` é anulada quando a defesa arrola testemunhas próprias no processo.
+* **Validação Operacional e Testes:**
+  - `pytest tests/test_specialized_multi_engines.py -v`: 22 aprovados com 100% de sucesso.
+  - `pytest versao_python/tests/test_specialized_multi_engines.py -v`: 22 aprovados com 100% de sucesso.
+  - `pytest`: **235 aprovados**, 42 skipped (sanitização LGPD), 0 falhas (suíte expandida de 213 para 235 testes).
+  - Sincronização e espelhamento completo para `versao_python/` e `gitpost/`.
 
