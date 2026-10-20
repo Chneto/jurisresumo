@@ -17,6 +17,11 @@ jobs:
       - name: Checkout do Repositório
         uses: actions/checkout@v4
 
+      - name: Instalar Dependências de Sistema (Linux)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgl1 libgomp1 libglib2.0-0
+
       - name: Configurar Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
