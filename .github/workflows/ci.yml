@@ -39,10 +39,8 @@ jobs:
         env:
           PYTHONPATH: .
         run: |
-          python -m pytest tests/ -v -ra --tb=short
-
-      - name: Diagnóstico de Falha
-        if: failure()
-        run: |
-          echo "=== DIAGNÓSTICO DETALHADO DO PYTEST ==="
-          python -m pytest tests/ --collect-only -v
+          python -m pytest tests/ -v -ra --tb=short || {
+            echo "::error::PYTEST FALHOU COM EXIT CODE $?"
+            python -c "import subprocess, sys; res = subprocess.run([sys.executable, '-m', 'pytest', 'tests/', '--collect-only', '-vv'], capture_output=True, text=True); print('=== STDOUT ===\n' + res.stdout); print('=== STDERR ===\n' + res.stderr)"
+            exit 1
+          }
