@@ -484,8 +484,10 @@ body.stitch-theme {
 
 /* Left Column: Form Editor (Independent Scroll) */
 .editor-pane {
+  min-width: 0;
   height: 100%;
   overflow-y: auto;
+  overflow-x: auto;
   padding-right: 0.6rem;
   display: flex;
   flex-direction: column;
@@ -531,6 +533,7 @@ body.stitch-theme {
   border-radius: var(--radius-lg);
   padding: 1.1rem;
   box-shadow: var(--shadow-sm);
+  min-width: 0;
 }
 
 .form-card {
@@ -591,6 +594,8 @@ body.stitch-theme {
 }
 
 .form-control {
+  width: 100%;
+  box-sizing: border-box;
   background-color: var(--bg-canvas);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
@@ -612,9 +617,17 @@ body.stitch-theme {
 }
 
 textarea.form-control {
-  resize: vertical;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: both;
   line-height: 1.5;
+  min-width: 250px;
 }
+
+#qualification_text { min-height: 120px; }
+#imputation_text { min-height: 95px; }
+#facts_summary { min-height: 250px; }
 
 .checkbox-group {
   justify-content: center;
@@ -1492,7 +1505,7 @@ textarea.form-control {
             </div>
             <p class="form-tip">Nome em caixa alta e dados pessoais extraídos da denúncia/inquérito policial.</p>
             <div class="form-group">
-              <textarea id="qualification_text" name="qualification_text" rows="4" class="form-control" placeholder="NOME DO RÉU, nacionalidade, estado civil, profissão, RG, CPF, endereço..."></textarea>
+              <textarea id="qualification_text" name="qualification_text" rows="6" class="form-control" placeholder="NOME DO RÉU, nacionalidade, estado civil, profissão, RG, CPF, endereço..."></textarea>
             </div>
           </div>
 
@@ -1504,7 +1517,7 @@ textarea.form-control {
             </div>
             <p class="form-tip">Tipificação penal e artigos atribuídos pelo Ministério Público.</p>
             <div class="form-group">
-              <textarea id="imputation_text" name="imputation_text" rows="3" class="form-control" placeholder="Lesão corporal (art. 129, §9º, do Código Penal)..."></textarea>
+              <textarea id="imputation_text" name="imputation_text" rows="4" class="form-control" placeholder="Lesão corporal (art. 129, §9º, do Código Penal)..."></textarea>
             </div>
           </div>
 
@@ -1519,7 +1532,7 @@ textarea.form-control {
             </div>
             <p class="form-tip">99% das vezes correspondendo aos fatos da denúncia; resumido se muito longo.</p>
             <div class="form-group">
-              <textarea id="facts_summary" name="facts_summary" rows="8" class="form-control" placeholder="Consta nos referidos autos do inquérito policial que, no dia..."></textarea>
+              <textarea id="facts_summary" name="facts_summary" rows="14" class="form-control" placeholder="Consta nos referidos autos do inquérito policial que, no dia..."></textarea>
             </div>
           </div>
 

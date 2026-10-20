@@ -194,6 +194,8 @@
     }
 
     .form-pane {
+      min-width: 0;
+      overflow-x: auto;
       overflow-y: auto;
       padding: 1.25rem;
       border-right: 1px solid var(--border-subtle);
@@ -207,6 +209,7 @@
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
       padding: 1.1rem;
+      min-width: 0;
     }
     .card-title {
       font-size: 0.95rem;
@@ -239,6 +242,8 @@
       letter-spacing: 0.04em;
     }
     .form-control {
+      width: 100%;
+      box-sizing: border-box;
       background: var(--bg-canvas);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
@@ -251,7 +256,18 @@
     }
     .form-control:focus { border-color: var(--banana-500); }
     .form-control.mono { font-family: var(--font-mono); }
-    textarea.form-control { resize: vertical; line-height: 1.45; }
+    textarea.form-control {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      resize: both;
+      line-height: 1.45;
+      min-width: 250px;
+    }
+    #qualification_text { min-height: 120px; }
+    #imputation_text { min-height: 95px; }
+    #special_notes { min-height: 75px; }
+    #facts_summary { min-height: 250px; }
 
     .form-row-grid { display: grid; gap: 0.75rem; }
     .grid-2 { grid-template-columns: 1fr 1fr; }
@@ -623,13 +639,13 @@
           <!-- Card 3: Qualificação -->
           <div class="card" id="card-qual">
             <div class="card-title"><span>📝</span><h3>3. Qualificação Completa</h3></div>
-            <textarea id="qualification_text" rows="3" class="form-control"></textarea>
+            <textarea id="qualification_text" rows="6" class="form-control"></textarea>
           </div>
 
           <!-- Card 4: Imputação -->
           <div class="card" id="card-imp">
             <div class="card-title"><span>⚖️</span><h3>4. Imputação Penal</h3></div>
-            <textarea id="imputation_text" rows="2" class="form-control"></textarea>
+            <textarea id="imputation_text" rows="4" class="form-control"></textarea>
           </div>
 
           <!-- Card 5: Resumo dos Fatos -->
@@ -640,9 +656,9 @@
             </div>
             <div id="obs-container" style="display:none;margin-bottom:0.6rem;">
               <label for="special_notes" style="font-size:0.75rem;color:var(--banana-400);font-weight:600;display:block;margin-bottom:0.25rem;">OBSERVAÇÃO ESPECIAL / RETOMADA DA MARCHA PENAL</label>
-              <textarea id="special_notes" rows="2" class="form-control" style="font-style:italic;border-color:rgba(250,204,21,0.4);"></textarea>
+              <textarea id="special_notes" rows="3" class="form-control" style="font-style:italic;border-color:rgba(250,204,21,0.4);"></textarea>
             </div>
-            <textarea id="facts_summary" rows="7" class="form-control"></textarea>
+            <textarea id="facts_summary" rows="14" class="form-control"></textarea>
           </div>
 
           <!-- Card 6: Histórico Processual -->
