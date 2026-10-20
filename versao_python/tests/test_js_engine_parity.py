@@ -75,9 +75,19 @@ def test_javascript_analytical_engine_features():
 
     # Key analytical functions
     assert "analyzePjeRecords" in content
+    assert "function analyzePjeRecords" in content
     assert "summarizeHistoryAct" in content
+    assert "function summarizeHistoryAct" in content
     assert "parsePtDateTime" in content
+    assert "function parsePtDateTime" in content
     assert "extractCleanNarrative" in content
+    assert "function extractCleanNarrative" in content
+    assert "extractSingleDefendantQualification" in content
+    assert "function extractSingleDefendantQualification" in content
+    assert "processPdfFile" in content
+    assert "function processPdfFile" in content
+    assert "extractImputationFromDenuncia" in content
+    assert "function extractImputationFromDenuncia" in content
     assert "findSubpoenaStatus" in content
 
     # TOC and footer stamp detection
@@ -315,7 +325,7 @@ def test_html_javascript_syntax_and_bracket_balance():
         p for p in ROOT_DIR.rglob("*.html")
         if ".git" not in str(p) and ".recovery" not in str(p) and "backup" not in str(p)
     ]
-    assert len(html_files) >= 3, f"Expected at least 3 HTML files in project, found {len(html_files)}"
+    assert len(html_files) >= 6, f"Expected at least 6 HTML files in project, found {len(html_files)}"
 
     total_scripts_checked = 0
     for html_file in html_files:
