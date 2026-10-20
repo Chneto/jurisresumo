@@ -983,5 +983,21 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
   - `pytest`: 235 aprovados, 42 skipped (LGPD), 0 falhas.
   - Sincronização bit a bit de todos os arquivos HTML em `gitpost/`.
 
+### Ato 15: Correção do Pipeline do GitHub Pages e Deploy no GitHub (20/10/26)
+* **Objetivo:** Identificar e sanar a causa raiz do congelamento do GitHub Pages (que mantinha o build antigo de 30 de setembro com o ícone antigo), viabilizando o deploy contínuo em produção.
+* **Causa Raiz Identificada:**
+  - O runner do GitHub Pages falhava no step `Checkout` devido a uma entrada de submódulo fantasma (`160000 commit gitpost`) sem correspondência no `.gitmodules`.
+  - Ausência do arquivo `.nojekyll` na raiz para contornar o processamento do Jekyll.
+  - Ausência de bibliotecas de sistema C/C++ Linux (`libgl1`, `libgomp1`) no runner de CI do Ubuntu.
+* **Solução Implementada:**
+  - Remoção da entrada espúria `gitpost` do índice do branch `main`.
+  - Adição do arquivo `.nojekyll` na raiz para servir arquivos estáticos de imediato.
+  - Criação do workflow dedicado `.github/workflows/pages.yml` (`actions/deploy-pages@v4`) para deploy automatizado e blindado.
+  - Inclusão das dependências de sistema Linux no `.github/workflows/ci.yml`.
+* **Validação Operacional:**
+  - 100% de aprovação na suíte de testes (235 passed, 42 skipped por LGPD).
+  - Deploy sincronizado em `main` e `release/v3.1`.
+
+
 
 
