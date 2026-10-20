@@ -39,20 +39,4 @@ jobs:
         env:
           PYTHONPATH: .
         run: |
-          set +e
-          python -m pytest tests/ -v -ra --tb=short 2>&1 | tee pytest_output.txt
-          EXIT_CODE=${PIPESTATUS[0]}
-          echo "## Pytest Run Result (Exit Code: $EXIT_CODE)" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat pytest_output.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          if [ $EXIT_CODE -ne 0 ]; then
-            python -c "
-with open('pytest_output.txt', 'r', encoding='utf-8', errors='replace') as f:
-    for line in f:
-        l = line.rstrip()
-        if any(w in l for w in ['ERROR', 'Error', 'FAIL', 'FAILED', 'Traceback', 'ImportError', 'ModuleNotFoundError', 'Exception', 'collection', '== ']):
-            print(f'::error::{l}')
-"
-            exit $EXIT_CODE
-          fi
+          python -m pytest tests/ -v -ra --tb=short
