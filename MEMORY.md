@@ -972,4 +972,16 @@ Criado o módulo canônico [`jev_decision_engine.py`](versao_python/app/core/jev
   - `pytest`: 235 aprovados, 42 skipped (LGPD), 0 falhas.
   - Paridade bit-a-bit integral entre os 4 arquivos HTML da versão JS e os arquivos da versão Python Web em `gitpost/`.
 
+### Ato 14: Substituição do Ícone Informal por Logotipo Jurídico Vetorial Sóbrio (Balança da Justiça) (20/10/26)
+* **Objetivo:** Substituir o emoji informal (banana) no cabeçalho do sistema e no lançador por uma insígnia jurídica vetorial sóbria, respeitável e solene (Balança da Justiça / Balança da Equidade Judiciária), condizente com a seriedade das audiências criminais do Poder Judiciário (TJRN).
+* **Implementação Visual:**
+  - Inserção de ícone vetorial SVG canônico da Balança da Justiça (`scale` com pilar central, base e pratos em equilíbrio) no cabeçalho institucional (`.brand-logo-icon`).
+  - Aplicação na página inicial de inicialização (`ABRIR_VERSAO_JAVASCRIPT.html`) com dimensão de 52x52px e iluminação sutil dourada institucional.
+  - Unificação do logotipo em todas as variantes (versão JavaScript cliente, versão Python Web/FastAPI e versão desktop Eel).
+* **Validação Operacional:**
+  - `pytest tests/test_js_engine_parity.py -v`: 8 aprovados (100% de paridade e sintaxe JS).
+  - `pytest`: 235 aprovados, 42 skipped (LGPD), 0 falhas.
+  - Sincronização bit a bit de todos os arquivos HTML em `gitpost/`.
+
+
 
