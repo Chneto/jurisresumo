@@ -35,5 +35,7 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Executar Testes Automatizados
+        env:
+          PYTHONPATH: .
         run: |
-          pytest tests/ -v
+          python -m pytest tests/ -v

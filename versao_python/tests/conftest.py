@@ -11,10 +11,19 @@ import io
 import os
 import re
 import socket
+import sys
 import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+# Ensure project root and versao_python are in sys.path before any local imports
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if PROJECT_ROOT.name == "versao_python":
+    PROJECT_ROOT = PROJECT_ROOT.parent
+for p in [str(PROJECT_ROOT), str(PROJECT_ROOT / "versao_python")]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 import docx
 import pytest
@@ -27,15 +36,6 @@ from app.core.models import (
     PJeDocument,
     Witness,
 )
-
-import sys
-
-# Project root directory
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if PROJECT_ROOT.name == "versao_python":
-    PROJECT_ROOT = PROJECT_ROOT.parent
-sys.path.insert(0, str(PROJECT_ROOT / "versao_python"))
-sys.path.insert(0, str(PROJECT_ROOT))
 
 
 # XML Namespaces for OpenXML inspection
