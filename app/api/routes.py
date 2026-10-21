@@ -109,14 +109,17 @@ async def upload_and_extract_pdf(
 def generate_docx_endpoint(data: HearingSummaryData) -> Response:
     """Generates and returns byte-perfect DOCX file from edited hearing summary data."""
     try:
+        from urllib.parse import quote
+        from app.generators.docx_generator import build_canonical_docx_filename
         docx_bytes = generate_docx_summary(data)
-        safe_case = data.case_number.replace("/", "-").replace(" ", "_")
-        filename = f"Resumo - {safe_case} {data.act_type}.docx"
+        filename = build_canonical_docx_filename(data)
+        ascii_filename = filename.replace("º", "n.").replace("ª", "a.").encode("ascii", "ignore").decode("ascii")
+        encoded_filename = quote(filename)
 
         return Response(
             content=docx_bytes,
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+            headers={"Content-Disposition": f'attachment; filename="{ascii_filename}"; filename*=UTF-8\'\'{encoded_filename}'},
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar documento DOCX: {str(exc)}")

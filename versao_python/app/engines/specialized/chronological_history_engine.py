@@ -161,12 +161,20 @@ class ChronologicalHistoryEngine:
         # 4. Despacho
         if "despacho" in name_l:
             if "conciliação" in txt_l or "conciliacao" in txt_l:
-                dt_m = re.search(r"(\d{1,2}/\d{1,2}/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})", txt)
+                dt_m = re.search(r"(?:pauta|design[ao]|apraz[ao]|audi[eê]ncia)[^\n\d]{1,40}?(\d{1,2}/\d{1,2}/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2}(?:min)?)", txt, re.I)
+                if not dt_m:
+                    dt_m = re.search(r"(\d{1,2}/\d{1,2}/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})", txt)
                 if dt_m:
                     return f"Despacho incluindo o feito em pauta de audiência de conciliação para {dt_m.group(1)}, às {dt_m.group(2)}"
                 return "Despacho incluindo o feito em pauta de audiência de conciliação"
             if "pauta" in txt_l or "designo" in txt_l or "instrução" in txt_l:
-                dt_m = re.search(r"(\d{1,2}/\d{1,2}/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})", txt)
+                dt_m = re.search(r"(?:pauta|design[ao]|apraz[ao]|audi[eê]ncia)[^\n\d]{1,40}?(\d{1,2}/\d{1,2}/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2}(?:min)?)", txt, re.I)
+                if not dt_m:
+                    from app.engines.specialized.hearing_details_engine import HearingDetailsEngine
+                    h_dt = HearingDetailsEngine().parse_datetime_from_text(txt)
+                    if h_dt and " às " in h_dt:
+                        h_dt_fmt = h_dt.replace(" às ", ", às ")
+                        return f"Despacho incluindo o feito em pauta de audiência de instrução e julgamento para {h_dt_fmt}"
                 if dt_m:
                     return f"Despacho incluindo o feito em pauta de audiência de instrução e julgamento para {dt_m.group(1)}, às {dt_m.group(2)}"
                 return "Despacho incluindo o feito em pauta de audiência de instrução e julgamento"

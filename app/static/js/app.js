@@ -326,6 +326,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('hearing_link').value = data.hearing_link || '';
     document.getElementById('is_in_person').checked = data.is_in_person || false;
     document.getElementById('prosecutor').value = data.prosecutor || '';
+    if (document.getElementById('assistente_acusacao')) {
+      document.getElementById('assistente_acusacao').value = data.assistente_acusacao || '';
+    }
     document.getElementById('defense_counsel').value = data.defense_counsel || '';
     document.getElementById('qualification_text').value = data.qualification_text || '';
     document.getElementById('imputation_text').value = data.imputation_text || '';
@@ -350,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <input type="text" class="form-control def-name" placeholder="Nome do Réu" value="${d.name || ''}" data-idx="${idx}">
         <input type="text" class="form-control def-status" placeholder="Situação (ex: preso, solto)" value="${d.status || ''}" data-idx="${idx}">
         <input type="text" class="form-control def-subpoena mono" placeholder="ID Intimação" value="${d.subpoena_id || ''}" data-idx="${idx}">
+        <input type="text" class="form-control def-counsel" placeholder="Defesa / Advogado deste réu" value="${d.counsel || ''}" data-idx="${idx}">
         <button type="button" class="btn-remove-item" data-idx="${idx}" title="Remover Réu">&times;</button>
       `;
       row.querySelector('.btn-remove-item').addEventListener('click', () => {
@@ -413,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Add Item Buttons
   btnAddDef.addEventListener('click', () => {
     if (!activeData) activeData = { defendants: [] };
-    activeData.defendants.push({ name: '', status: 'respondendo ao processo em liberdade', subpoena_id: '' });
+    activeData.defendants.push({ name: '', status: 'respondendo ao processo em liberdade', subpoena_id: '', counsel: '' });
     renderDefendants(activeData.defendants);
     updateLivePreview();
   });
@@ -445,6 +449,9 @@ document.addEventListener('DOMContentLoaded', () => {
     activeData.hearing_link = document.getElementById('hearing_link').value;
     activeData.is_in_person = document.getElementById('is_in_person').checked;
     activeData.prosecutor = document.getElementById('prosecutor').value;
+    if (document.getElementById('assistente_acusacao')) {
+      activeData.assistente_acusacao = document.getElementById('assistente_acusacao').value;
+    }
     activeData.defense_counsel = document.getElementById('defense_counsel').value;
     activeData.qualification_text = document.getElementById('qualification_text').value;
     activeData.imputation_text = document.getElementById('imputation_text').value;
@@ -456,6 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
       name: r.querySelector('.def-name').value,
       status: r.querySelector('.def-status').value,
       subpoena_id: r.querySelector('.def-subpoena').value,
+      counsel: r.querySelector('.def-counsel') ? r.querySelector('.def-counsel').value : '',
     }));
 
     const histRows = historyContainer.querySelectorAll('.history-item-row');
@@ -536,6 +544,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // PROMOTOR (Bright green highlight)
     const promPrefix = (activeData.prosecutor || '').includes(';') ? 'PROMOTORES:' : 'PROMOTOR:';
     html += `<div class="doc-promotor"><span class="hl-green">${promPrefix} ${activeData.prosecutor || ''}</span></div>`;
+    if (activeData.assistente_acusacao) {
+      const asstTxt = activeData.assistente_acusacao.trim();
+      if (asstTxt) {
+        const asstLabel = asstTxt.toLowerCase().startsWith('assistente') ? asstTxt : `Assistente de Acusação: ${asstTxt}`;
+        html += `<div class="doc-assistente"><span class="hl-green">${asstLabel}</span></div>`;
+      }
+    }
     html += '<div style="margin-bottom: 1.2rem;"></div>';
 
     // RÉUS (Bright green highlight)
@@ -545,18 +560,32 @@ document.addEventListener('DOMContentLoaded', () => {
       const genderPrefix = isFem ? 'Ré:' : 'Réu:';
       const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
       html += `<div class="doc-reus"><span class="hl-green">${genderPrefix} ${d.name} - ${d.status}${idText}</span></div>`;
+      const defCounsel = (d.counsel || activeData.defense_counsel || '').trim();
+      if (defCounsel) {
+        const defLabel = defCounsel.toLowerCase().startsWith('defesa:') ? defCounsel : `Defesa: ${defCounsel}`;
+        html += `<div class="doc-defesa"><span class="hl-green">${defLabel}</span></div>`;
+      }
     } else if (activeData.defendants && activeData.defendants.length > 1) {
       html += '<div class="doc-reus"><span class="hl-green">Réus:</span></div>';
       activeData.defendants.forEach((d, idx) => {
         const prefix = /^\d+[\s.)-]/.test(d.name.trim()) ? '' : `${String(idx+1).padStart(2, '0')}) `;
         const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
         html += `<div class="doc-reus" style="padding-left: 1.27cm;"><span class="hl-green">${prefix}${d.name} - ${d.status}${idText}</span></div>`;
+        const counselText = (d.counsel || (activeData.defendants.length === 1 ? activeData.defense_counsel : '') || '').trim();
+        if (counselText) {
+          const defLabel = counselText.toLowerCase().startsWith('defesa:') ? counselText : `Defesa: ${counselText}`;
+          html += `<div class="doc-defesa" style="padding-left: 1.27cm;"><span class="hl-green">${defLabel}</span></div>`;
+        }
       });
-    }
-
-    // DEFESA (Bright green highlight)
-    if (activeData.defense_counsel) {
-      html += `<div class="doc-defesa"><span class="hl-green">${activeData.defense_counsel}</span></div>`;
+      if (activeData.defense_counsel && !activeData.defendants.some((d) => d.counsel && d.counsel.trim())) {
+        const defLabel = activeData.defense_counsel.toLowerCase().startsWith('defesa:') ? activeData.defense_counsel : `Defesa: ${activeData.defense_counsel}`;
+        html += `<div class="doc-defesa"><span class="hl-green">${defLabel}</span></div>`;
+      }
+    } else {
+      if (activeData.defense_counsel) {
+        const defLabel = activeData.defense_counsel.toLowerCase().startsWith('defesa:') ? activeData.defense_counsel : `Defesa: ${activeData.defense_counsel}`;
+        html += `<div class="doc-defesa"><span class="hl-green">${defLabel}</span></div>`;
+      }
     }
 
     html += '<div style="margin-bottom: 1.2rem;"></div>';
@@ -650,6 +679,39 @@ document.addEventListener('DOMContentLoaded', () => {
     paperBody.innerHTML = html;
   }
 
+  function buildCanonicalDocxFilename(data) {
+    const safeCase = (data.case_number || 'Processo').replace(/[\/\\]/g, '-').trim();
+    const safeAct = (data.act_type || 'AIJ').replace(/[\/\\]/g, '-').trim();
+    const dtStr = (data.hearing_datetime || '').trim();
+
+    let timeStr = '';
+    let dateStr = '';
+
+    const tmM = dtStr.match(/(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)/i);
+    if (tmM) {
+      const h = parseInt(tmM[1], 10);
+      const m = tmM[2] || tmM[3] || '00';
+      timeStr = `${String(h).padStart(2, '0')}h${String(parseInt(m, 10)).padStart(2, '0')}min`;
+    }
+
+    const dtM = dtStr.match(/(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})/);
+    if (dtM) {
+      const d = parseInt(dtM[1], 10);
+      const mo = parseInt(dtM[2], 10);
+      const y = dtM[3];
+      const yr = y.length === 2 ? `20${y}` : y;
+      dateStr = `${String(d).padStart(2, '0')}.${String(mo).padStart(2, '0')}.${yr}`;
+    }
+
+    if (timeStr && dateStr) {
+      return `${timeStr}, ${dateStr} - Resumo nº ${safeCase} - ${safeAct}.docx`;
+    } else if (dateStr) {
+      return `${dateStr} - Resumo nº ${safeCase} - ${safeAct}.docx`;
+    } else {
+      return `Resumo nº ${safeCase} - ${safeAct}.docx`;
+    }
+  }
+
   // Export DOCX
   btnExportDocx.addEventListener('click', async () => {
     if (!activeData) return;
@@ -672,8 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch(() => {});
       }
 
-      const safeCase = (activeData.case_number || 'Processo').replace(/[\/\\]/g, '-');
-      const filename = `Resumo - ${safeCase} ${activeData.act_type || 'AIJ'}.docx`;
+      const filename = buildCanonicalDocxFilename(activeData);
 
       if (typeof eel !== 'undefined' && eel.generate_docx_eel) {
         // Modo Desktop Nativo via Eel

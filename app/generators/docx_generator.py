@@ -247,10 +247,19 @@ def generate_docx_summary(
     prom_prefix = "PROMOTORES:" if ";" in data.prosecutor else "PROMOTOR:"
     _add_run(p_prom, f"{prom_prefix} {data.prosecutor}", bold=True, highlight="green")
 
+    # ASSISTENTE DE ACUSAÇÃO (Requirement 3: below the party it represents)
+    if getattr(data, "assistente_acusacao", None):
+        asst_txt = str(data.assistente_acusacao).strip()
+        if asst_txt:
+            p_asst = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+            asst_label = asst_txt if asst_txt.lower().startswith("assistente") else f"Assistente de Acusação: {asst_txt}"
+            _add_run(p_asst, asst_label, bold=True, highlight="green")
+
     # Blank line separator
     _add_p(doc)
 
     # RÉUS lines: BOLD + BRIGHT GREEN HIGHLIGHT, ID hyperlinked
+    # Requirement 3: Defense counsel / public defender positioned directly below each defendant
     if len(data.defendants) == 1:
         d = data.defendants[0]
         p_reu = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
@@ -261,6 +270,13 @@ def generate_docx_summary(
         elif d.citation_id:
             reu_text += f" - Citado ID {d.citation_id}"
         _append_text_with_id_links(p_reu, reu_text, bold=True, highlight="green")
+
+        # DEFESA positioned directly below the defendant
+        counsel_text = getattr(d, "counsel", None) or data.defense_counsel
+        if counsel_text:
+            p_def = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+            def_label = counsel_text if counsel_text.lower().startswith("defesa:") else f"Defesa: {counsel_text}"
+            _add_run(p_def, def_label, bold=True, highlight="green")
     elif len(data.defendants) > 1:
         p_reus_hdr = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
         _add_run(p_reus_hdr, "Réus:", bold=True, highlight="green")
@@ -274,23 +290,34 @@ def generate_docx_summary(
                 d_line += f" - Citado ID {d.citation_id}"
             _append_text_with_id_links(p_d, d_line, bold=False, highlight="green")
 
-    # DEFESA line: BOLD + BRIGHT GREEN HIGHLIGHT
-    if data.defense_counsel:
-        p_def = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-        _add_run(p_def, data.defense_counsel, bold=True, highlight="green")
+            # DEFESA positioned directly below this specific defendant
+            counsel_text = getattr(d, "counsel", None) or data.defense_counsel
+            if counsel_text:
+                p_d_def = _add_p(doc, left=720, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+                def_label = counsel_text if counsel_text.lower().startswith("defesa:") else f"Defesa: {counsel_text}"
+                _add_run(p_d_def, def_label, bold=False, highlight="green")
+    else:
+        # Fallback if no defendant row exists
+        if data.defense_counsel:
+            p_def = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+            def_label = data.defense_counsel if data.defense_counsel.lower().startswith("defesa:") else f"Defesa: {data.defense_counsel}"
+            _add_run(p_def, def_label, bold=True, highlight="green")
 
     # Blank line separator
     _add_p(doc)
 
     is_anpp = "ANPP" in (data.act_type or "")
 
+    from app.engines.specialized.text_sanitizer_engine import TextSanitizerEngine
+    sanitizer = TextSanitizerEngine()
+
     # 3. QUALIFICAÇÃO Section: Header BOLD + YELLOW HIGHLIGHT (omitted in ANPP)
     if data.qualification_text and not is_anpp:
         p_q_hdr = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
         _add_run(p_q_hdr, "QUALIFICAÇÃO", bold=True, highlight="yellow")
 
-        # Parse qualifications per defendant
-        qual_paragraphs = [q.strip() for q in data.qualification_text.split("\n\n") if q.strip()]
+        # Parse qualifications per defendant with text sanitizer (Requirement 4)
+        qual_paragraphs = sanitizer.clean_paragraphs(data.qualification_text)
         if not qual_paragraphs:
             qual_paragraphs = [data.qualification_text.strip()]
 
@@ -312,7 +339,7 @@ def generate_docx_summary(
         p_imp_hdr = _add_p(doc, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
         _add_run(p_imp_hdr, "IMPUTAÇÃO", bold=True, highlight="yellow")
 
-        imp_paragraphs = [imp.strip() for imp in data.imputation_text.split("\n\n") if imp.strip()]
+        imp_paragraphs = sanitizer.clean_paragraphs(data.imputation_text)
         if not imp_paragraphs:
             imp_paragraphs = [data.imputation_text.strip()]
 
@@ -344,9 +371,10 @@ def generate_docx_summary(
         # Special OBS block for ANPP / desmembramento in italic
         if data.special_notes:
             p_obs = _add_p(doc, first_line=720, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-            _append_text_with_id_links(p_obs, data.special_notes, italic=True)
+            clean_notes = sanitizer.separate_glued_words(data.special_notes)
+            _append_text_with_id_links(p_obs, clean_notes, italic=True)
 
-        facts_paragraphs = [f.strip() for f in data.facts_summary.split("\n\n") if f.strip()]
+        facts_paragraphs = sanitizer.clean_paragraphs(data.facts_summary)
         if not facts_paragraphs:
             facts_paragraphs = [data.facts_summary.strip()]
 
@@ -366,7 +394,8 @@ def generate_docx_summary(
             p_h = _add_p(doc, after=283, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
             url = item.pje_url or PJE_DOC_URL_TEMPLATE.format(doc_id=item.doc_id)
 
-            prefix_str = f"{item.date_str}: {item.description} (ID "
+            clean_desc = sanitizer.separate_glued_words(item.description)
+            prefix_str = f"{item.date_str}: {clean_desc} (ID "
             _add_run(p_h, prefix_str, bold=False)
             _add_hyperlink(p_h, url=url, text=item.doc_id, color="0000ff", underline=True, bold=False)
             _add_run(p_h, ")", bold=False)
@@ -419,3 +448,41 @@ def generate_docx_summary(
         out_p.write_bytes(file_bytes)
 
     return file_bytes
+
+
+def build_canonical_docx_filename(data: HearingSummaryData) -> str:
+    """Builds the canonical filename required by the magistrate (Requirement 6):
+
+    "{hora da audiência (em formato: HHhMINmin}, {data da audiência (em formato: DD.MM.AAAA} - Resumo nº {numero do processo} - {tipo de audiência}.docx"
+    """
+    safe_case = data.case_number.replace("/", "-").strip()
+    safe_act = (data.act_type or "AIJ").replace("/", "-").strip()
+    dt_str = (data.hearing_datetime or "").strip()
+
+    time_str = ""
+    date_str = ""
+
+    # 1. Parse time (e.g. "10h00min", "10h", "10:00", "09h30min", "11h25")
+    tm_m = re.search(r"(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)", dt_str, re.I)
+    if tm_m:
+        h = int(tm_m.group(1))
+        m = tm_m.group(2) or tm_m.group(3) or "00"
+        if not m:
+            m = "00"
+        time_str = f"{h:02d}h{int(m):02d}min"
+
+    # 2. Parse date (e.g. "31.07.26", "31/07/2026", "31.07.2026")
+    dt_m = re.search(r"(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})", dt_str)
+    if dt_m:
+        d = int(dt_m.group(1))
+        mo = int(dt_m.group(2))
+        y = dt_m.group(3)
+        yr = f"20{y}" if len(y) == 2 else y
+        date_str = f"{d:02d}.{mo:02d}.{yr}"
+
+    if time_str and date_str:
+        return f"{time_str}, {date_str} - Resumo nº {safe_case} - {safe_act}.docx"
+    elif date_str:
+        return f"{date_str} - Resumo nº {safe_case} - {safe_act}.docx"
+    else:
+        return f"Resumo nº {safe_case} - {safe_act}.docx"
