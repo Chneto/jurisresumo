@@ -288,14 +288,14 @@ def generate_docx_summary(
                 d_line += f" - Intimado ID {d.subpoena_id}"
             elif d.citation_id:
                 d_line += f" - Citado ID {d.citation_id}"
-            _append_text_with_id_links(p_d, d_line, bold=False, highlight="green")
+            _append_text_with_id_links(p_d, d_line, bold=False, highlight=None)
 
-            # DEFESA positioned directly below this specific defendant
+            # DEFESA positioned directly below this specific defendant (regular text, no highlight per AGENTS.md)
             counsel_text = getattr(d, "counsel", None) or data.defense_counsel
             if counsel_text:
                 p_d_def = _add_p(doc, left=720, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
                 def_label = counsel_text if counsel_text.lower().startswith("defesa:") else f"Defesa: {counsel_text}"
-                _add_run(p_d_def, def_label, bold=False, highlight="green")
+                _add_run(p_d_def, def_label, bold=False, highlight=None)
     else:
         # Fallback if no defendant row exists
         if data.defense_counsel:
@@ -455,8 +455,12 @@ def build_canonical_docx_filename(data: HearingSummaryData) -> str:
 
     "{hora da audiência (em formato: HHhMINmin}, {data da audiência (em formato: DD.MM.AAAA} - Resumo nº {numero do processo} - {tipo de audiência}.docx"
     """
-    safe_case = data.case_number.replace("/", "-").strip()
-    safe_act = (data.act_type or "AIJ").replace("/", "-").strip()
+    raw_case = (data.case_number or "Processo").strip()
+    safe_case = re.sub(r"^(?:processo|proc\.?)\s*(?:n[ºo°]\.?)?\s*", "", raw_case, flags=re.IGNORECASE).strip()
+    safe_case = re.sub(r'[\\/*?:"<>|]', "-", safe_case).strip()
+    safe_case = re.sub(r"-+", "-", safe_case).strip("-")
+    safe_act = re.sub(r'[\\/*?:"<>|]', "-", (data.act_type or "AIJ")).strip()
+    safe_act = re.sub(r"-+", "-", safe_act).strip("-")
     dt_str = (data.hearing_datetime or "").strip()
 
     time_str = ""

@@ -570,11 +570,11 @@ document.addEventListener('DOMContentLoaded', () => {
       activeData.defendants.forEach((d, idx) => {
         const prefix = /^\d+[\s.)-]/.test(d.name.trim()) ? '' : `${String(idx+1).padStart(2, '0')}) `;
         const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
-        html += `<div class="doc-reus" style="padding-left: 1.27cm;"><span class="hl-green">${prefix}${d.name} - ${d.status}${idText}</span></div>`;
+        html += `<div class="doc-reus" style="padding-left: 1.27cm;">${prefix}${d.name} - ${d.status}${idText}</div>`;
         const counselText = (d.counsel || (activeData.defendants.length === 1 ? activeData.defense_counsel : '') || '').trim();
         if (counselText) {
           const defLabel = counselText.toLowerCase().startsWith('defesa:') ? counselText : `Defesa: ${counselText}`;
-          html += `<div class="doc-defesa" style="padding-left: 1.27cm;"><span class="hl-green">${defLabel}</span></div>`;
+          html += `<div class="doc-defesa" style="padding-left: 1.27cm;">${defLabel}</div>`;
         }
       });
       if (activeData.defense_counsel && !activeData.defendants.some((d) => d.counsel && d.counsel.trim())) {
@@ -680,8 +680,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function buildCanonicalDocxFilename(data) {
-    const safeCase = (data.case_number || 'Processo').replace(/[\/\\]/g, '-').trim();
-    const safeAct = (data.act_type || 'AIJ').replace(/[\/\\]/g, '-').trim();
+    const rawCase = (data.case_number || 'Processo').trim();
+    const safeCase = rawCase.replace(/^(?:processo|proc\.?)\s*(?:n[ºo°]\.?)?\s*/i, '').replace(/[\\/*?:"<>|]/g, '').trim();
+    const safeAct = (data.act_type || 'AIJ').replace(/[\\/*?:"<>|]/g, '').trim();
     const dtStr = (data.hearing_datetime || '').trim();
 
     let timeStr = '';

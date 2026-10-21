@@ -264,3 +264,93 @@ class TestCanonicalDocxFilename:
         )
         fn2 = build_canonical_docx_filename(data2)
         assert fn2 == "11h25min, 24.07.2026 - Resumo nº 0860849-94.2026.8.20.5001 - ANPP.docx"
+
+    def test_canonical_filename_strips_proc_prefix_and_sanitizes_chars(self):
+        data = HearingSummaryData(
+            case_number="Proc. nº 0801889-53.2023.8.20.5001",
+            act_type="AIJ/Virtual",
+            hearing_datetime="31.07.26 às 10h00min",
+            prosecutor="Dr. Promotor",
+            defense_counsel="Defensoria Pública",
+            defendants=[Defendant(name="RÉU", status="solto")],
+            qualification_text="...",
+            imputation_text="...",
+            facts_summary="...",
+        )
+        fn = build_canonical_docx_filename(data)
+        assert fn == "10h00min, 31.07.2026 - Resumo nº 0801889-53.2023.8.20.5001 - AIJ-Virtual.docx"
+        assert "Proc." not in fn
+        assert "/" not in fn
+
+
+class TestAdversarialAuditedFixes:
+    """Rigorous tests specifically covering the bugs identified during adversarial review."""
+
+    def test_multi_defendant_no_green_highlight_on_individual_defendants(self):
+        """AGENTS.md rule: In multiple defendants, ONLY 'Réus:' gets green highlight.
+        Individual defendants and defense below have NO green highlight!
+        """
+        import io, zipfile, xml.etree.ElementTree as ET
+        data = HearingSummaryData(
+            case_number="0805555-55.2026.8.20.5001",
+            act_type="AIJ",
+            hearing_datetime="25.09.26 às 14h00min",
+            prosecutor="Dr. Promotor",
+            defendants=[
+                Defendant(name="RÉU UM", status="preso", subpoena_id="10101010", counsel="Dr. Advogado Um"),
+                Defendant(name="RÉU DOIS", status="solto", subpoena_id="20202020", counsel="Dra. Advogada Dois"),
+            ],
+            defense_counsel="Defensoria Pública",
+            qualification_text="RÉU UM... RÉU DOIS...",
+            imputation_text="Art. 157 do CP",
+            facts_summary="Fatos...",
+        )
+        docx_bytes = generate_docx_summary(data)
+        with zipfile.ZipFile(io.BytesIO(docx_bytes)) as z:
+            doc_xml = z.read("word/document.xml").decode("utf-8")
+
+        root = ET.fromstring(doc_xml)
+        namespaces = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+
+        # Find paragraphs containing RÉU UM and Dr. Advogado Um
+        for p in root.findall(".//w:p", namespaces):
+            full_text = "".join(t.text for t in p.findall(".//w:t", namespaces) if t.text)
+            if "RÉU UM" in full_text or "Dr. Advogado Um" in full_text or "RÉU DOIS" in full_text or "Dra. Advogada Dois" in full_text:
+                # Must have NO green highlight
+                for highlight in p.findall(".//w:highlight", namespaces):
+                    val = highlight.attrib.get(f"{{{namespaces['w']}}}val")
+                    assert val != "green", f"Paragraph '{full_text}' must NOT have green highlight!"
+
+        # Ensure 'Réus:' DOES have green highlight
+        found_reus_hl = False
+        for p in root.findall(".//w:p", namespaces):
+            full_text = "".join(t.text for t in p.findall(".//w:t", namespaces) if t.text)
+            if full_text.strip() == "Réus:":
+                for highlight in p.findall(".//w:highlight", namespaces):
+                    if highlight.attrib.get(f"{{{namespaces['w']}}}val") == "green":
+                        found_reus_hl = True
+        assert found_reus_hl, "Paragraph 'Réus:' must have green highlight!"
+
+    def test_short_substantive_sentences_preserved_in_narrative(self):
+        """Ensure short substantive sentences (<= 35 chars) are not silently deleted."""
+        engine = FactsNarrativeEngine()
+        complaint = (
+            "DOS FATOS\n\n"
+            "Consta dos autos que no dia dos fatos o réu subtraiu a quantia descrita.\n"
+            "A arma foi apreendida.\n"
+            "O réu confessou a autoria.\n\n"
+            "ROL DE TESTEMUNHAS"
+        )
+        extracted = engine.extract_clean_narrative(complaint)
+        joined = " ".join(extracted)
+        assert "A arma foi apreendida." in joined
+        assert "O réu confessou a autoria." in joined
+
+    def test_glued_numbers_and_words_fixed(self):
+        """Ensure glued numbers and words (e.g. 15de, 10horas, 155do) are separated."""
+        sanitizer = TextSanitizerEngine()
+        result = sanitizer.separate_glued_words("no dia 15de maio às 10horas com base no art. 155do CP")
+        assert "15 de maio" in result
+        assert "10 horas" in result
+        assert "155 do CP" in result
+

@@ -164,18 +164,18 @@ class DefendantQualificationEngine:
                     break
 
             # Find matching subpoena / citation ID in mandado docs via PartySubpoenaEngine
-            subpoena_id = None
-            citation_id = None
+            from app.engines.specialized.party_subpoena_engine import PartySubpoenaEngine
+            subp_engine = PartySubpoenaEngine()
             for doc_id, m_text in mandado_texts.items():
-                if name_lower in m_text or (len(first_name) > 3 and first_name in m_text):
-                    if "citação" in m_text or "citei" in m_text:
-                        citation_id = doc_id
-                    if "intimação" in m_text or "intimei" in m_text or "audiência" in m_text:
-                        subpoena_id = doc_id
-                        break
+                subp_engine._doc_cache[doc_id] = m_text
+            p_map = subp_engine.build_party_diligences_map(mandados_docs, doc, [name])
+            subpoena_id, citation_id, neg_status = subp_engine.get_defendant_diligence(name, p_map)
+
+            if neg_status and status in ("respondendo ao processo em liberdade", "não citado e não localizado"):
+                status = neg_status
 
             # Fallback ONLY if single defendant in case (never cross-pollinate in multi-defendant cases)
-            if not subpoena_id and len(names) == 1:
+            if not subpoena_id and len(names) == 1 and not neg_status:
                 for p_doc in pje_catalog:
                     d_name = p_doc.doc_name.lower()
                     if "mandado" in d_name and ("intimação" in d_name or "cumprido" in d_name):
