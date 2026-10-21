@@ -73,6 +73,8 @@ from app.engines.specialized import (
     ProsecutorEngine,
     WitnessSubpoenaEngine,
     ConsensusAuditReport,
+    TextSanitizerEngine,
+    PartySubpoenaEngine,
 )
 
 
@@ -92,6 +94,8 @@ class OfflineExtractionEngine(BaseExtractionEngine):
         self.history_engine = ChronologicalHistoryEngine()
         self.witness_engine = WitnessSubpoenaEngine()
         self.corroboration_engine = CorroborationConsensusEngine()
+        self.sanitizer_engine = TextSanitizerEngine()
+        self.subpoena_linking_engine = PartySubpoenaEngine()
 
     def extract(
         self,
@@ -250,6 +254,13 @@ class OfflineExtractionEngine(BaseExtractionEngine):
             pje_catalog=pje_catalog,
             defense_docs=defense_docs,
         )
+
+        if final_summary.facts_summary:
+            final_summary.facts_summary = self.sanitizer_engine.sanitize_text(final_summary.facts_summary)
+        if final_summary.qualification_text:
+            final_summary.qualification_text = self.sanitizer_engine.sanitize_text(final_summary.qualification_text)
+        if final_summary.imputation_text:
+            final_summary.imputation_text = self.sanitizer_engine.sanitize_text(final_summary.imputation_text)
 
         self.last_audit_report = audit_report
         doc.close()

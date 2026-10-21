@@ -70,10 +70,6 @@ class FactsNarrativeEngine:
             if not any(mat_line[:25].lower() in p.lower() for p in narrative_paragraphs):
                 narrative_paragraphs.append(mat_line)
 
-        # If too many paragraphs (> 6), keep the most substantive ones
-        if len(narrative_paragraphs) > 6:
-            narrative_paragraphs = narrative_paragraphs[:5] + [narrative_paragraphs[-1]]
-
         facts_result = "\n\n".join(narrative_paragraphs) if narrative_paragraphs else "Fatos narrados na denúncia."
 
         # Check revocation of ANPP or PSCP to inject into special_notes
@@ -233,13 +229,30 @@ class FactsNarrativeEngine:
         # Apply JEV System One noise filtering to strip OCR artifacts and margin noise
         cleaned_lines = JEVDecisionEngine.get_instance().filter_noise_lines(cleaned_lines)
 
+        from app.engines.specialized.text_sanitizer_engine import TextSanitizerEngine
+        sanitizer = TextSanitizerEngine()
+
+        abbrev_rx = re.compile(
+            rf"\b(?:{TextSanitizerEngine.NON_TERMINATING_ABBREVIATIONS})\.\s*$",
+            re.IGNORECASE,
+        )
+
         paragraphs: List[str] = []
         curr_para: List[str] = []
 
-        for l in cleaned_lines:
+        for idx, l in enumerate(cleaned_lines):
             curr_para.append(l)
-            if re.search(r"[.:;]$", l):
+            ends_with_punct = bool(re.search(r"[.:;]$", l))
+            ends_with_abbrev = bool(abbrev_rx.search(l))
+
+            # Lookahead: if next line starts with lowercase or continuation, keep in same paragraph
+            next_starts_lower = False
+            if idx + 1 < len(cleaned_lines):
+                next_starts_lower = bool(re.match(r"^[a-zà-ú0-9,;:)\]§-]", cleaned_lines[idx + 1]))
+
+            if ends_with_punct and not ends_with_abbrev and not next_starts_lower:
                 p_text = re.sub(r"^\d+\)\s*", "", " ".join(curr_para))
+                p_text = sanitizer.separate_glued_words(p_text)
                 p_text = re.sub(r"\s+", " ", p_text).strip()
                 # Remove salutations or introductory vocatives to the judge
                 p_text = re.sub(
@@ -258,6 +271,7 @@ class FactsNarrativeEngine:
 
         if curr_para:
             p_text = re.sub(r"^\d+\)\s*", "", " ".join(curr_para))
+            p_text = sanitizer.separate_glued_words(p_text)
             p_text = re.sub(r"\s+", " ", p_text).strip()
             p_text = re.sub(
                 r"^(?:O\s+MINIST[EÉ]RIO\s+P[UÚ]BLICO[^\n]+vem[,\s]+perante\s+Vossa\s+Excelência[^\n]+oferecer\s+denúncia[^\n]+?:\s*|"
@@ -270,10 +284,6 @@ class FactsNarrativeEngine:
             ).strip()
             if len(p_text) > 35:
                 paragraphs.append(p_text)
-
-        # Condense if too extensive: keep 3 to 6 key narrative paragraphs
-        if len(paragraphs) > 6:
-            paragraphs = paragraphs[:5] + [paragraphs[-1]]
 
         return paragraphs
 

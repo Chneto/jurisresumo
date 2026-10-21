@@ -163,7 +163,7 @@ class DefendantQualificationEngine:
                     status = "não citado e não localizado"
                     break
 
-            # Find matching subpoena / citation ID in mandado docs
+            # Find matching subpoena / citation ID in mandado docs via PartySubpoenaEngine
             subpoena_id = None
             citation_id = None
             for doc_id, m_text in mandado_texts.items():
@@ -174,8 +174,8 @@ class DefendantQualificationEngine:
                         subpoena_id = doc_id
                         break
 
-            # Fallback to general mandado if not matched individually
-            if not subpoena_id:
+            # Fallback ONLY if single defendant in case (never cross-pollinate in multi-defendant cases)
+            if not subpoena_id and len(names) == 1:
                 for p_doc in pje_catalog:
                     d_name = p_doc.doc_name.lower()
                     if "mandado" in d_name and ("intimação" in d_name or "cumprido" in d_name):

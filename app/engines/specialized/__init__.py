@@ -22,6 +22,9 @@ from app.engines.specialized.corroboration_consensus_engine import (
     ConsensusAuditReport,
 )
 
+from app.engines.specialized.text_sanitizer_engine import TextSanitizerEngine
+from app.engines.specialized.party_subpoena_engine import PartySubpoenaEngine
+
 __all__ = [
     "CapaPartiesEngine",
     "HearingDetailsEngine",
@@ -35,4 +38,7 @@ __all__ = [
     "WitnessSubpoenaEngine",
     "CorroborationConsensusEngine",
     "ConsensusAuditReport",
+    "TextSanitizerEngine",
+    "PartySubpoenaEngine",
 ]
+

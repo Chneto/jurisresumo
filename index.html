@@ -636,7 +636,13 @@
                 <input type="text" id="prosecutor" class="form-control">
               </div>
               <div class="form-group">
-                <label>Defesa Técnica</label>
+                <label>Assistente de Acusação (se houver)</label>
+                <input type="text" id="assistente_acusacao" class="form-control" placeholder="Dr. Nome do Advogado / Vítima" oninput="if(activeData){activeData.assistente_acusacao=this.value;updateLivePreview();}">
+              </div>
+            </div>
+            <div class="form-row-grid" style="margin-top: 0.75rem;">
+              <div class="form-group">
+                <label>Defesa Técnica Geral / Padrão (Defensoria Pública ou Advogado)</label>
                 <input type="text" id="defense_counsel" class="form-control">
               </div>
             </div>
@@ -939,9 +945,17 @@
       return idNum % 1000000;
     }
 
+    function stripSignatureLines(text) {
+      if (!text) return '';
+      return text.split('\n')
+        .filter(line => !/assinado\s+eletronicamente|data\s+da\s+assinatura|emitido\s+em|assinado\s+por|certificado\s+por|documento\s+assinado/i.test(line))
+        .join('\n');
+    }
+
     // Portuguese written date parser with strict calendar and time validation
     function parsePtDateTime(str) {
       if (!str) return null;
+      const cleanStr = stripSignatureLines(str);
       const months = {
         'janeiro': '01', 'jan': '01',
         'fevereiro': '02', 'fev': '02',
@@ -957,8 +971,28 @@
         'dezembro': '12', 'dez': '12'
       };
 
+      // 0. Anchored judicial scheduling clause (prioritized)
+      const mAnchor = cleanStr.match(/(?:designo|designa-se|aprazo|fica\s+designad[oa]|pauta\s+do\s+dia|audi[eê]ncia\s+(?:de\s+[a-zA-Z\s]+)?(?:para|no\s+dia|designada\s+para)?)[^\n\d]{1,60}?(\d{1,2})\s*(?:de\s+)?(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s+)?(\d{2,4})[^\n\d]{1,40}?(?:às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?/i);
+      if (mAnchor) {
+        const dI = parseInt(mAnchor[1], 10);
+        const mKey = mAnchor[2].toLowerCase().replace('ç', 'c');
+        const yStr = mAnchor[3];
+        const yI = parseInt(yStr, 10);
+        const hI = parseInt(mAnchor[4], 10);
+        const mnCol = mAnchor[5];
+        const mnH = mAnchor[6];
+        const yValid = (yStr.length === 4) ? (yI >= 2020 && yI <= 2035) : (yI >= 20 && yI <= 35);
+        if (dI >= 1 && dI <= 31 && hI >= 0 && hI <= 23 && yValid) {
+          const d = String(dI).padStart(2, '0');
+          const m = months[mKey] || '01';
+          const yr = yStr.length === 4 ? yStr.slice(-2) : yStr.padStart(2, '0');
+          const mn = (mnCol || mnH || '00').padStart(2, '0');
+          return `${d}.${m}.${yr} às ${String(hI).padStart(2, '0')}h${mn}min`;
+        }
+      }
+
       // 1. Portuguese written month format
-      const mPt = str.match(/(?:(?:no\s+dia|dia|data|para|em|pauta|audi[eê]ncia)\s+)?(\d{1,2})\s*(?:(?:de|[^\w\d]){1,20}(?:[a-zçãõ-]+feira|[^\w\d]){0,20})?\s*(?:de\s+)?(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s+)?(\d{2,4})[^\n\d]{1,40}?(?:às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?/i);
+      const mPt = cleanStr.match(/(?:(?:no\s+dia|dia|data|para|em|pauta|audi[eê]ncia)\s+)?(\d{1,2})\s*(?:(?:de|[^\w\d]){1,20}(?:[a-zçãõ-]+feira|[^\w\d]){0,20})?\s*(?:de\s+)?(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s+)?(\d{2,4})[^\n\d]{1,40}?(?:às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?/i);
       if (mPt) {
         const dI = parseInt(mPt[1], 10);
         const mKey = mPt[2].toLowerCase().replace('ç', 'c');
@@ -978,7 +1012,7 @@
       }
 
       // 2. Numeric date format (DD/MM/AAAA às HH:MM)
-      const mNum = str.match(/(?:(?:no\s+dia|dia|data|para|em|pauta|audi[eê]ncia)\s+)?(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?/i);
+      const mNum = cleanStr.match(/(?:(?:no\s+dia|dia|data|para|em|pauta|audi[eê]ncia)\s+)?(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?/i);
       if (mNum) {
         const dI = parseInt(mNum[1], 10);
         const moI = parseInt(mNum[2], 10);
@@ -998,7 +1032,7 @@
       }
 
       // 3. General scheduling phrase fallback
-      const mGen = str.match(/(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+em)\s+(\d{1,2})[./](\d{1,2})[./](\d{2,4})\s*(?:,|às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2}))/i);
+      const mGen = cleanStr.match(/(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+em)\s+(\d{1,2})[./](\d{1,2})[./](\d{2,4})\s*(?:,|às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2}))/i);
       if (mGen) {
         const dI = parseInt(mGen[1], 10);
         const moI = parseInt(mGen[2], 10);
@@ -1787,15 +1821,18 @@
 
       // 4. Despacho
       if (nL.includes('despacho')) {
+        const cleanT = stripSignatureLines(text || '');
         if (txtL.includes('conciliação') || txtL.includes('conciliacao')) {
-          const dtM = (text || '').match(/(\d{1,2}\/\d{1,2}\/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})/);
+          const dtM = cleanT.match(/(?:designo|aprazo|pauta|audi[eê]ncia|realiza[cç][aã]o|para\s+o\s+dia)[^\n\d]{1,50}?(\d{1,2}\/\d{1,2}\/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})/i) ||
+                      cleanT.match(/(\d{1,2}\/\d{1,2}\/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})/);
           if (dtM) {
             return `Despacho incluindo o feito em pauta de audiência de conciliação para ${dtM[1]}, às ${dtM[2]}`;
           }
           return 'Despacho incluindo o feito em pauta de audiência de conciliação';
         }
         if (txtL.includes('pauta') || txtL.includes('designo') || txtL.includes('instrução')) {
-          const dtM = (text || '').match(/(\d{1,2}\/\d{1,2}\/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})/);
+          const dtM = cleanT.match(/(?:designo|aprazo|pauta|audi[eê]ncia|realiza[cç][aã]o|para\s+o\s+dia)[^\n\d]{1,50}?(\d{1,2}\/\d{1,2}\/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})/i) ||
+                      cleanT.match(/(\d{1,2}\/\d{1,2}\/\d{2,4})[^\n\d]{1,20}(\d{1,2}:\d{2}|\d{1,2}h\d{0,2})/);
           if (dtM) {
             return `Despacho incluindo o feito em pauta de audiência de instrução e julgamento para ${dtM[1]}, às ${dtM[2]}`;
           }
@@ -2385,27 +2422,56 @@
         let subpoenaId = '';
         let citationId = '';
         for (let md of mandadosDocs) {
-          const mt = md.text.toLowerCase();
-          if (mt.includes(nameLower) || (firstName.length > 3 && surname.length > 3 && mt.includes(firstName) && mt.includes(surname))) {
-            if (mt.includes('citação') || mt.includes('citei')) citationId = md.doc_id;
-            if (mt.includes('intimação') || mt.includes('intimei') || mt.includes('audiência')) {
-              subpoenaId = md.doc_id;
-              break;
+          const mt = (md.text || '').toLowerCase();
+          const matchesDefendant = mt.includes(nameLower) || (firstName.length > 3 && surname.length > 3 && mt.includes(firstName) && mt.includes(surname));
+          if (matchesDefendant) {
+            const isNegative = /contrafé negativa|contrafe negativa|não localizado|deixei de citar|deixei de intimar/i.test(mt);
+            if (!isNegative) {
+              if (mt.includes('citação') || mt.includes('citei')) citationId = md.doc_id;
+              if (mt.includes('intimação') || mt.includes('intimei') || mt.includes('audiência')) {
+                subpoenaId = md.doc_id;
+                break;
+              }
             }
           }
         }
-        if (!subpoenaId) {
-          const genMandado = mandadosDocs.find(d => /mandado/i.test(d.doc_name) && /intimação|cumprido/i.test(d.doc_name));
-          if (genMandado) subpoenaId = genMandado.doc_id;
+
+        // Extract counsel for this specific defendant (Requirement 3)
+        let defCounsel = '';
+        for (let doc of pjeCatalog) {
+          const dt = `${doc.doc_name} ${doc.doc_type}`.toLowerCase();
+          if (/procura|substabelec|defesa|resposta/i.test(dt)) {
+            const txt = (doc.text || '').toLowerCase();
+            if (txt.includes(nameLower) || (firstName.length > 3 && surname.length > 3 && txt.includes(firstName) && txt.includes(surname))) {
+              const oabM = (doc.text || '').match(/(?:advogad[oa]|oab)[^\n]{0,60}?(?:dr[a.]?\s+)?([A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõ]+(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõ]+)+)/);
+              if (oabM) {
+                defCounsel = `Dr. ${oabM[1]}`;
+                break;
+              }
+            }
+          }
         }
 
         return {
           name: name.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
           status: status,
           citation_id: citationId,
-          subpoena_id: subpoenaId
+          subpoena_id: subpoenaId,
+          counsel: defCounsel
         };
       });
+
+      let assistenteAcusacao = '';
+      for (let doc of pjeCatalog) {
+        const dt = `${doc.doc_name} ${doc.doc_type}`.toLowerCase();
+        if (/assistente|habilita/i.test(dt)) {
+          const m = (doc.text || '').match(/(?:assistente\s+de\s+acusação|habilitação)[^\n]{0,60}?(?:dr[a.]?\s+)?([A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõ]+(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõ]+)+)/i);
+          if (m) {
+            assistenteAcusacao = `Dr. ${m[1]}`;
+            break;
+          }
+        }
+      }
 
       let ipText = '';
       const ipDocs = pjeCatalog.filter(d => /inquérito|inquerito|flagrante|interrogat|qualifica|boletim/i.test(`${d.doc_name} ${d.doc_type}`));
@@ -2558,9 +2624,7 @@
           }
         }
 
-        if (narrativeParas.length > 6) {
-          factsSummary = narrativeParas.slice(0, 5).concat([narrativeParas[narrativeParas.length - 1]]).join('\n\n');
-        } else if (narrativeParas.length > 0) {
+        if (narrativeParas.length > 0) {
           factsSummary = narrativeParas.join('\n\n');
         } else {
           factsSummary = 'Consta nos autos do inquérito policial que os fatos narrados na denúncia encontram-se descritos nos autos.';
@@ -2603,8 +2667,7 @@
           return /maria|ana|julia|samara|dra|sra|nelisse|michele|jacilene/i.test(cleanN) ? `Intimada ID ${matched[0]}` : `Intimado ID ${matched[0]}`;
         }
         if (isPm) {
-          const ofDoc = mandadosDocs.find(d => d.doc_name.toLowerCase().includes('ofício'));
-          return ofDoc ? `Ofício enviado ID ${ofDoc.doc_id}` : 'Ofício expedido';
+          return 'Ofício expedido';
         }
         return 'Mandado expedido';
       };
@@ -2889,6 +2952,7 @@
         hearing_link: hearingLink,
         is_in_person: !hearingLink,
         prosecutor: prosecutor,
+        assistente_acusacao: assistenteAcusacao,
         defendants: defendants,
         defense_counsel: defenseCounsel,
         qualification_text: qualText,
@@ -2901,6 +2965,25 @@
         defense_witness_note: defNote,
         closure_text: 'Cordial e respeitosamente,'
       };
+    }
+
+    // Dedicated Spelling & Text Sanitization Engine (Requirement 4)
+    function separateGluedWords(text) {
+      if (!text) return '';
+      // 1. Legal article patterns: art.129 -> art. 129
+      let s = text.replace(/\b(art(?:igo)?s?|fls?|p[aá]gs?|leis?|incs?|par[aá]g(?:rafo)?s?|decs?|decr?\.?|cls?|id|n[ºo]|mov)\.([0-9a-zA-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ])/gi, '$1. $2');
+      // 2. Period followed immediately by uppercase letter: denúncia.O -> denúncia. O
+      s = s.replace(/([a-záéíóúâêôãõ0-9])\.([A-ZÁÉÍÓÚÂÊÔ])/g, '$1. $2');
+      // 3. Comma followed immediately by letter/number: fato,com -> fato, com
+      s = s.replace(/([a-záéíóúâêôãõ0-9]),([a-zA-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ])/g, '$1, $2');
+      // 4. Semicolon followed immediately by word: lei;o -> lei; o
+      s = s.replace(/([a-záéíóúâêôãõ0-9]);([a-zA-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ])/g, '$1; $2');
+      // 5. Colon followed immediately by word: disse:que -> disse: que
+      s = s.replace(/([a-záéíóúâêôãõ0-9]):([a-zA-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ])/g, '$1: $2');
+      // 6. Parenthesis / brackets: (CP)art -> (CP) art
+      s = s.replace(/\)([a-zA-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ])/g, ') $1');
+      s = s.replace(/([a-zA-ZÁÉÍÓÚÂÊÔÃÕa-záéíóúâêôãõ])\(/g, '$1 (');
+      return s;
     }
 
     function extractCleanNarrative(rawText) {
@@ -2978,13 +3061,15 @@
         jevCleaned.push(l);
       }
 
+      const NON_TERMINATING_RE = /\b(?:arts?|artigo|fls?|folhas?|p[aá]gs?|p[aá]ginas?|n[ºo]|n[uú]m|inc|par|par[aá]grafo|v|vs|dr|dra|exmo|exma|av|sr|sra|id)\.$/i;
       const paragraphs = [];
       let currPara = [];
       for (const l of jevCleaned) {
         currPara.push(l);
-        if (/[.:;]$/.test(l)) {
+        if (/[.:;]$/.test(l) && !NON_TERMINATING_RE.test(l.trim())) {
           let pText = currPara.join(' ').replace(/^\d+\)\s*/, '').replace(/\s+/g, ' ').trim();
           pText = pText.replace(/^(?:O\s+MINIST[EÉ]RIO\s+P[UÚ]BLICO[^\n]+vem[,\s]+perante\s+Vossa\s+Excelência[^\n]+oferecer\s+denúncia[^\n]+?:\s*|vem[,\s]+perante\s+Vossa\s+Excelência[^\n]+?:\s*|Excelent[ií]ssim[oa][^,;:]+[;,:]\s*|Ao\s+Ju[ií]zo[^,;:]+[;,:]\s*)/i, '').trim();
+          pText = separateGluedWords(pText);
           if (pText.length > 35) paragraphs.push(pText);
           currPara = [];
         }
@@ -2992,12 +3077,10 @@
       if (currPara.length > 0) {
         let pText = currPara.join(' ').replace(/^\d+\)\s*/, '').replace(/\s+/g, ' ').trim();
         pText = pText.replace(/^(?:O\s+MINIST[EÉ]RIO\s+P[UÚ]BLICO[^\n]+vem[,\s]+perante\s+Vossa\s+Excelência[^\n]+oferecer\s+denúncia[^\n]+?:\s*|vem[,\s]+perante\s+Vossa\s+Excelência[^\n]+?:\s*|Excelent[ií]ssim[oa][^,;:]+[;,:]\s*|Ao\s+Ju[ií]zo[^,;:]+[;,:]\s*)/i, '').trim();
+        pText = separateGluedWords(pText);
         if (pText.length > 35) paragraphs.push(pText);
       }
 
-      if (paragraphs.length > 6) {
-        return paragraphs.slice(0, 5).concat([paragraphs[paragraphs.length - 1]]);
-      }
       return paragraphs;
     }
 
@@ -3009,6 +3092,9 @@
       document.getElementById('hearing_link').value = data.hearing_link || '';
       document.getElementById('is_in_person').checked = data.is_in_person || false;
       document.getElementById('prosecutor').value = data.prosecutor || '';
+      if (document.getElementById('assistente_acusacao')) {
+        document.getElementById('assistente_acusacao').value = data.assistente_acusacao || '';
+      }
       document.getElementById('defense_counsel').value = data.defense_counsel || '';
       document.getElementById('qualification_text').value = data.qualification_text || '';
       document.getElementById('imputation_text').value = data.imputation_text || '';
@@ -3043,7 +3129,8 @@
         row.innerHTML = `
           <input type="text" class="form-control" value="${d.name || ''}" placeholder="Nome" oninput="activeData.defendants[${idx}].name=this.value;updateLivePreview();">
           <input type="text" class="form-control" value="${d.status || ''}" placeholder="Situação" oninput="activeData.defendants[${idx}].status=this.value;updateLivePreview();">
-          <input type="text" class="form-control mono" value="${d.subpoena_id || ''}" placeholder="ID" oninput="activeData.defendants[${idx}].subpoena_id=this.value;updateLivePreview();">
+          <input type="text" class="form-control mono" value="${d.subpoena_id || ''}" placeholder="ID Intimação" oninput="activeData.defendants[${idx}].subpoena_id=this.value;updateLivePreview();">
+          <input type="text" class="form-control" value="${d.counsel || ''}" placeholder="Defesa / Advogado deste réu" oninput="activeData.defendants[${idx}].counsel=this.value;updateLivePreview();">
           <button type="button" class="btn-remove-item" onclick="activeData.defendants.splice(${idx},1);renderDefendants(activeData.defendants);updateLivePreview();">&times;</button>
         `;
         container.appendChild(row);
@@ -3084,7 +3171,7 @@
 
     document.getElementById('btn-add-defendant').onclick = () => {
       if (!activeData) activeData = { defendants: [] };
-      activeData.defendants.push({ name: '', status: 'respondendo ao processo em liberdade', subpoena_id: '' });
+      activeData.defendants.push({ name: '', status: 'respondendo ao processo em liberdade', subpoena_id: '', counsel: '' });
       renderDefendants(activeData.defendants);
       updateLivePreview();
     };
@@ -3173,25 +3260,47 @@
 
       const promPrefix = (activeData.prosecutor || '').includes(';') ? 'PROMOTORES:' : 'PROMOTOR:';
       html += `<div class="doc-promotor"><span class="hl-green">${promPrefix} ${activeData.prosecutor || ''}</span></div>`;
+      if (activeData.assistente_acusacao) {
+        const asstTxt = activeData.assistente_acusacao.trim();
+        if (asstTxt) {
+          const asstLabel = asstTxt.toLowerCase().startsWith('assistente') ? asstTxt : `Assistente de Acusação: ${asstTxt}`;
+          html += `<div class="doc-assistente"><span class="hl-green">${asstLabel}</span></div>`;
+        }
+      }
       html += '<div style="margin-bottom: 0.85rem;"></div>';
 
       if (activeData.defendants && activeData.defendants.length === 1) {
         const d = activeData.defendants[0];
         const isFem = (d.name || '').trim().toLowerCase().endsWith('a');
         const genderPrefix = isFem ? 'Ré:' : 'Réu:';
-        const idText = d.subpoena_id ? ` - Intimada ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
+        const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
         html += `<div class="doc-reus"><span class="hl-green">${genderPrefix} ${d.name} - ${d.status}${idText}</span></div>`;
+        const defCounsel = (d.counsel || activeData.defense_counsel || '').trim();
+        if (defCounsel) {
+          const defLabel = defCounsel.toLowerCase().startsWith('defesa:') ? defCounsel : `Defesa: ${defCounsel}`;
+          html += `<div class="doc-defesa"><span class="hl-green">${defLabel}</span></div>`;
+        }
       } else if (activeData.defendants && activeData.defendants.length > 1) {
         html += '<div class="doc-reus"><span class="hl-green">Réus:</span></div>';
         activeData.defendants.forEach((d, idx) => {
           const prefix = /^\d+[\s.)-]/.test(d.name.trim()) ? '' : `${String(idx+1).padStart(2, '0')}) `;
           const idText = d.subpoena_id ? ` - Intimado ID <a href="${pjeLink(d.subpoena_id)}" target="_blank" rel="noopener noreferrer">${d.subpoena_id}</a>` : '';
           html += `<div class="doc-reus-item"><span class="hl-green">${prefix}${d.name} - ${d.status}${idText}</span></div>`;
+          const counselText = (d.counsel || (activeData.defendants.length === 1 ? activeData.defense_counsel : '') || '').trim();
+          if (counselText) {
+            const defLabel = counselText.toLowerCase().startsWith('defesa:') ? counselText : `Defesa: ${counselText}`;
+            html += `<div class="doc-defesa" style="padding-left: 1.27cm;"><span class="hl-green">${defLabel}</span></div>`;
+          }
         });
-      }
-
-      if (activeData.defense_counsel) {
-        html += `<div class="doc-defesa"><span class="hl-green">${activeData.defense_counsel}</span></div>`;
+        if (activeData.defense_counsel && !activeData.defendants.some((d) => d.counsel && d.counsel.trim())) {
+          const defLabel = activeData.defense_counsel.toLowerCase().startsWith('defesa:') ? activeData.defense_counsel : `Defesa: ${activeData.defense_counsel}`;
+          html += `<div class="doc-defesa"><span class="hl-green">${defLabel}</span></div>`;
+        }
+      } else {
+        if (activeData.defense_counsel) {
+          const defLabel = activeData.defense_counsel.toLowerCase().startsWith('defesa:') ? activeData.defense_counsel : `Defesa: ${activeData.defense_counsel}`;
+          html += `<div class="doc-defesa"><span class="hl-green">${defLabel}</span></div>`;
+        }
       }
       html += '<div style="margin-bottom: 0.85rem;"></div>';
 
@@ -3393,6 +3502,13 @@
         // PROMOTOR (Bold + Green highlight)
         const promPrefix = (activeData.prosecutor || '').includes(';') ? 'PROMOTORES:' : 'PROMOTOR:';
         bodyXml += pXml(runXml(`${promPrefix} ${activeData.prosecutor}`, { bold: true, highlight: "green" }));
+        if (activeData.assistente_acusacao) {
+          const asstTxt = activeData.assistente_acusacao.trim();
+          if (asstTxt) {
+            const asstLabel = asstTxt.toLowerCase().startsWith('assistente') ? asstTxt : `Assistente de Acusação: ${asstTxt}`;
+            bodyXml += pXml(runXml(asstLabel, { bold: true, highlight: "green" }));
+          }
+        }
         bodyXml += pXml('');
 
         // RÉUS (Bold + Green highlight strict pattern)
@@ -3404,6 +3520,12 @@
           if (d.subpoena_id) reuStr += ` - Intimado ID ${d.subpoena_id}`;
           else if (d.citation_id) reuStr += ` - Citado ID ${d.citation_id}`;
           bodyXml += pXml(runsWithIdLinks(reuStr, { bold: true, highlight: "green" }));
+
+          const counselText = d.counsel || activeData.defense_counsel;
+          if (counselText) {
+            const defLabel = counselText.toLowerCase().startsWith('defesa:') ? counselText : `Defesa: ${counselText}`;
+            bodyXml += pXml(runXml(defLabel, { bold: true, highlight: "green" }));
+          }
         } else if (activeData.defendants && activeData.defendants.length > 1) {
           bodyXml += pXml(runXml("Réus:", { bold: true, highlight: "green" }));
           activeData.defendants.forEach((d, idx) => {
@@ -3412,12 +3534,18 @@
             if (d.subpoena_id) reuStr += ` - Intimado ID ${d.subpoena_id}`;
             else if (d.citation_id) reuStr += ` - Citado ID ${d.citation_id}`;
             bodyXml += pXml(runsWithIdLinks(reuStr, { bold: false, highlight: "green" }), { left: 720, hanging: 360 });
-          });
-        }
 
-        // DEFESA (Bold + Green highlight)
-        if (activeData.defense_counsel) {
-          bodyXml += pXml(runXml(activeData.defense_counsel, { bold: true, highlight: "green" }));
+            const counselText = d.counsel || activeData.defense_counsel;
+            if (counselText) {
+              const defLabel = counselText.toLowerCase().startsWith('defesa:') ? counselText : `Defesa: ${counselText}`;
+              bodyXml += pXml(runXml(defLabel, { bold: false, highlight: "green" }), { left: 720 });
+            }
+          });
+        } else {
+          if (activeData.defense_counsel) {
+            const defLabel = activeData.defense_counsel.toLowerCase().startsWith('defesa:') ? activeData.defense_counsel : `Defesa: ${activeData.defense_counsel}`;
+            bodyXml += pXml(runXml(defLabel, { bold: true, highlight: "green" }));
+          }
         }
         bodyXml += pXml('');
 
@@ -3534,8 +3662,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const safeCase = (activeData.case_number || 'Processo').replace(/[\/\\]/g, '-');
-        a.download = `Resumo - ${safeCase} ${activeData.act_type || 'AIJ'}.docx`;
+        a.download = buildCanonicalDocxFilename(activeData);
         document.body.appendChild(a);
         a.click();
         URL.revokeObjectURL(url);
@@ -3546,6 +3673,39 @@
         console.error(err);
       }
     };
+
+    function buildCanonicalDocxFilename(data) {
+      const safeCase = (data.case_number || 'Processo').replace(/[\/\\]/g, '-').trim();
+      const safeAct = (data.act_type || 'AIJ').replace(/[\/\\]/g, '-').trim();
+      const dtStr = (data.hearing_datetime || '').trim();
+
+      let timeStr = '';
+      let dateStr = '';
+
+      const tmM = dtStr.match(/(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)/i);
+      if (tmM) {
+        const h = parseInt(tmM[1], 10);
+        const m = tmM[2] || tmM[3] || '00';
+        timeStr = `${String(h).padStart(2, '0')}h${String(parseInt(m, 10)).padStart(2, '0')}min`;
+      }
+
+      const dtM = dtStr.match(/(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})/);
+      if (dtM) {
+        const d = parseInt(dtM[1], 10);
+        const mo = parseInt(dtM[2], 10);
+        const y = dtM[3];
+        const yr = y.length === 2 ? `20${y}` : y;
+        dateStr = `${String(d).padStart(2, '0')}.${String(mo).padStart(2, '0')}.${yr}`;
+      }
+
+      if (timeStr && dateStr) {
+        return `${timeStr}, ${dateStr} - Resumo nº ${safeCase} - ${safeAct}.docx`;
+      } else if (dateStr) {
+        return `${dateStr} - Resumo nº ${safeCase} - ${safeAct}.docx`;
+      } else {
+        return `Resumo nº ${safeCase} - ${safeAct}.docx`;
+      }
+    }
 
     function escapeXml(unsafe) {
       return String(unsafe || '').replace(/[<>&'"]/g, c => {

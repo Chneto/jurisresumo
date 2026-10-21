@@ -171,13 +171,117 @@ class HearingDetailsEngine:
 
         return "Data a definir", meeting_link, is_in_person
 
+    def strip_signature_and_issuance_lines(self, txt: str) -> str:
+        """Strips digital signature metadata, PJe margin stamps, and city-issuance date footers
+
+        to ensure they are never confused with the judicial hearing determination date.
+        """
+        if not txt:
+            return ""
+        filtered_lines = []
+        for line in txt.split("\n"):
+            l_s = line.strip()
+            # Strip digital signature headers/footers
+            if re.search(
+                r"(?:Assinado\s+eletronicamente\s+por|C[oó]digo\s+de\s+valida[cç][aã]o|Valide\s+a\s+autenticidade|"
+                r"Identificador\s*:\s*\d+|Num\.\s*\d+\s*-\s*P[aáAÁ]g\.\s*\d+|Data\s+da\s+assinatura|"
+                r"Documento\s+assinado\s+eletronicamente)",
+                l_s,
+                re.IGNORECASE,
+            ):
+                continue
+            # Strip city date lines (e.g. "Natal/RN, 15 de maio de 2024", "Natal - RN, 15/05/2024")
+            if re.search(
+                r"^(?:[A-Za-zÁÉÍÓÚÂÊÔÃÕçÇ\s]+/[A-Z]{2}|Natal\s*[-–]\s*RN|Tribunal\s+de\s+Justi[cç]a)"
+                r"[,\s]+\d{1,2}\s+(?:de\s+[a-zç]+\s+de|\/)\s*\d{2,4}",
+                l_s,
+                re.IGNORECASE,
+            ):
+                continue
+            filtered_lines.append(line)
+        return "\n".join(filtered_lines)
+
     def parse_datetime_from_text(self, txt: str) -> Optional[str]:
-        """Extracts and formats hearing date and time from Portuguese text."""
-        # 1. Portuguese format with month names:
-        # e.g. "para o dia 17 (sexta-feira) de julho de 2026, às 09:00 horas"
+        """Extracts and formats hearing date and time determined by the judge inside the judicial act,
+
+        rigorously ignoring document signature/issuance timestamps.
+        """
+        if not txt:
+            return None
+
+        # Clean signature and margin issuance dates first
+        clean_txt = self.strip_signature_and_issuance_lines(txt)
+
+        # 1. Primary: Explicit hearing designation determination with written month
+        # e.g. "designo audiência de instrução para o dia 31 de julho de 2026, às 10:00 horas"
+        # or "incluo o feito em pauta para o dia 17 de julho de 2026 às 09h"
+        m_hear_pt = re.search(
+            r"(?:design[ao]|apraz[ao]|reapraz[ao]|redesign[ao]|remarc[ao]|inclu[ao](?:-se)?(?:\s+o\s+feito)?\s+em\s+pauta|"
+            r"pauta\s+(?:de\s+audi[eê]ncia|para|do\s+dia)|"
+            r"audi[eê]ncia\s+(?:de\s+instru[cç][aã]o|de\s+continua[cç][aã]o|de\s+cust[oó]dia|de\s+homologa[cç][aã]o|designad[ao]|aprazad[ao]|reaprazad[ao]|redesignad[ao]|remarcad[ao]|marcad[ao]|agendad[ao]|para\s+o\s+dia|no\s+dia)|"
+            r"determino\s+a\s+realiza[cç][aã]o\s+de\s+audi[eê]ncia)[^\n\d]{1,60}?"
+            r"(\d{1,2})\s*(?:(?:de|[^\w\d]){1,20}(?:[a-zçãõ-]+feira|[^\w\d]){0,20})?\s*(?:de\s+)?(janeiro|fevereiro|março|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s+)?(\d{2,4})[^\n\d]{1,40}?(?:às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
+            clean_txt,
+            re.IGNORECASE,
+        )
+        if m_hear_pt:
+            d, m_name, y, h, mn_col, mn_h = m_hear_pt.groups()
+            d_i, h_i = int(d), int(h)
+            if 1 <= d_i <= 31 and 0 <= h_i <= 23:
+                m_num = MONTH_MAP.get(m_name.lower().strip(), "07")
+                yr = y[-2:] if len(y) == 4 else y
+                mn = mn_col or mn_h or "00"
+                if not mn:
+                    mn = "00"
+                return f"{d_i:02d}.{m_num}.{yr} às {h_i:02d}h{mn}min"
+
+        # 2. Primary: Explicit hearing designation determination with numeric date
+        # e.g. "designo o feito em pauta para o dia 31/07/2026 às 11:00 horas"
+        m_hear_num = re.search(
+            r"(?:design[ao]|apraz[ao]|reapraz[ao]|redesign[ao]|remarc[ao]|inclu[ao](?:-se)?(?:\s+o\s+feito)?\s+em\s+pauta|"
+            r"pauta\s+(?:de\s+audi[eê]ncia|para|do\s+dia)|"
+            r"audi[eê]ncia\s+(?:de\s+instru[cç][aã]o|de\s+continua[cç][aã]o|de\s+cust[oó]dia|de\s+homologa[cç][aã]o|designad[ao]|aprazad[ao]|reaprazad[ao]|redesignad[ao]|remarcad[ao]|marcad[ao]|agendad[ao]|para\s+o\s+dia|no\s+dia)|"
+            r"determino\s+a\s+realiza[cç][aã]o\s+de\s+audi[eê]ncia)[^\n\d]{1,60}?"
+            r"(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
+            clean_txt,
+            re.IGNORECASE,
+        )
+        if m_hear_num:
+            d, m, y, h, mn_col, mn_h = m_hear_num.groups()
+            d_i, m_i, h_i = int(d), int(m), int(h)
+            y_i = int(y)
+            y_valid = (2020 <= y_i <= 2035) if len(y) == 4 else (20 <= y_i <= 35)
+            if 1 <= d_i <= 31 and 1 <= m_i <= 12 and 0 <= h_i <= 23 and y_valid:
+                yr = y[-2:] if len(y) == 4 else y
+                mn = mn_col or mn_h or "00"
+                if not mn:
+                    mn = "00"
+                return f"{d_i:02d}.{m_i:02d}.{yr} às {h_i:02d}h{mn}min"
+
+        # 3. Inverted hearing formulation: "designo o dia 18/06/2026, às 10h30min, para a audiência"
+        m_hear_inv = re.search(
+            r"(?:design[ao]|apraz[ao]|reapraz[ao]|redesign[ao]|remarc[ao])\s+(?:o\s+dia|para\s+o\s+dia)\s+"
+            r"(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?"
+            r"[^\n]*?(?:audi[eê]ncia|instru[cç][aã]o|sess[aã]o)",
+            clean_txt,
+            re.IGNORECASE,
+        )
+        if m_hear_inv:
+            d, m, y, h, mn_col, mn_h = m_hear_inv.groups()
+            d_i, m_i, h_i = int(d), int(m), int(h)
+            y_i = int(y)
+            y_valid = (2020 <= y_i <= 2035) if len(y) == 4 else (20 <= y_i <= 35)
+            if 1 <= d_i <= 31 and 1 <= m_i <= 12 and 0 <= h_i <= 23 and y_valid:
+                yr = y[-2:] if len(y) == 4 else y
+                mn = mn_col or mn_h or "00"
+                if not mn:
+                    mn = "00"
+                return f"{d_i:02d}.{m_i:02d}.{yr} às {h_i:02d}h{mn}min"
+
+        # 4. Portuguese format with month names (cleaned text fallback):
         m_pt = re.search(
-            r"(?:dia|data|para|em|pauta)\s+(\d{1,2})\s*(?:(?:de|[^\w\d]){1,20}(?:[a-zçãõ-]+feira|[^\w\d]){0,20})?\s*(?:de\s+)?(janeiro|fevereiro|março|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s+)?(\d{2,4})[^\n\d]{1,40}?(?:às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
-            txt,
+            r"(?:dia|data|para|pauta)\s+(\d{1,2})\s*(?:(?:de|[^\w\d]){1,20}(?:[a-zçãõ-]+feira|[^\w\d]){0,20})?\s*(?:de\s+)?(janeiro|fevereiro|março|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s+)?(\d{2,4})[^\n\d]{1,40}?(?:às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
+            clean_txt,
             re.IGNORECASE,
         )
         if m_pt:
@@ -191,11 +295,10 @@ class HearingDetailsEngine:
                     mn = "00"
                 return f"{d_i:02d}.{m_num}.{yr} às {h_i:02d}h{mn}min"
 
-        # 2. Numeric date format:
-        # e.g. "no dia 31/07/2026 às 11:00 horas" or "em 23/07/26 às 13h"
+        # 5. Numeric date format (cleaned text fallback):
         m_num = re.search(
-            r"(?:dia|data|para|em|pauta|audi[eê]ncia)\s+(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
-            txt,
+            r"(?:dia|data|para|pauta|audi[eê]ncia)\s+(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
+            clean_txt,
             re.IGNORECASE,
         )
         if m_num:
@@ -210,10 +313,10 @@ class HearingDetailsEngine:
                     mn = "00"
                 return f"{d_i:02d}.{m_i:02d}.{yr} às {h_i:02d}h{mn}min"
 
-        # 3. General scheduling phrase fallback
+        # 6. General scheduling phrase fallback
         m_gen = re.search(
             r"(?:no\s+dia|pauta\s+para|designad[oa]\s+para|aprazad[oa]\s+para|audi[eê]ncia\s+em)\s+(\d{1,2})[./](\d{1,2})[./](\d{2,4})\s*(?:,|às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2}))",
-            txt,
+            clean_txt,
             re.IGNORECASE,
         )
         if m_gen:

@@ -442,5 +442,29 @@ class CorroborationConsensusEngine:
                     defense_counsel += f"; Assistido(s) pela Defensoria Pública (em defesa de {names_str})"
                     report.adjustments_applied.append(f"Appended Defensoria Pública coverage for unassigned defendant(s): {names_str}.")
 
+        # Map representation to each defendant individually (Requirement 3)
+        for d in defendants:
+            if not d.counsel:
+                assigned = False
+                d_first = d.name.split()[0].lower() if d.name.split() else ""
+                d_last = d.name.split()[-1].lower() if len(d.name.split()) > 1 else ""
+
+                if defense_docs:
+                    for d_info in defense_docs:
+                        rep_defs = [r.lower() for r in d_info.get("represented_defendants", [])]
+                        if any(d.name.lower() in rd or rd in d.name.lower() or (len(d_first) > 3 and d_first in rd) for rd in rep_defs):
+                            if d_info.get("is_defensoria", False):
+                                d.counsel = "Assistido pela Defensoria Pública"
+                            else:
+                                l_n = d_info.get("lawyer_name") or "Advogado Particular"
+                                l_o = d_info.get("lawyer_oab") or ""
+                                oab_s = f" - {l_o}" if l_o else ""
+                                d.counsel = f"Dr. {l_n}{oab_s}"
+                            assigned = True
+                            break
+
+                if not assigned:
+                    d.counsel = defense_counsel
+
         return defense_counsel
 

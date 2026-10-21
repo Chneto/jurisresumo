@@ -17,6 +17,7 @@ class Defendant(BaseModel):
     citation_id: Optional[str] = None
     subpoena_id: Optional[str] = None
     qualification: Optional[str] = None
+    counsel: Optional[str] = None  # Attorney or public defender representing this specific defendant
 
 
 class Witness(BaseModel):
@@ -43,6 +44,7 @@ class HearingSummaryData(BaseModel):
     hearing_link: Optional[str] = None
     is_in_person: bool = False
     prosecutor: str
+    assistente_acusacao: Optional[str] = None  # Attorney representing victim / private prosecution assistant
     defendants: List[Defendant] = Field(default_factory=list)
     defense_counsel: str
     qualification_text: Optional[str] = None
