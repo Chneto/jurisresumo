@@ -214,7 +214,7 @@ class CorroborationConsensusEngine:
                 from app.engines.specialized.facts_narrative_engine import FactsNarrativeEngine
                 narrative_paras = FactsNarrativeEngine().extract_clean_narrative(denuncia_text)
                 if narrative_paras:
-                    facts_summary = "\n\n".join(narrative_paras[:6])
+                    facts_summary = "\n\n".join(narrative_paras)
                     report.adjustments_applied.append("Restored AIJ factual narrative from denúncia following ANPP revocation.")
 
         # If act is AIJ or standard but Art. 366 suspension exists without subsequent resumption, corroborate PAnP

@@ -190,6 +190,17 @@ class HearingDetailsEngine:
                 re.IGNORECASE,
             ):
                 continue
+            # Strip issuance, dispatch prolation, filing, distribution timestamps
+            if re.search(
+                r"(?:(?:despacho|decis[aã]o|senten[cç]a|ato|certid[aã]o)\s+(?:proferid[oa]|expedid[oa]|assinado|juntado|registrado)\s+em|"
+                r"conclus[aã]o\s+ao\s+ju[ií]z\s+em|"
+                r"data\s+(?:e\s+hora\s+)?(?:da\s+)?(?:assinatura|distribui[cç][aã]o|conclus[aã]o|emiss[aã]o|juntada|prola[cç][aã]o|publica[cç][aã]o)|"
+                r"documento\s+gerado\s+em|"
+                r"^\s*data[:\s]+\d{1,2}[./-]\d{1,2}[./-]\d{2,4})",
+                l_s,
+                re.IGNORECASE,
+            ):
+                continue
             # Strip city date lines (e.g. "Natal/RN, 15 de maio de 2024", "Natal - RN, 15/05/2024")
             if re.search(
                 r"^(?:[A-Za-zÁÉÍÓÚÂÊÔÃÕçÇ\s]+/[A-Z]{2}|Natal\s*[-–]\s*RN|Tribunal\s+de\s+Justi[cç]a)"
@@ -280,7 +291,7 @@ class HearingDetailsEngine:
 
         # 4. Portuguese format with month names (cleaned text fallback):
         m_pt = re.search(
-            r"(?:dia|data|para|pauta)\s+(\d{1,2})\s*(?:(?:de|[^\w\d]){1,20}(?:[a-zçãõ-]+feira|[^\w\d]){0,20})?\s*(?:de\s+)?(janeiro|fevereiro|março|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s+)?(\d{2,4})[^\n\d]{1,40}?(?:às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
+            r"(?:dia|para\s+o\s+dia|pauta|audi[eê]ncia)\s+(\d{1,2})\s*(?:(?:de|[^\w\d]){1,20}(?:[a-zçãõ-]+feira|[^\w\d]){0,20})?\s*(?:de\s+)?(janeiro|fevereiro|março|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:de\s+)?(\d{2,4})[^\n\d]{1,40}?(?:às|as)\s*(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
             clean_txt,
             re.IGNORECASE,
         )
@@ -297,7 +308,7 @@ class HearingDetailsEngine:
 
         # 5. Numeric date format (cleaned text fallback):
         m_num = re.search(
-            r"(?:dia|data|para|pauta|audi[eê]ncia)\s+(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
+            r"(?:dia|para\s+o\s+dia|pauta|audi[eê]ncia)\s+(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:,?\s*(?:às|as|-)\s*)(\d{1,2})(?::(\d{2})|h(\d{0,2})(?:min)?)?",
             clean_txt,
             re.IGNORECASE,
         )

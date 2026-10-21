@@ -56,37 +56,15 @@ class WitnessSubpoenaEngine:
             for m_doc in mandados_docs:
                 mandado_texts[m_doc.doc_id] = extract_doc_text(doc, m_doc).lower()
 
-        # Helper to find subpoena / notification ID
+        from app.engines.specialized.party_subpoena_engine import PartySubpoenaEngine
+        subp_engine = PartySubpoenaEngine()
+        for doc_id, m_text in mandado_texts.items():
+            subp_engine._doc_cache[doc_id] = m_text
+
+        # Helper to find subpoena / notification ID via PartySubpoenaEngine
         def find_subpoena_status(name: str, is_pm: bool) -> str:
-            name_lower = name.lower()
-            clean_n = _normalize_witness_name(name_lower)
-            first_name = clean_n.split()[0].lower() if clean_n.split() else ""
-            surname = clean_n.split()[-1].lower() if len(clean_n.split()) > 1 else ""
-
-            matched_ids = []
-            negative_ids = []
-
-            for doc_id, m_text in mandado_texts.items():
-                if clean_n in m_text or (len(first_name) > 3 and len(surname) > 3 and first_name in m_text and surname in m_text):
-                    if "contrafé negativa" in m_text or "não localizado" in m_text or "deixei de citar" in m_text or "deixei de intimar" in m_text:
-                        negative_ids.append(doc_id)
-                    else:
-                        matched_ids.append(doc_id)
-
-            if negative_ids:
-                return f"Certidão contrafé negativa ID {'; '.join(negative_ids)}"
-            if matched_ids:
-                if is_pm:
-                    return f"Ofício enviado ID {matched_ids[0]}"
-                return f"Intimada ID {matched_ids[0]}" if any(fem in clean_n for fem in ["maria", "ana", "julia", "samara", "dra", "sra", "nelisse", "michele", "jacilene"]) else f"Intimado ID {matched_ids[0]}"
-
-            if is_pm:
-                for m_doc in mandados_docs:
-                    if "ofício" in m_doc.doc_name.lower():
-                        return f"Ofício enviado ID {m_doc.doc_id}"
-                return "Ofício expedido"
-
-            return "Mandado expedido"
+            p_map = subp_engine.build_party_diligences_map(mandados_docs, doc, [name])
+            return subp_engine.get_witness_diligence_status(name, is_pm, p_map, mandados_docs)
 
         num = 1
         seen_names = set()

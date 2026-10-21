@@ -265,7 +265,9 @@ class FactsNarrativeEngine:
                     flags=re.IGNORECASE,
                 ).strip()
 
-                if len(p_text) > 35:
+                # Only discard empty or standalone section headers; preserve legitimate substantive sentences
+                is_header = bool(re.match(r"^(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+FATOS|FATOS(?:\s+NARRADOS)?|HIST[OÓ]RICO|DA\s+NARRATIVA|\d+\.?)\s*$", p_text, re.IGNORECASE))
+                if len(p_text) >= 4 and not is_header:
                     paragraphs.append(p_text)
                 curr_para = []
 
@@ -282,7 +284,8 @@ class FactsNarrativeEngine:
                 p_text,
                 flags=re.IGNORECASE,
             ).strip()
-            if len(p_text) > 35:
+            is_header = bool(re.match(r"^(?:[IVXLCDM]+\.?\s*)?(?:DOS\s+FATOS|FATOS(?:\s+NARRADOS)?|HIST[OÓ]RICO|DA\s+NARRATIVA|\d+\.?)\s*$", p_text, re.IGNORECASE))
+            if len(p_text) >= 4 and not is_header:
                 paragraphs.append(p_text)
 
         return paragraphs
